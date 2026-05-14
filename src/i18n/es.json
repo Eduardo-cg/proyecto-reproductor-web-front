@@ -1,0 +1,56 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "library": "Biblioteca",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "Bienvenido a MusicApp",
+    "subtitle": "Tu plataforma de música favorita",
+    "darkMode": "Modo Oscuro",
+    "lightMode": "Modo Claro",
+    "feature1Title": "Reproductor",
+    "feature1Desc": "Escucha tu música favorita sin interrupciones",
+    "feature2Title": "Biblioteca",
+    "feature2Desc": "Gestiona tus canciones y playlists",
+    "feature3Title": "Temas"
+  },
+  "auth": {
+    "loginTitle": "Iniciar Sesión",
+    "registerTitle": "Crear Cuenta",
+    "email": "Email",
+    "password": "Contraseña",
+    "name": "Nombre",
+    "submit": "Entrar",
+    "loading": "Cargando...",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "registerLink": "Regístrate",
+    "loginLink": "Login"
+  },
+  "library": {
+    "title": "Tu Biblioteca",
+    "addTrack": "Añadir Canción",
+    "searchPlaceholder": "Buscar canciones...",
+    "noTracks": "No se encontraron canciones",
+    "delete": "Eliminar",
+    "trackTitle": "Título",
+    "trackArtist": "Artista",
+    "trackUrl": "URL del audio",
+    "trackCover": "URL de portada",
+    "cancel": "Cancelar",
+    "add": "Añadir"
+  },
+  "playlist": {
+    "title": "Playlist",
+    "songsCount": "{count} canciones",
+    "notFound": "Playlist no encontrada",
+    "remove": "Quitar"
+  },
+  "player": {
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "next": "Siguiente"
+  }
+}
