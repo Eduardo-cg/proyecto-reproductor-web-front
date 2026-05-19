@@ -1,79 +1,71 @@
 import { reactive } from 'vue'
+import { api } from '../services/api'
 
-const API_URL = 'http://localhost:8080/api'
+const state = reactive({
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  loading: false,
+  error: null
+})
 
-export const useAuthStore = () => {
-  const state = reactive({
-    user: null,
-    token: null,
-    isAuthenticated: false,
-    loading: false,
-    error: null
-  })
-
-  const init = () => {
-    const token = localStorage.getItem('token')
-    const user = localStorage.getItem('user')
-    if (token && user) {
+const init = () => {
+  const token = localStorage.getItem('token')
+  const user = localStorage.getItem('user')
+  if (token && user) {
+    try {
       state.token = token
       state.user = JSON.parse(user)
       state.isAuthenticated = true
+    } catch {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
     }
   }
-
-  const login = async (email, password) => {
-    state.loading = true
-    state.error = null
-    try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      })
-      if (!res.ok) throw new Error('Credenciales incorrectas')
-      const data = await res.json()
-      state.token = data.token
-      state.user = data.user
-      state.isAuthenticated = true
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-      return true
-    } catch (e) {
-      state.error = e.message
-      return false
-    } finally {
-      state.loading = false
-    }
-  }
-
-  const register = async (name, email, password) => {
-    state.loading = true
-    state.error = null
-    try {
-      const res = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
-      })
-      if (!res.ok) throw new Error('Error al registrar')
-      return await login(email, password)
-    } catch (e) {
-      state.error = e.message
-      return false
-    } finally {
-      state.loading = false
-    }
-  }
-
-  const logout = () => {
-    state.user = null
-    state.token = null
-    state.isAuthenticated = false
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-  }
-
-  init()
-
-  return { state, login, register, logout }
 }
+
+const login = async (username, password) => {
+  state.loading = true
+  state.error = null
+  try {
+    const data = await api.login(username, password)
+    state.token = data.token
+    state.user = data.user
+    state.isAuthenticated = true
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('user', JSON.stringify(data.user))
+    return true
+  } catch (e) {
+    state.error = e.message
+    return false
+  } finally {
+    state.loading = false
+  }
+}
+
+const register = async (username, email, password) => {
+  state.loading = true
+  state.error = null
+  try {
+    await api.register(username, email, password)
+    return await login(username, password)
+  } catch (e) {
+    state.error = e.message
+    return false
+  } finally {
+    state.loading = false
+  }
+}
+
+const logout = () => {
+  state.user = null
+  state.token = null
+  state.isAuthenticated = false
+  state.error = null
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+}
+
+init()
+
+export const useAuthStore = () => ({ state, login, register, logout })

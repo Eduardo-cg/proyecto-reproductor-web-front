@@ -1,9 +1,11 @@
+import { Buffer } from 'buffer'
 import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router'
-import { i18n } from './i18n'
-import './assets/styles/variables.css'
 import './assets/styles/global.css'
+import './assets/styles/variables.css'
+import { i18n } from './i18n'
+import router from './router'
+window.Buffer = Buffer
 
 const app = createApp(App)
 app.use(router)

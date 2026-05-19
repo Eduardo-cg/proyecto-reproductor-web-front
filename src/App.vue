@@ -7,23 +7,11 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import PlayerBar from './components/PlayerBar.vue'
-import NavBar from './components/NavBar.vue'
-import { usePlayerStore } from './stores/playerStore'
+import NavBar from './components/NavBar.vue';
+import PlayerBar from './components/PlayerBar.vue';
+import { useTheme } from './composables/useTheme';
 
-const playerStore = usePlayerStore()
-const isDark = ref(true)
-
-onMounted(() => {
-  const savedTheme = localStorage.getItem('theme')
-  if (savedTheme) {
-    isDark.value = savedTheme === 'dark'
-  } else {
-    localStorage.setItem('theme', 'light')
-    isDark.value = false
-  }
-})
+const { isDark } = useTheme()
 </script>
 
 <style>

@@ -4,12 +4,12 @@
       <h2>{{ t('auth.loginTitle') }}</h2>
       <form @submit.prevent="handleLogin">
         <div class="form-group">
-          <label>{{ t('auth.email') }}</label>
-          <input v-model="email" type="email" required />
+          <label>{{ t('auth.name') }}</label>
+          <input v-model="name" type="text" required minlength="3" maxlength="30" />
         </div>
         <div class="form-group">
           <label>{{ t('auth.password') }}</label>
-          <input v-model="password" type="password" required />
+          <input v-model="password" type="password" required minlength="6" maxlength="128" />
         </div>
         <p v-if="authStore.state.error" class="error">{{ authStore.state.error }}</p>
         <button type="submit" class="btn btn-primary" :disabled="authStore.state.loading">
@@ -25,19 +25,19 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
 const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const email = ref('')
+const name = ref('')
 const password = ref('')
 
 const handleLogin = async () => {
-  const success = await authStore.login(email.value, password.value)
+  const success = await authStore.login(name.value, password.value)
   if (success) {
     router.push('/library')
   }

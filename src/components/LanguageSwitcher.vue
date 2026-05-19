@@ -1,11 +1,7 @@
 <template>
   <div class="lang-switcher">
-    <button 
-      v-for="lang in languages" 
-      :key="lang.code"
-      :class="{ active: currentLocale === lang.code }"
-      @click="changeLocale(lang.code)"
-    >
+    <button v-for="lang in languages" :key="lang.code" :class="{ active: currentLocale === lang.code }"
+      @click="changeLocale(lang.code)">
       {{ lang.label }}
     </button>
   </div>

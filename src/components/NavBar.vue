@@ -5,7 +5,8 @@
       <router-link to="/library">{{ t('nav.library') }}</router-link>
     </div>
     <div class="nav-bottom">
-      <router-link v-if="!authStore.state.isAuthenticated" to="/login" class="nav-icon" :title="t('nav.login')">🔐</router-link>
+      <router-link v-if="!authStore.state.isAuthenticated" to="/login" class="nav-icon"
+        :title="t('nav.login')">🔐</router-link>
       <button v-else @click="logout" class="nav-icon" :title="t('nav.logout')">🚪</button>
       <ThemeSwitcher />
       <LanguageSwitcher />
@@ -14,11 +15,11 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
-import ThemeSwitcher from './ThemeSwitcher.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
+import ThemeSwitcher from './ThemeSwitcher.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -66,7 +67,7 @@ const logout = () => {
   gap: 10px;
 }
 
-.nav-bottom > * {
+.nav-bottom>* {
   width: 100%;
 }
 

@@ -5,18 +5,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useTheme } from '../composables/useTheme';
 
-const savedTheme = localStorage.getItem('theme')
-const isDark = ref(savedTheme !== 'light')
-
-document.documentElement.classList.toggle('dark-mode', isDark.value)
-
-const toggleTheme = () => {
-  isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark-mode', isDark.value)
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-}
+const { isDark, toggleTheme } = useTheme()
 </script>
 
 <style scoped>

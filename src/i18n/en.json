@@ -13,7 +13,7 @@
     "feature1Title": "Player",
     "feature1Desc": "Listen to your favorite music without interruptions",
     "feature2Title": "Library",
-    "feature2Desc": "Manage your songs and playlists",
+    "feature2Desc": "Manage your songs",
     "feature3Title": "Themes"
   },
   "auth": {
@@ -40,13 +40,29 @@
     "trackUrl": "Audio URL",
     "trackCover": "Cover URL",
     "cancel": "Cancel",
-    "add": "Add"
-  },
-  "playlist": {
-    "title": "Playlist",
-    "songsCount": "{count} songs",
-    "notFound": "Playlist not found",
-    "remove": "Remove"
+    "add": "Add",
+    "dragDropZone": "Drag audio files here or click to select",
+    "acceptedFormats": "Accepted formats: MP3, WAV, OGG, FLAC, M4A",
+    "album": "Album",
+    "duration": "Duration",
+    "fileName": "File",
+    "previewTitle": "Songs preview",
+    "uploading": "Uploading...",
+    "upload": "Upload",
+    "uploadCount": "Upload {count} songs",
+    "removeFile": "Remove",
+    "noFilesSelected": "No files selected",
+    "uploadSuccess": "Songs uploaded successfully",
+    "uploadError": "Error uploading songs",
+    "unknownArtist": "Unknown artist",
+    "unknownAlbum": "Unknown album",
+    "unknownTitle": "Unknown title",
+    "addAlbum": "Add Album",
+    "albumName": "Album Name",
+    "position": "Position",
+    "dragToReorder": "Drag to reorder",
+    "uploadAlbumCount": "Upload {count} songs as album",
+    "changeCover": "Change cover"
   },
   "player": {
     "play": "Play",

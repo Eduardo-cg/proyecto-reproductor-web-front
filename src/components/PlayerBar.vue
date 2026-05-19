@@ -1,12 +1,11 @@
 <template>
   <div class="player-bar">
+
     <div class="track-info">
       <div v-if="playerStore.state.currentTrack" class="track-details">
-        <img
-          :src="playerStore.state.currentTrack.cover || '/default-cover.png'"
-          alt="Cover"
-          class="cover"
-        />
+        <img v-if="playerStore.state.currentTrack.cover" :src="playerStore.state.currentTrack.cover" alt="Cover"
+          class="cover" />
+        <div v-else class="preview-cover-placeholder">&#127925;</div>
         <div class="track-text">
           <div class="track-title">{{ playerStore.state.currentTrack.title }}</div>
           <div class="track-artist">{{ playerStore.state.currentTrack.artist }}</div>
@@ -23,43 +22,34 @@
         <button class="btn-control" @click="playerStore.playNext()">⏭</button>
       </div>
       <div class="progress-container">
-        <span class="time">{{ formatTime(playerStore.state.position) }}</span>
-        <input
-          type="range"
-          :value="playerStore.state.position"
-          :max="playerStore.state.duration || 0"
-          @input="onSeek"
-          class="progress-bar"
-        />
-        <span class="time">{{ formatTime(playerStore.state.duration) }}</span>
+        <span class="time">{{ formatDuration(playerStore.state.position) }}</span>
+        <input type="range" :value="playerStore.state.position" :max="playerStore.state.duration || 0" @input="onSeek"
+          class="progress-bar" />
+        <span class="time">{{ formatDuration(playerStore.state.duration) }}</span>
       </div>
     </div>
 
+    <button class="btn-control" :class="{ active: showQueue }" @click="showQueue = !showQueue">☰</button>
+
     <div class="volume">
-      <span>🔊</span>
-      <input
-        type="range"
-        :value="playerStore.state.volume"
-        max="1"
-        step="0.01"
-        @input="onVolumeChange"
-        class="volume-bar"
-      />
+      <span @click="playerStore.mute()">{{ playerStore.state.volume === 0 ? '🔇' : '🔊' }}</span>
+      <input type="range" :value="playerStore.state.volume" max="1" step="0.01" @input="onVolumeChange"
+        class="volume-bar" />
     </div>
   </div>
+
+  <QueuePanel v-if="showQueue" :queue="playerStore.state.queue" @close="showQueue = false"
+    @remove="playerStore.removeFromQueue" @clear="playerStore.clearQueue" />
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { usePlayerStore } from '../stores/playerStore'
+import { formatDuration } from '../utils/format'
+import QueuePanel from './QueuePanel.vue'
 
 const playerStore = usePlayerStore()
-
-const formatTime = (seconds) => {
-  if (!seconds) return '0:00'
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-  return `${mins}:${secs.toString().padStart(2, '0')}`
-}
+const showQueue = ref(false)
 
 const onSeek = (e) => {
   playerStore.seek(parseFloat(e.target.value))
@@ -136,6 +126,10 @@ const onVolumeChange = (e) => {
   padding: 4px;
 }
 
+.btn-control.active {
+  color: var(--accent);
+}
+
 .btn-play {
   width: 40px;
   height: 40px;
@@ -155,18 +149,14 @@ const onVolumeChange = (e) => {
   width: 100%;
 }
 
-.progress-bar {
-  flex: 1;
-}
-
-.progress-bar {
-  flex: 1;
-}
-
 .time {
   font-size: 12px;
   color: var(--text-secondary);
   min-width: 40px;
+}
+
+.progress-bar {
+  flex: 1;
 }
 
 .progress-bar,

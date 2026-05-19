@@ -1,116 +1,175 @@
 import { reactive } from 'vue'
+import { initMediaSession, updateMetadata, updatePlaybackState } from '../composables/useMediaSession'
+import { api } from '../services/api'
 
-export const usePlayerStore = () => {
-  const state = reactive({
-    currentTrack: null,
-    isPlaying: false,
-    volume: 1,
-    position: 0,
-    duration: 0,
-    queue: [],
-    history: []
-  })
+let audio = null
+let currentBlobUrl = null
+let eventListenersBound = false
 
-  let audio = null
+const state = reactive({
+  currentTrack: null,
+  isPlaying: false,
+  volume: 1,
+  position: 0,
+  duration: 0,
+  queue: [],
+  backQueue: []
+})
 
-  const initAudio = () => {
-    if (!audio) {
-      audio = new Audio()
-      audio.volume = state.volume
-
-      audio.addEventListener('timeupdate', () => {
-        state.position = audio.currentTime
-      })
-
-      audio.addEventListener('loadedmetadata', () => {
-        state.duration = audio.duration
-      })
-
-      audio.addEventListener('ended', () => {
-        state.isPlaying = false
-        playNext()
-      })
-    }
+const revokeCurrentBlob = () => {
+  if (currentBlobUrl) {
+    URL.revokeObjectURL(currentBlobUrl)
+    currentBlobUrl = null
   }
+}
 
-  const playTrack = (track) => {
-    if (state.currentTrack) {
-      state.history.push(state.currentTrack)
-    }
-    initAudio()
-    state.currentTrack = track
-    audio.src = track.url
+const bindEventListeners = () => {
+  if (eventListenersBound) return
+  eventListenersBound = true
+
+  window.addEventListener('media-session-previous', () => playPrevious())
+  window.addEventListener('media-session-next', () => playNext())
+}
+
+const initAudio = () => {
+  if (!audio) {
+    audio = new Audio()
+    audio.volume = state.volume
+    initMediaSession(audio)
+
+    audio.addEventListener('timeupdate', () => {
+      state.position = audio.currentTime
+    })
+
+    audio.addEventListener('loadedmetadata', () => {
+      state.duration = audio.duration
+    })
+
+    audio.addEventListener('ended', () => {
+      state.isPlaying = false
+      playNext()
+    })
+
+    audio.addEventListener('error', () => {
+      state.isPlaying = false
+    })
+
+    bindEventListeners()
+  }
+}
+
+const playTrack = async (track, fromBackQueue = false) => {
+  if (state.currentTrack && !fromBackQueue) {
+    state.backQueue.push(state.currentTrack)
+  }
+  initAudio()
+  state.currentTrack = track
+  updateMetadata(track)
+
+  revokeCurrentBlob()
+
+  try {
+    const blob = await api.getTrackStreamBlob(track.id)
+    currentBlobUrl = URL.createObjectURL(blob)
+    audio.src = currentBlobUrl
+    await audio.play()
+    state.isPlaying = true
+    updatePlaybackState(true)
+  } catch (e) {
+    console.error('Error playing track:', e)
+    state.isPlaying = false
+    revokeCurrentBlob()
+  }
+}
+
+const play = () => {
+  if (audio) {
     audio.play()
     state.isPlaying = true
   }
+}
 
-  const play = () => {
-    if (audio) {
-      audio.play()
-      state.isPlaying = true
-    }
-  }
-
-  const pause = () => {
-    if (audio) {
-      audio.pause()
-      state.isPlaying = false
-    }
-  }
-
-  const togglePlay = () => {
-    state.isPlaying ? pause() : play()
-  }
-
-  const seek = (time) => {
-    if (audio) {
-      audio.currentTime = time
-      state.position = time
-    }
-  }
-
-  const setVolume = (vol) => {
-    state.volume = vol
-    if (audio) {
-      audio.volume = vol
-    }
-  }
-
-  const addToQueue = (track) => {
-    state.queue.push(track)
-  }
-
-  const playNext = () => {
-    if (state.queue.length > 0) {
-      const next = state.queue.shift()
-      playTrack(next)
-    }
-  }
-
-  const playPrevious = () => {
-    if (state.position > 5) {
-      seek(0)
-    } else if (state.history.length > 0) {
-      const prev = state.history.pop()
-      playTrack(prev)
-    }
-  }
-
-  const clearQueue = () => {
-    state.queue = []
-  }
-
-  return {
-    state,
-    playTrack,
-    play,
-    pause,
-    togglePlay,
-    seek,
-    setVolume,
-    addToQueue,
-    playNext,
-    playPrevious,
-    clearQueue
+const pause = () => {
+  if (audio) {
+    audio.pause()
+    state.isPlaying = false
   }
 }
+
+const togglePlay = () => {
+  state.isPlaying ? pause() : play()
+}
+
+const seek = (time) => {
+  if (audio) {
+    audio.currentTime = time
+    state.position = time
+  }
+}
+
+const setVolume = (vol) => {
+  state.volume = vol
+  if (audio) {
+    audio.volume = vol
+  }
+}
+
+const addToQueue = (track) => {
+  state.queue.push(track)
+}
+
+const playNext = () => {
+  if (state.queue.length > 0) {
+    const next = state.queue.shift()
+    playTrack(next)
+  }
+}
+
+const playPrevious = () => {
+  if (state.position > 3) {
+    seek(0)
+  } else if (state.backQueue.length > 0) {
+    const prev = state.backQueue.pop()
+    if (state.currentTrack) {
+      state.queue.unshift(state.currentTrack)
+    }
+    playTrack(prev, true)
+  } else {
+    seek(0)
+  }
+}
+
+const clearQueue = () => {
+  state.queue.length = 0
+}
+
+const removeFromQueue = (index) => {
+  state.queue.splice(index, 1)
+}
+
+const mute = () => {
+  if (state.volume === 0) {
+    state.volume = 1
+  } else {
+    state.volume = 0
+  }
+  if (audio) {
+    audio.volume = state.volume
+  }
+}
+
+export const usePlayerStore = () => ({
+  state,
+  playTrack,
+  play,
+  pause,
+  togglePlay,
+  seek,
+  setVolume,
+  addToQueue,
+  playNext,
+  playPrevious,
+  clearQueue,
+  removeFromQueue,
+  mute
+})
