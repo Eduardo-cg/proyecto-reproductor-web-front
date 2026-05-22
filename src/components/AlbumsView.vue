@@ -1,66 +1,88 @@
 <template>
   <div>
-    <div class="search">
-      <input v-model="search" type="text" :placeholder="t('library.albumSearchPlaceholder')" />
+    <div class="search" role="search">
+      <div class="search-wrapper">
+        <Icon name="search" size="16" class="search-icon" />
+        <input v-model="search" type="text" :placeholder="t('library.albumSearchPlaceholder')" aria-label="Buscar álbumes" />
+      </div>
     </div>
 
-    <div v-if="loading" class="loading">{{ t('auth.loading') }}</div>
+    <div v-if="loading" class="loading" role="status">{{ t('auth.loading') }}</div>
 
     <template v-else>
-      <div v-if="filteredAlbums.length === 0" class="empty">{{ t('library.noAlbums') }}</div>
-      <div v-else class="tracks-table">
-        <div class="tracks-header albums-header">
-          <div class="col-cover"></div>
-          <div class="col-title">{{ t('library.albumName') }}</div>
-          <div class="col-artist">{{ t('library.trackArtist') }}</div>
-          <div class="col-duration">{{ t('library.albumCount').replace('{count}', '') }}</div>
-          <div class="col-actions"></div>
+      <div v-if="filteredAlbums.length === 0" class="empty">
+        <Icon name="empty" size="48" />
+        <p>{{ t('library.noAlbums') }}</p>
+      </div>
+      <div v-else class="tracks-table" role="table" aria-label="Lista de álbumes">
+        <div class="tracks-header albums-header" role="row">
+          <div class="col-cover" role="columnheader"></div>
+          <div class="col-title" role="columnheader">{{ t('library.albumName') }}</div>
+          <div class="col-artist" role="columnheader">{{ t('library.trackArtist') }}</div>
+          <div class="col-duration" role="columnheader">{{ t('library.albumCount').replace('{count}', '') }}</div>
+          <div class="col-actions" role="columnheader"></div>
         </div>
         <div v-for="album in filteredAlbums" :key="album.id" class="track-wrapper">
-          <div class="track-row album-row" @click="toggleAlbum(album.id)">
-            <div class="col-cover">
-              <img v-if="album.cover" :src="album.cover" alt="Cover" class="track-cover" />
-              <div v-else class="preview-cover-placeholder">&#127925;</div>
+          <div class="track-row album-row" @click="toggleAlbum(album.id)" role="row" :aria-expanded="expandedAlbumId === album.id">
+            <div class="col-cover" role="cell">
+              <img v-if="album.cover" :src="album.cover" alt="" class="track-cover" />
+              <div v-else class="cover-placeholder" aria-hidden="true">
+                <Icon name="album" size="16" />
+              </div>
             </div>
-            <div class="col-title track-title">
-              <span class="expand-icon">{{ expandedAlbumId === album.id ? '&#9660;' : '&#9654;' }}</span>
+            <div class="col-title track-title" role="cell">
+              <Icon :name="expandedAlbumId === album.id ? 'chevron-down' : 'chevron-up'" size="12" class="expand-icon" />
               {{ album.title }}
             </div>
-            <div class="col-artist track-artist">{{ album.artistDisplay || '-' }}</div>
-            <div class="col-duration track-duration">{{ album.trackCount }}</div>
-            <div class="col-actions track-actions">
-              <button class="btn-play" @click.stop="playAlbum(album)" :title="t('player.play')">&#9654;</button>
-              <button v-if="playerStore.state.currentTrack" class="btn-queue" @click.stop="queueAlbum(album)"
-                :title="t('player.addToQueue')">&#10133;</button>
-              <button class="btn-info" @click.stop="toggleAlbumInfo(album.id)"
-                :title="t('library.info')">&#8505;&#65039;</button>
-              <button class="btn-delete" @click.stop="deleteAlbum(album.id)"
-                :title="t('library.deleteAlbum')">&#128465;</button>
+            <div class="col-artist track-artist" role="cell">{{ album.artistDisplay || '-' }}</div>
+            <div class="col-duration track-duration" role="cell">{{ album.trackCount }}</div>
+            <div class="col-actions track-actions" role="cell" @click.stop>
+              <button class="btn-action" @click="playAlbum(album)" :aria-label="'Reproducir ' + album.title">
+                <Icon name="play" size="14" />
+              </button>
+              <button v-if="playerStore.state.currentTrack" class="btn-action" @click="queueAlbum(album)"
+                :aria-label="'Agregar ' + album.title + ' a la cola'">
+                <Icon name="plus" size="14" />
+              </button>
+              <button class="btn-action" @click.stop="toggleAlbumInfo(album.id)"
+                :aria-label="'Información de ' + album.title">
+                <Icon name="info" size="14" />
+              </button>
+              <button class="btn-action btn-action-danger" @click="deleteAlbum(album.id)"
+                :aria-label="'Eliminar ' + album.title">
+                <Icon name="trash" size="14" />
+              </button>
             </div>
           </div>
-          <div v-if="selectedAlbumId === album.id" class="track-details">
+          <div v-if="selectedAlbumId === album.id" class="track-details" role="region" :aria-label="'Detalles de ' + album.title">
             <div class="details-content">
               <span class="details-label">{{ t('library.releaseDate') }}:</span>
               <span class="details-value">{{ album.releaseDate ? formatDate(album.releaseDate) : t('library.notSpecified') }}</span>
             </div>
           </div>
 
-          <!-- Expanded tracks -->
-          <div v-if="expandedAlbumId === album.id" class="album-tracks">
+          <div v-if="expandedAlbumId === album.id" class="album-tracks" role="region" :aria-label="'Canciones de ' + album.title">
             <div v-if="albumTracksLoading.has(album.id)" class="loading">{{ t('auth.loading') }}</div>
-            <div v-else-if="!albumTracksMap[album.id] || albumTracksMap[album.id].length === 0" class="empty">{{
-              t('library.noTracks') }}</div>
+            <div v-else-if="!albumTracksMap[album.id] || albumTracksMap[album.id].length === 0" class="empty-sub">
+              <p>{{ t('library.noTracks') }}</p>
+            </div>
             <template v-else>
               <div v-for="track in albumTracksMap[album.id]" :key="track.id" class="track-row album-track-row">
                 <div class="col-title track-title">{{ track.title }}</div>
                 <div class="col-artist track-artist">{{ track.artistDisplay || '-' }}</div>
                 <div class="col-duration track-duration">{{ formatDuration(track.duration) }}</div>
                 <div class="col-actions track-actions">
-                  <button class="btn-play" @click="playTrack(track)" :title="t('player.play')">&#9654;</button>
-                  <button v-if="playerStore.state.currentTrack" class="btn-queue" @click="playerStore.addToQueue(track)"
-                    :title="t('player.addToQueue')">&#10133;</button>
-                  <button class="btn-delete" @click="deleteAlbumTrack(album.id, track.id)"
-                    :title="t('library.delete')">&#128465;</button>
+                  <button class="btn-action" @click="playTrack(track)" :aria-label="'Reproducir ' + track.title">
+                    <Icon name="play" size="14" />
+                  </button>
+                  <button v-if="playerStore.state.currentTrack" class="btn-action" @click="playerStore.addToQueue(track)"
+                    :aria-label="'Agregar ' + track.title + ' a la cola'">
+                    <Icon name="plus" size="14" />
+                  </button>
+                  <button class="btn-action btn-action-danger" @click="deleteAlbumTrack(album.id, track.id)"
+                    :aria-label="'Eliminar ' + track.title">
+                    <Icon name="trash" size="14" />
+                  </button>
                 </div>
               </div>
             </template>
@@ -81,6 +103,7 @@ import Pagination from '../components/Pagination.vue'
 import { api } from '../services/api'
 import { usePlayerStore } from '../stores/playerStore'
 import { formatDuration } from '../utils/format'
+import Icon from './icons/Icon.vue'
 
 const { t } = useI18n()
 const playerStore = usePlayerStore()
@@ -244,7 +267,49 @@ onUnmounted(() => {
 
 <style scoped>
 .search {
-  margin-bottom: 30px;
+  margin-bottom: 24px;
+}
+
+.search-wrapper {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-wrapper input {
+  padding-left: 36px;
+}
+
+.loading {
+  text-align: center;
+  padding: 32px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 16px;
+  color: var(--text-muted);
+  gap: 12px;
+}
+.empty p {
+  font-size: 14px;
+}
+.empty-sub {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
 }
 
 .tracks-table {
@@ -254,20 +319,20 @@ onUnmounted(() => {
 
 .tracks-header {
   display: grid;
-  grid-template-columns: 50px 2fr 1.5fr 1.5fr 80px 180px;
-  gap: 15px;
-  padding: 12px 15px;
-  font-weight: 600;
-  font-size: 13px;
+  grid-template-columns: 50px 2fr 1.5fr 1.5fr 80px 160px;
+  gap: 12px;
+  padding: 10px 12px;
+  font-weight: 500;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   border-bottom: 1px solid var(--border);
 }
 
 .albums-header,
 .album-row {
-  grid-template-columns: 50px 2fr 1.5fr 80px 180px;
+  grid-template-columns: 50px 2fr 1.5fr 80px 160px;
 }
 
 .album-row {
@@ -276,38 +341,36 @@ onUnmounted(() => {
 
 .track-row {
   display: grid;
-  gap: 15px;
-  padding: 12px 15px;
+  gap: 12px;
+  padding: 10px 12px;
   align-items: center;
-  border-radius: var(--radius-md);
-  transition: background 0.15s;
+  border-radius: var(--radius-sm);
+  transition: background 0.1s;
 }
-
 .track-row:hover {
   background: var(--bg-secondary);
 }
 
 .expand-icon {
   display: inline-block;
-  margin-right: 8px;
-  font-size: 10px;
-  color: var(--text-secondary);
+  margin-right: 6px;
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .album-track-row {
-  grid-template-columns: 2fr 1.5fr 80px 140px;
-  padding-left: 40px;
-  background: var(--bg-tertiary);
-  margin: 2px 0;
+  grid-template-columns: 2fr 1.5fr 80px 120px;
+  padding-left: 32px;
+  background: transparent;
+  margin: 1px 0;
   border-radius: 0;
 }
-
 .album-track-row:hover {
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
 }
 
 .album-tracks {
-  animation: slideDown 0.2s ease;
+  animation: slideDown 0.15s ease;
 }
 
 .track-cover {
@@ -315,80 +378,68 @@ onUnmounted(() => {
   height: 44px;
   border-radius: var(--radius-sm);
   object-fit: cover;
+  display: block;
+}
+
+.cover-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
 }
 
 .track-title {
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
 }
 
 .track-artist {
   color: var(--text-secondary);
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .track-duration {
-  color: var(--text-secondary);
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 
 .track-actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   justify-content: flex-end;
 }
 
-.btn-play,
-.btn-info,
-.btn-delete {
-  width: 36px;
-  height: 36px;
+.btn-action {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  font-size: 16px;
-  transition: background 0.15s;
+  background: transparent;
+  color: var(--text-secondary);
+  transition: background 0.1s, color 0.1s;
 }
-
-.btn-play:hover {
-  background: var(--accent);
-  color: white;
+.btn-action:hover {
+  background: var(--accent-alpha);
+  color: var(--accent);
 }
-
-.btn-queue {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  font-size: 16px;
-  transition: background 0.15s;
-}
-
-.btn-queue:hover {
-  background: #2ecc71;
-  color: white;
-}
-
-.btn-info:hover {
-  background: #3498db;
-  color: white;
-}
-
-.btn-delete:hover {
-  background: #e74c3c;
-  color: white;
+.btn-action-danger:hover {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
 }
 
 .track-wrapper {
@@ -397,22 +448,23 @@ onUnmounted(() => {
 }
 
 .track-details {
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
-  margin: 0 15px 10px;
-  padding: 12px 20px;
-  animation: slideDown 0.2s ease;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  margin: 0 12px 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  animation: slideDown 0.15s ease;
 }
 
 .details-content {
   display: flex;
   gap: 8px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .details-label {
-  color: var(--text-secondary);
-  font-weight: 600;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .details-value {
@@ -422,9 +474,8 @@ onUnmounted(() => {
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-4px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -436,18 +487,56 @@ onUnmounted(() => {
     display: none;
   }
 
-  .track-row {
+  .album-row {
     grid-template-columns: 44px 1fr auto;
-    gap: 12px;
+    gap: 10px;
   }
 
   .album-track-row {
     grid-template-columns: 1fr auto;
-    padding-left: 24px;
+    padding-left: 20px;
   }
 
   .col-duration {
     display: none;
+  }
+
+  .btn-action {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .album-row {
+    grid-template-columns: 40px 1fr auto;
+    gap: 8px;
+    padding: 8px 8px;
+  }
+
+  .track-cover,
+  .cover-placeholder {
+    width: 36px;
+    height: 36px;
+  }
+
+  .album-track-row {
+    padding-left: 16px;
+    gap: 6px;
+  }
+
+  .album-track-row .track-actions {
+    gap: 2px;
+  }
+
+  .btn-action {
+    width: 28px;
+    height: 28px;
+  }
+
+  .track-details {
+    margin: 0 8px 6px;
+    padding: 8px 12px;
   }
 }
 </style>

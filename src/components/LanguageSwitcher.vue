@@ -1,7 +1,10 @@
 <template>
-  <div class="lang-switcher">
-    <button v-for="lang in languages" :key="lang.code" :class="{ active: currentLocale === lang.code }"
-      @click="changeLocale(lang.code)">
+  <div class="lang-switcher" role="radiogroup" aria-label="Idioma">
+    <button v-for="lang in languages" :key="lang.code"
+      :class="{ active: currentLocale === lang.code }"
+      @click="changeLocale(lang.code)"
+      role="radio"
+      :aria-checked="currentLocale === lang.code">
       {{ lang.label }}
     </button>
   </div>
@@ -29,25 +32,24 @@ const changeLocale = (code) => {
 <style scoped>
 .lang-switcher {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   width: 100%;
 }
 
 .lang-switcher button {
   flex: 1;
-  padding: 6px 12px;
+  padding: 8px 12px;
   background: var(--bg-tertiary);
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background var(--transition), color var(--transition);
 }
-
 .lang-switcher button.active {
   background: var(--accent);
-  color: white;
+  color: var(--bg-primary);
 }
-
 .lang-switcher button:hover:not(.active) {
   background: var(--border);
 }

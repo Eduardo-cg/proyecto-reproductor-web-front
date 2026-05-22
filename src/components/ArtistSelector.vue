@@ -1,6 +1,6 @@
 <template>
   <div class="artist-selector" :class="{ open: isOpen }">
-    <div class="selector-trigger" @click="toggleDropdown">
+    <div class="selector-trigger" @click="toggleDropdown" role="combobox" :aria-expanded="isOpen" :aria-label="placeholder || t('library.selectArtist')" tabindex="0" @keydown.enter.prevent="toggleDropdown" @keydown.space.prevent="toggleDropdown">
       <div class="selector-display">
         <template v-if="selectedArtists.length === 0">
           <span class="placeholder">{{ placeholder || t('library.selectArtist') }}</span>
@@ -16,42 +16,56 @@
         <template v-else>
           <div class="selected-chips">
             <span v-for="(artist, index) in selectedArtists" :key="artist.id" class="artist-chip"
-                  :class="{ 'primary-chip': index === 0 }">
-              <img v-if="artist.image" :src="artist.image" class="chip-image" />
+              :class="{ 'primary-chip': index === 0 }">
+              <img v-if="artist.image" :src="artist.image" alt="" class="chip-image" />
               <span class="chip-name">
                 {{ artist.name }}
                 <span v-if="index === 0" class="primary-badge">{{ t('library.primary') }}</span>
               </span>
               <button type="button" class="chip-remove" @click.stop="removeArtist(index)"
-                      :title="t('library.removeArtist')">&times;</button>
+                :aria-label="'Eliminar ' + artist.name">
+                <Icon name="close" size="12" />
+              </button>
             </span>
           </div>
         </template>
       </div>
       <div class="selector-actions">
         <button type="button" class="btn-add-artist" @click.stop="openCreateModal"
-                :title="t('library.createArtist')">+</button>
-        <span class="dropdown-arrow" :class="{ rotated: isOpen }">▼</span>
+          :title="t('library.createArtist')" aria-label="Crear nuevo artista">
+          <Icon name="plus" size="14" />
+        </button>
+        <Icon name="chevron-down" size="12" class="dropdown-arrow" :class="{ rotated: isOpen }" />
       </div>
     </div>
 
-    <div v-if="isOpen" class="selector-dropdown" @click.stop>
+    <div v-if="isOpen" class="selector-dropdown" @click.stop role="listbox" :aria-label="t('library.selectArtist')">
       <div class="dropdown-search">
-        <input v-model="searchQuery" type="text" :placeholder="t('library.searchArtist')"
-               class="search-input" ref="searchInput" />
+        <div class="search-wrapper">
+          <Icon name="search" size="14" class="search-icon-inline" />
+          <input v-model="searchQuery" type="text" :placeholder="t('library.searchArtist')"
+            class="search-input" ref="searchInput" aria-label="Buscar artista" />
+        </div>
       </div>
 
       <div v-if="selectedArtists.length > 0" class="selected-section">
         <div class="section-label">{{ t('library.selectedArtists').replace('{count}', selectedArtists.length) }}</div>
         <div class="selected-list" ref="sortableContainer">
           <div v-for="(artist, index) in selectedArtists" :key="artist.id" class="selected-item"
-               :class="{ 'primary-item': index === 0 }" :data-id="artist.id">
-            <div class="drag-handle" :title="t('library.dragToReorderArtists')">⠿</div>
-            <img v-if="artist.image" :src="artist.image" class="item-image" />
-            <div v-else class="item-image-placeholder">🎤</div>
+            :class="{ 'primary-item': index === 0 }" :data-id="artist.id" role="option" :aria-selected="true">
+            <span class="drag-handle" :title="t('library.dragToReorderArtists')" aria-hidden="true">
+              <Icon name="drag" size="14" />
+            </span>
+            <img v-if="artist.image" :src="artist.image" alt="" class="item-image" />
+            <div v-else class="item-image-placeholder" aria-hidden="true">
+              <Icon name="artist" size="14" />
+            </div>
             <span class="item-name">{{ artist.name }}</span>
             <span v-if="index === 0" class="item-primary-tag">{{ t('library.primaryArtist') }}</span>
-            <button type="button" class="item-remove" @click="removeArtist(index)">&times;</button>
+            <button type="button" class="item-remove" @click="removeArtist(index)"
+              :aria-label="'Eliminar ' + artist.name">
+              <Icon name="close" size="14" />
+            </button>
           </div>
         </div>
       </div>
@@ -68,12 +82,14 @@
             {{ t('auth.loading') }}
           </div>
           <div v-for="artist in availableArtists" :key="artist.id"
-               class="available-item" :class="{ disabled: isSelected(artist.id) }"
-               @click="toggleArtist(artist)">
+            class="available-item" :class="{ disabled: isSelected(artist.id) }"
+            @click="toggleArtist(artist)" role="option" :aria-selected="false">
             <input type="checkbox" :checked="isSelected(artist.id)" :disabled="isSelected(artist.id)"
-                   class="item-checkbox" @click.stop />
-            <img v-if="artist.image" :src="artist.image" class="item-image" />
-            <div v-else class="item-image-placeholder">🎤</div>
+              class="item-checkbox" @click.stop :aria-label="artist.name" />
+            <img v-if="artist.image" :src="artist.image" alt="" class="item-image" />
+            <div v-else class="item-image-placeholder" aria-hidden="true">
+              <Icon name="artist" size="14" />
+            </div>
             <span class="item-name">{{ artist.name }}</span>
           </div>
         </div>
@@ -81,7 +97,7 @@
     </div>
 
     <UploadArtistModal :show-upload="showCreateModal" @update:show-upload="showCreateModal = false"
-                       @created="onArtistCreated" @uploaded="$emit('artistCreated')" />
+      @created="onArtistCreated" @uploaded="$emit('artistCreated')" />
   </div>
 </template>
 
@@ -91,6 +107,7 @@ import { useI18n } from 'vue-i18n'
 import Sortable from 'sortablejs'
 import { api } from '../services/api'
 import UploadArtistModal from './UploadArtistModal.vue'
+import Icon from './icons/Icon.vue'
 
 const { t } = useI18n()
 
@@ -176,16 +193,13 @@ const onArtistCreated = (artist) => {
 
 const initSortable = () => {
   if (!sortableContainer.value) return
-
   destroySortable()
-
   sortableInstance = Sortable.create(sortableContainer.value, {
     handle: '.drag-handle',
     animation: 150,
     onEnd: (evt) => {
       const oldIndex = evt.oldIndex
       const newIndex = evt.newIndex
-
       if (oldIndex !== newIndex) {
         const [removed] = selectedArtists.value.splice(oldIndex, 1)
         selectedArtists.value.splice(newIndex, 0, removed)
@@ -264,23 +278,19 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 44px;
-  padding: 8px 12px;
+  min-height: 40px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--bg-tertiary);
+  background: var(--bg-secondary);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color var(--transition);
 }
-
 .selector-trigger:hover {
   border-color: var(--accent);
 }
-
 .open .selector-trigger {
   border-color: var(--accent);
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
 }
 
 .selector-display {
@@ -289,7 +299,7 @@ onBeforeUnmount(() => {
 }
 
 .placeholder {
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -301,33 +311,34 @@ onBeforeUnmount(() => {
 .and-more {
   color: var(--text-secondary);
   margin-left: 4px;
+  font-size: 13px;
 }
 
 .selected-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
 
 .artist-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  background: var(--bg-secondary);
+  gap: 4px;
+  padding: 3px 6px;
+  background: var(--bg-tertiary);
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .primary-chip {
-  background: rgba(29, 185, 84, 0.15);
+  background: var(--accent-alpha);
   border: 1px solid var(--accent);
 }
 
 .chip-image {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
   object-fit: cover;
 }
 
@@ -344,25 +355,23 @@ onBeforeUnmount(() => {
 }
 
 .chip-remove {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
   border-radius: 2px;
+  color: var(--text-muted);
 }
-
 .chip-remove:hover {
-  background: #e74c3c;
-  color: white;
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
 }
 
 .selector-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-left: 8px;
 }
 
@@ -373,26 +382,19 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: var(--accent);
-  color: white;
-  border: none;
+  color: var(--bg-primary);
   border-radius: var(--radius-sm);
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  line-height: 1;
-  padding-bottom: 2px;
+  transition: opacity var(--transition);
 }
-
 .btn-add-artist:hover {
-  background: #1ed760;
+  opacity: 0.85;
 }
 
 .dropdown-arrow {
-  font-size: 10px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   transition: transform 0.15s;
+  flex-shrink: 0;
 }
-
 .dropdown-arrow.rotated {
   transform: rotate(180deg);
 }
@@ -403,10 +405,9 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   margin-top: 4px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   z-index: 100;
   max-height: 360px;
   display: flex;
@@ -414,23 +415,35 @@ onBeforeUnmount(() => {
 }
 
 .dropdown-search {
-  padding: 12px;
+  padding: 10px;
   border-bottom: 1px solid var(--border);
+}
+
+.search-wrapper {
+  position: relative;
+}
+
+.search-icon-inline {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
 }
 
 .search-input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 7px 10px 7px 32px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--bg-tertiary);
+  background: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
 }
-
 .search-input:focus {
-  outline: 2px solid var(--accent);
-  border-color: transparent;
+  outline: none;
+  border-color: var(--accent);
 }
 
 .selected-section,
@@ -441,13 +454,13 @@ onBeforeUnmount(() => {
 }
 
 .section-label {
-  padding: 8px 12px;
-  font-size: 12px;
+  padding: 6px 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-secondary);
-  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  background: var(--bg-secondary);
 }
 
 .selected-list {
@@ -463,70 +476,67 @@ onBeforeUnmount(() => {
 
 .empty-state,
 .loading-state {
-  padding: 20px;
+  padding: 16px;
   text-align: center;
-  color: var(--text-secondary);
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 13px;
 }
 
 .selected-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 6px 10px;
   transition: background 0.1s;
 }
-
 .selected-item:hover {
-  background: var(--bg-tertiary);
+  background: var(--bg-secondary);
 }
 
 .primary-item {
-  background: rgba(29, 185, 84, 0.08);
+  background: var(--accent-alpha);
 }
 
 .drag-handle {
-  width: 20px;
-  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: grab;
-  color: var(--text-secondary);
-  font-size: 14px;
-  border-radius: 4px;
+  color: var(--text-muted);
+  padding: 2px;
+  border-radius: 2px;
 }
-
 .drag-handle:hover {
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
 }
-
 .drag-handle:active {
   cursor: grabbing;
 }
 
 .item-image {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 2px;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .item-image-placeholder {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 2px;
   background: var(--bg-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  flex-shrink: 0;
+  color: var(--text-muted);
 }
 
 .item-name {
   flex: 1;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-primary);
   min-width: 0;
   overflow: hidden;
@@ -535,47 +545,43 @@ onBeforeUnmount(() => {
 }
 
 .item-primary-tag {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--accent);
   font-weight: 600;
-  padding: 2px 6px;
-  background: rgba(29, 185, 84, 0.15);
-  border-radius: 4px;
+  padding: 2px 4px;
+  background: var(--accent-alpha);
+  border-radius: 2px;
 }
 
 .item-remove {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0 4px;
-  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+  color: var(--text-muted);
   visibility: hidden;
 }
-
 .selected-item:hover .item-remove {
   visibility: visible;
 }
-
 .item-remove:hover {
-  background: #e74c3c;
-  color: white;
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
 }
 
 .available-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 6px 10px;
   cursor: pointer;
   transition: background 0.1s;
 }
-
 .available-item:hover:not(.disabled) {
-  background: var(--bg-tertiary);
+  background: var(--bg-secondary);
 }
-
 .available-item.disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -585,5 +591,25 @@ onBeforeUnmount(() => {
   width: 16px;
   height: 16px;
   accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .selector-dropdown {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    max-height: none;
+    border-radius: 0;
+    z-index: 300;
+  }
+
+  .available-list {
+    flex: 1;
+    min-height: 0;
+  }
 }
 </style>

@@ -1,21 +1,31 @@
 <template>
-  <div v-if="totalPages > 0" class="pagination">
+  <div v-if="totalPages > 0" class="pagination" role="navigation" aria-label="Paginación">
     <div class="pagination-info">
       {{ currentPage * pageSize + 1 }}–{{ Math.min((currentPage + 1) * pageSize, totalElements) }} {{ t('pagination.of') }} {{ totalElements }}
     </div>
     <div class="pagination-controls">
-      <select v-model.number="localPageSize" class="pagination-size-select" @change="onSizeChange">
+      <select v-model.number="localPageSize" class="pagination-size-select" @change="onSizeChange" aria-label="Elementos por página">
         <option :value="10">10</option>
         <option :value="20">20</option>
         <option :value="50">50</option>
         <option :value="100">100</option>
       </select>
-      <button class="pagination-btn" :disabled="currentPage === 0" @click="$emit('page-change', currentPage - 1)">{{ t('pagination.prev') }}</button>
+      <button class="pagination-btn" :disabled="currentPage === 0" @click="$emit('page-change', currentPage - 1)"
+        :aria-label="'Página anterior'">
+        <Icon name="chevron-left" size="14" />
+      </button>
       <template v-for="(page, i) in pageNumbers" :key="i">
-        <span v-if="page === '...'" class="pagination-ellipsis">...</span>
-        <button v-else class="pagination-btn" :class="{ active: page === currentPage }" @click="$emit('page-change', page)">{{ page + 1 }}</button>
+        <span v-if="page === '...'" class="pagination-ellipsis" aria-hidden="true">…</span>
+        <button v-else class="pagination-btn" :class="{ active: page === currentPage }"
+          @click="$emit('page-change', page)"
+          :aria-label="'Ir a página ' + (page + 1)" :aria-current="page === currentPage ? 'page' : undefined">
+          {{ page + 1 }}
+        </button>
       </template>
-      <button class="pagination-btn" :disabled="currentPage >= totalPages - 1" @click="$emit('page-change', currentPage + 1)">{{ t('pagination.next') }}</button>
+      <button class="pagination-btn" :disabled="currentPage >= totalPages - 1"
+        @click="$emit('page-change', currentPage + 1)" :aria-label="'Página siguiente'">
+        <Icon name="chevron-left" size="14" style="transform:rotate(180deg)" />
+      </button>
     </div>
   </div>
 </template>
@@ -23,6 +33,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Icon from './icons/Icon.vue'
 
 const { t } = useI18n()
 
@@ -74,73 +85,82 @@ const pageNumbers = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
-  margin-top: 30px;
-  padding: 15px 0;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px 0;
   flex-wrap: wrap;
 }
 
 .pagination-info {
-  color: var(--text-secondary);
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 13px;
   white-space: nowrap;
 }
 
 .pagination-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .pagination-size-select {
-  padding: 6px 10px;
+  padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.per-page-label {
-  color: var(--text-secondary);
   font-size: 13px;
-  margin-right: 4px;
+  cursor: pointer;
+  margin-right: 8px;
 }
 
 .pagination-btn {
   min-width: 36px;
   height: 36px;
-  padding: 0 10px;
+  padding: 0 8px;
   border-radius: var(--radius-sm);
   background: var(--bg-tertiary);
   color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
+  transition: background 0.1s;
 }
-
 .pagination-btn:hover:not(:disabled) {
-  background: var(--accent);
-  color: white;
+  background: var(--accent-alpha);
+  color: var(--accent);
 }
-
 .pagination-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: default;
 }
-
 .pagination-btn.active {
   background: var(--accent);
-  color: white;
+  color: var(--bg-primary);
 }
 
 .pagination-ellipsis {
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13px;
   padding: 0 4px;
+}
+
+@media (max-width: 768px) {
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .pagination-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 6px;
+    font-size: 12px;
+  }
 }
 </style>

@@ -4,19 +4,19 @@
       <h2>{{ t('auth.registerTitle') }}</h2>
       <form @submit.prevent="handleRegister">
         <div class="form-group">
-          <label>{{ t('auth.name') }}</label>
-          <input v-model="name" type="text" required minlength="3" maxlength="30" />
+          <label for="reg-name">{{ t('auth.name') }}</label>
+          <input id="reg-name" v-model="name" type="text" required minlength="3" maxlength="30" />
         </div>
         <div class="form-group">
-          <label>{{ t('auth.email') }}</label>
-          <input v-model="email" type="email" required maxlength="255" />
+          <label for="reg-email">{{ t('auth.email') }}</label>
+          <input id="reg-email" v-model="email" type="email" required maxlength="255" />
         </div>
         <div class="form-group">
-          <label>{{ t('auth.password') }}</label>
-          <input v-model="password" type="password" required minlength="6" maxlength="128" />
+          <label for="reg-password">{{ t('auth.password') }}</label>
+          <input id="reg-password" v-model="password" type="password" required minlength="6" maxlength="128" />
         </div>
-        <p v-if="authStore.state.error" class="error">{{ authStore.state.error }}</p>
-        <button type="submit" class="btn btn-primary" :disabled="authStore.state.loading">
+        <p v-if="authStore.state.error" class="error" role="alert">{{ authStore.state.error }}</p>
+        <button type="submit" class="btn btn-primary" :disabled="authStore.state.loading" style="width:100%">
           {{ authStore.state.loading ? t('auth.loading') : t('auth.submit') }}
         </button>
       </form>
@@ -60,41 +60,51 @@ const handleRegister = async () => {
 
 .auth-card {
   background: var(--bg-secondary);
-  padding: 40px;
+  padding: 32px;
   border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   width: 100%;
   max-width: 400px;
 }
 
 .auth-card h2 {
-  margin-bottom: 30px;
+  margin-bottom: 24px;
   text-align: center;
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-weight: 500;
-}
-
-.error {
-  color: #e74c3c;
-  margin-bottom: 15px;
   font-size: 14px;
 }
 
-.auth-card .btn {
-  width: 100%;
-  margin-top: 10px;
+.error {
+  color: var(--accent);
+  margin-bottom: 12px;
+  font-size: 14px;
 }
 
 .switch-link {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 16px;
+  font-size: 14px;
   color: var(--text-secondary);
+}
+
+@media (max-width: 480px) {
+  .auth-page {
+    padding: 12px;
+  }
+
+  .auth-card {
+    padding: 24px 20px;
+  }
 }
 </style>

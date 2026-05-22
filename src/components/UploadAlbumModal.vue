@@ -1,11 +1,15 @@
 <template>
-  <!-- Embedded mode: just the form content, no modal shell -->
   <template v-if="embedded">
     <div class="album-global-fields">
-      <div class="album-cover-group" @click="$refs.coverInput.click()" :title="t('library.changeCover')">
-        <img v-if="albumCover" :src="albumCover" alt="Cover" class="album-cover-img" />
-        <div v-else class="album-cover-placeholder">&#127925;</div>
-        <div class="album-cover-overlay">🖼</div>
+      <div class="album-cover-group" @click="$refs.coverInput.click()" :title="t('library.changeCover')" role="button"
+        tabindex="0" :aria-label="'Seleccionar portada'">
+        <img v-if="albumCover" :src="albumCover" alt="Portada del álbum" class="album-cover-img" />
+        <div v-else class="album-cover-placeholder" aria-hidden="true">
+          <Icon name="album" size="24" />
+        </div>
+        <div class="album-cover-overlay" aria-hidden="true">
+          <Icon name="upload" size="20" />
+        </div>
         <input ref="coverInput" type="file" accept="image/*" class="file-input" @change="handleCoverSelect" />
       </div>
       <div class="album-meta-fields">
@@ -17,11 +21,13 @@
 
     <div v-if="!pendingFiles.length" class="upload-step">
       <div class="drop-zone" :class="{ 'drop-zone-dragover': isDragOver }" @dragover.prevent="isDragOver = true"
-        @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="$refs.fileInput.click()">
+        @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="$refs.fileInput.click()"
+        role="button" :aria-label="t('library.dragDropZone')" tabindex="0"
+        @keydown.enter.prevent="$refs.fileInput.click()" @keydown.space.prevent="$refs.fileInput.click()">
         <input ref="fileInput" type="file"
           accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a" multiple
-          class="file-input" @change="handleFileSelect" />
-        <div class="drop-zone-icon">&#127925;</div>
+          class="file-input" @change="handleFileSelect" aria-hidden="true" />
+        <Icon name="upload" size="48" class="drop-zone-icon" />
         <div class="drop-zone-text">{{ t('library.dragDropZone') }}</div>
         <div class="drop-zone-formats">{{ t('library.acceptedFormats') }}</div>
       </div>
@@ -30,44 +36,54 @@
     <div v-else class="preview-step">
       <h4 class="preview-title">{{ t('library.previewTitle') }} ({{ pendingFiles.length }})</h4>
       <div class="preview-list" ref="sortableContainer">
-          <div v-for="(file, index) in pendingFiles" :key="file._key" class="preview-row" :data-id="file._key">
-            <div class="drag-handle" :title="t('library.dragToReorder')">⠿</div>
-            <div class="preview-position">{{ file.position }}</div>
-            <div class="preview-fields">
-              <input v-model="file.title" :placeholder="t('library.trackTitle')" class="preview-input" />
-              <ArtistSelector v-model="file.artistIds" :compact="true" :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
-              <div class="preview-meta">
-                <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
-                <span class="meta-file">{{ file.fileName }}</span>
-              </div>
+        <div v-for="(file, index) in pendingFiles" :key="file._key" class="preview-row" :data-id="file._key">
+          <span class="drag-handle" :title="t('library.dragToReorder')" aria-hidden="true">
+            <Icon name="drag" size="16" />
+          </span>
+          <div class="preview-position">{{ file.position }}</div>
+          <div class="preview-fields">
+            <input v-model="file.title" :placeholder="t('library.trackTitle')" class="preview-input" />
+            <ArtistSelector v-model="file.artistIds" :compact="true"
+              :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
+            <div class="preview-meta">
+              <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
+              <span class="meta-file">{{ file.fileName }}</span>
             </div>
-            <button class="btn-remove-file" @click="removeFile(file._key)"
-              :title="t('library.removeFile')">&times;</button>
           </div>
-        </div>
-        <div class="preview-actions">
-          <button class="btn btn-secondary" @click="close">{{ t('library.cancel') }}</button>
-          <button class="btn btn-primary" @click="upload" :disabled="uploading || !albumName.trim()">
-            {{ uploading ? t('library.uploading') : t('library.uploadAlbumCount').replace('{count}',
-              pendingFiles.length) }}
+          <button class="btn-remove-file" @click="removeFile(file._key)"
+            :aria-label="'Eliminar ' + (file.title || file.fileName)">
+            <Icon name="close" size="16" />
           </button>
         </div>
+      </div>
+      <div class="preview-actions">
+        <button class="btn btn-secondary" @click="close">{{ t('library.cancel') }}</button>
+        <button class="btn btn-primary" @click="upload" :disabled="uploading || !albumName.trim()">
+          {{ uploading ? t('library.uploading') : t('library.uploadAlbumCount').replace('{count}', pendingFiles.length) }}
+        </button>
+      </div>
     </div>
   </template>
 
-  <!-- Standalone mode: full modal with overlay -->
-  <div v-else-if="showUpload" class="modal" @click.self="close">
+  <div v-else-if="showUpload" class="modal" @click.self="close" role="dialog" aria-modal="true" aria-label="Subir álbum">
     <div class="modal-content modal-large">
       <div class="modal-header">
         <h3>{{ t('library.addAlbum') }}</h3>
-        <button class="btn-close" @click="close">&times;</button>
+        <button class="btn-close" @click="close" aria-label="Cerrar">
+          <Icon name="close" size="20" />
+        </button>
       </div>
 
       <div class="album-global-fields">
-        <div class="album-cover-group" @click="$refs.coverInput.click()" :title="t('library.changeCover')">
-          <img v-if="albumCover" :src="albumCover" alt="Cover" class="album-cover-img" />
-          <div v-else class="album-cover-placeholder">&#127925;</div>
-          <div class="album-cover-overlay">🖼</div>
+        <div class="album-cover-group" @click="$refs.coverInput.click()" :title="t('library.changeCover')" role="button"
+          tabindex="0" :aria-label="'Seleccionar portada'">
+          <img v-if="albumCover" :src="albumCover" alt="Portada del álbum" class="album-cover-img" />
+          <div v-else class="album-cover-placeholder" aria-hidden="true">
+            <Icon name="album" size="24" />
+          </div>
+          <div class="album-cover-overlay" aria-hidden="true">
+            <Icon name="upload" size="20" />
+          </div>
           <input ref="coverInput" type="file" accept="image/*" class="file-input" @change="handleCoverSelect" />
         </div>
         <div class="album-meta-fields">
@@ -79,11 +95,13 @@
 
       <div v-if="!pendingFiles.length" class="upload-step">
         <div class="drop-zone" :class="{ 'drop-zone-dragover': isDragOver }" @dragover.prevent="isDragOver = true"
-          @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="$refs.fileInput.click()">
+          @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="$refs.fileInput.click()"
+          role="button" :aria-label="t('library.dragDropZone')" tabindex="0"
+          @keydown.enter.prevent="$refs.fileInput.click()" @keydown.space.prevent="$refs.fileInput.click()">
           <input ref="fileInput" type="file"
             accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a" multiple
-            class="file-input" @change="handleFileSelect" />
-          <div class="drop-zone-icon">&#127925;</div>
+            class="file-input" @change="handleFileSelect" aria-hidden="true" />
+          <Icon name="upload" size="48" class="drop-zone-icon" />
           <div class="drop-zone-text">{{ t('library.dragDropZone') }}</div>
           <div class="drop-zone-formats">{{ t('library.acceptedFormats') }}</div>
         </div>
@@ -93,28 +111,32 @@
         <h4 class="preview-title">{{ t('library.previewTitle') }} ({{ pendingFiles.length }})</h4>
         <div class="preview-list" ref="sortableContainer">
           <div v-for="(file, index) in pendingFiles" :key="file._key" class="preview-row" :data-id="file._key">
-            <div class="drag-handle" :title="t('library.dragToReorder')">⠿</div>
+            <span class="drag-handle" :title="t('library.dragToReorder')" aria-hidden="true">
+              <Icon name="drag" size="16" />
+            </span>
             <div class="preview-position">{{ file.position }}</div>
             <div class="preview-fields">
               <input v-model="file.title" :placeholder="t('library.trackTitle')" class="preview-input" />
-              <ArtistSelector v-model="file.artistIds" :compact="true" :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
+              <ArtistSelector v-model="file.artistIds" :compact="true"
+                :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
               <div class="preview-meta">
                 <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
                 <span class="meta-file">{{ file.fileName }}</span>
               </div>
             </div>
             <button class="btn-remove-file" @click="removeFile(file._key)"
-              :title="t('library.removeFile')">&times;</button>
+              :aria-label="'Eliminar ' + (file.title || file.fileName)">
+              <Icon name="close" size="16" />
+            </button>
           </div>
         </div>
         <div class="preview-actions">
           <button class="btn btn-secondary" @click="close">{{ t('library.cancel') }}</button>
           <button class="btn btn-primary" @click="upload" :disabled="uploading || !albumName.trim()">
-            {{ uploading ? t('library.uploading') : t('library.uploadAlbumCount').replace('{count}',
-              pendingFiles.length) }}
+            {{ uploading ? t('library.uploading') : t('library.uploadAlbumCount').replace('{count}', pendingFiles.length) }}
           </button>
         </div>
-    </div>
+      </div>
     </div>
   </div>
 </template>
@@ -127,6 +149,7 @@ import { useI18n } from 'vue-i18n'
 import { api } from '../services/api'
 import { formatDuration } from '../utils/format'
 import ArtistSelector from './ArtistSelector.vue'
+import Icon from './icons/Icon.vue'
 
 const { t } = useI18n()
 
@@ -387,55 +410,59 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 200;
-  backdrop-filter: blur(4px);
+  padding: 16px;
 }
 
 .modal-content {
-  background: var(--bg-secondary);
-  padding: 30px;
+  background: var(--bg-primary);
+  padding: 24px;
   border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   width: 100%;
   max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-large {
-  max-width: 720px;
+  max-width: 680px;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .modal-header h3 {
   margin: 0;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .btn-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 4px 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sm);
+  color: var(--text-secondary);
 }
-
 .btn-close:hover {
-  background: var(--bg-tertiary);
+  background: var(--accent-alpha);
   color: var(--text-primary);
 }
 
 .album-global-fields {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   margin-bottom: 16px;
   align-items: flex-start;
 }
@@ -446,6 +473,8 @@ onBeforeUnmount(() => {
   cursor: pointer;
   border-radius: var(--radius-sm);
   overflow: hidden;
+  width: 64px;
+  height: 64px;
 }
 
 .album-cover-img {
@@ -464,7 +493,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  color: var(--text-muted);
 }
 
 .album-cover-overlay {
@@ -476,10 +505,9 @@ onBeforeUnmount(() => {
   background: rgba(0, 0, 0, 0.4);
   opacity: 0;
   transition: opacity 0.2s;
-  font-size: 20px;
   border-radius: var(--radius-sm);
+  color: white;
 }
-
 .album-cover-group:hover .album-cover-overlay {
   opacity: 1;
 }
@@ -493,49 +521,47 @@ onBeforeUnmount(() => {
 
 .global-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--bg-tertiary);
+  background: var(--bg-secondary);
   color: var(--text-primary);
   font-size: 14px;
   font-weight: 500;
 }
-
 .global-input:focus {
-  outline: 2px solid var(--accent);
-  border-color: transparent;
+  outline: none;
+  border-color: var(--accent);
 }
 
 .drop-zone {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius-lg);
-  padding: 50px 30px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 40px 24px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color var(--transition), background var(--transition);
 }
-
 .drop-zone:hover,
 .drop-zone-dragover {
   border-color: var(--accent);
-  background: rgba(29, 185, 84, 0.05);
+  background: var(--accent-alpha);
 }
 
 .drop-zone-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
 }
 
 .drop-zone-text {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .drop-zone-formats {
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .file-input {
@@ -543,61 +569,56 @@ onBeforeUnmount(() => {
 }
 
 .preview-title {
-  margin-bottom: 16px;
-  font-size: 16px;
+  margin-bottom: 12px;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
 .preview-list {
-  max-height: 520px;
+  max-height: 420px;
   overflow-y: auto;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .preview-row {
   display: flex;
-  gap: 12px;
-  padding: 12px;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
-  margin-bottom: 10px;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
   align-items: center;
 }
 
 .drag-handle {
-  flex-shrink: 0;
-  width: 24px;
-  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: grab;
-  color: var(--text-secondary);
-  font-size: 20px;
-  user-select: none;
-  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: 2px;
+  flex-shrink: 0;
 }
-
 .drag-handle:hover {
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
 }
-
 .drag-handle:active {
   cursor: grabbing;
 }
 
 .preview-position {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-secondary);
-  background: var(--bg-secondary);
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
   border-radius: var(--radius-sm);
 }
 
@@ -605,30 +626,29 @@ onBeforeUnmount(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
 .preview-input {
   width: 100%;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
 }
-
 .preview-input:focus {
-  outline: 2px solid var(--accent);
-  border-color: transparent;
+  outline: none;
+  border-color: var(--accent);
 }
 
 .preview-meta {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .meta-duration {
@@ -648,17 +668,12 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 20px;
-  cursor: pointer;
   border-radius: var(--radius-sm);
+  color: var(--text-muted);
 }
-
 .btn-remove-file:hover {
-  background: #e74c3c;
-  color: white;
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
 }
 
 .preview-actions {
@@ -670,5 +685,57 @@ onBeforeUnmount(() => {
 .preview-actions .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .modal {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    border-radius: 0;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    padding: 16px;
+  }
+
+  .album-global-fields {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .album-meta-fields {
+    width: 100%;
+  }
+
+  .preview-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .preview-fields {
+    width: 100%;
+  }
+
+  .preview-list {
+    max-height: none;
+  }
+
+  .drop-zone {
+    padding: 24px 16px;
+  }
+
+  .preview-actions {
+    flex-direction: column;
+  }
+
+  .preview-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
 }
 </style>

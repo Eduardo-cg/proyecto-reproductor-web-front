@@ -1,21 +1,28 @@
 <template>
-  <div class="queue-panel">
+  <div class="queue-panel" role="dialog" aria-label="Cola de reproducción">
     <div class="queue-header">
       <h3>Cola de reproducción</h3>
-      <button class="close-btn" @click="$emit('close')">✕</button>
+      <button class="close-btn" @click="$emit('close')" aria-label="Cerrar cola">
+        <Icon name="close" size="18" />
+      </button>
     </div>
     <div class="queue-list">
       <div v-if="queue.length === 0" class="empty-queue">
-        No hay canciones en la cola
+        <Icon name="queue" size="32" />
+        <p>No hay canciones en la cola</p>
       </div>
       <div v-for="(track, index) in queue" :key="index" class="queue-item">
-        <img v-if="track.cover" :src="track.cover" alt="Cover" class="item-cover" />
-        <div v-else class="item-cover-placeholder">🎵</div>
+        <img v-if="track.cover" :src="track.cover" alt="" class="item-cover" />
+        <div v-else class="item-cover-placeholder" aria-hidden="true">
+          <Icon name="music" size="18" />
+        </div>
         <div class="item-info">
           <div class="item-title">{{ track.title }}</div>
           <div class="item-artist">{{ track.artist }}</div>
         </div>
-        <button class="remove-btn" @click="$emit('remove', index)">✕</button>
+        <button class="remove-btn" @click="$emit('remove', index)" :aria-label="'Eliminar ' + track.title">
+          <Icon name="close" size="14" />
+        </button>
       </div>
     </div>
     <div v-if="queue.length > 0" class="queue-footer">
@@ -25,6 +32,8 @@
 </template>
 
 <script setup>
+import Icon from './icons/Icon.vue'
+
 defineProps({
   queue: {
     type: Array,
@@ -38,11 +47,11 @@ defineEmits(['close', 'remove', 'clear'])
 <style scoped>
 .queue-panel {
   position: fixed;
-  bottom: 90px;
+  bottom: var(--player-height);
   left: 0;
   right: 0;
   height: 300px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -54,7 +63,6 @@ defineEmits(['close', 'remove', 'clear'])
   from {
     transform: translateY(100%);
   }
-
   to {
     transform: translateY(0);
   }
@@ -64,51 +72,59 @@ defineEmits(['close', 'remove', 'clear'])
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
 }
 
 .queue-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  cursor: pointer;
-  padding: 4px 8px;
 }
-
 .close-btn:hover {
+  background: var(--accent-alpha);
   color: var(--text-primary);
 }
 
 .queue-list {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
 .empty-queue {
-  padding: 20px;
-  text-align: center;
-  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  gap: 8px;
+}
+
+.empty-queue p {
+  font-size: 14px;
 }
 
 .queue-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 20px;
-  transition: background 0.15s;
+  padding: 8px 16px;
+  transition: background 0.1s;
 }
-
 .queue-item:hover {
-  background: var(--bg-tertiary);
+  background: var(--bg-secondary);
 }
 
 .item-cover {
@@ -116,6 +132,7 @@ defineEmits(['close', 'remove', 'clear'])
   height: 40px;
   border-radius: var(--radius-sm);
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .item-cover-placeholder {
@@ -126,7 +143,8 @@ defineEmits(['close', 'remove', 'clear'])
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  flex-shrink: 0;
+  color: var(--text-muted);
 }
 
 .item-info {
@@ -151,40 +169,49 @@ defineEmits(['close', 'remove', 'clear'])
 }
 
 .remove-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 4px 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity 0.1s;
 }
-
 .queue-item:hover .remove-btn {
   opacity: 1;
 }
-
 .remove-btn:hover {
+  background: var(--accent-alpha);
   color: var(--text-primary);
 }
 
 .queue-footer {
-  padding: 12px 20px;
+  padding: 12px 16px;
   border-top: 1px solid var(--border);
 }
 
 .clear-btn {
-  background: var(--bg-tertiary);
-  border: none;
-  color: var(--text-primary);
   padding: 8px 16px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   border-radius: var(--radius-sm);
-  cursor: pointer;
   font-size: 13px;
-  transition: background 0.15s;
+  transition: background 0.1s;
+}
+.clear-btn:hover {
+  background: var(--accent-alpha);
 }
 
-.clear-btn:hover {
-  background: var(--border);
+@media (max-width: 480px) {
+  .queue-panel {
+    height: 100%;
+    bottom: var(--player-height);
+  }
+
+  .remove-btn {
+    opacity: 1;
+  }
 }
 </style>
