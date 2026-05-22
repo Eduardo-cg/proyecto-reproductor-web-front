@@ -4,6 +4,13 @@
     <main class="container">
       <h1>{{ t('home.title') }}</h1>
       <p>{{ t('home.subtitle') }}</p>
+      <div class="features">
+        <router-link to="/library" class="feature">
+          <div class="feature-icon">📚</div>
+          <h3>{{ t('nav.library') }}</h3>
+          <p>{{ t('home.feature2Desc') }}</p>
+        </router-link>
+      </div>
     </main>
   </div>
 </template>

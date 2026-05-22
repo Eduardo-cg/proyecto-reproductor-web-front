@@ -1,5 +1,58 @@
 <template>
-  <div v-if="showUpload" class="modal" @click.self="close">
+  <!-- Embedded mode: just the form content, no modal shell -->
+  <template v-if="embedded">
+    <div v-if="!pendingFiles.length" class="upload-step">
+      <div class="drop-zone" :class="{ 'drop-zone-dragover': isDragOver }" @dragover.prevent="isDragOver = true"
+        @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="$refs.fileInput.click()">
+        <input ref="fileInput" type="file"
+          accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a" multiple
+          class="file-input" @change="handleFileSelect" />
+        <div class="drop-zone-icon">&#127925;</div>
+        <div class="drop-zone-text">{{ t('library.dragDropZone') }}</div>
+        <div class="drop-zone-formats">{{ t('library.acceptedFormats') }}</div>
+      </div>
+    </div>
+
+    <div v-else class="preview-step">
+      <div class="global-artist-section">
+        <ArtistSelector v-model="globalArtistIds" :compact="true" :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
+        <button type="button" class="btn-apply-to-all" @click="applyArtistsToAll"
+                :disabled="!globalArtistIds.length">
+          {{ t('library.applyToAll') || 'Aplicar a todas' }}
+        </button>
+      </div>
+
+      <h4 class="preview-title">{{ t('library.previewTitle') }} ({{ pendingFiles.length }})</h4>
+      <div class="preview-list">
+        <div v-for="(file, index) in pendingFiles" :key="index" class="preview-row">
+          <div class="preview-cover">
+            <img v-if="file.cover" :src="file.cover" alt="Cover" class="preview-cover-img" />
+            <div v-else class="preview-cover-placeholder">&#127925;</div>
+          </div>
+          <div class="preview-fields">
+            <input v-model="file.title" :placeholder="t('library.trackTitle')" class="preview-input" />
+            <ArtistSelector v-model="file.artistIds" :compact="true" :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
+            <input v-model="file.album" :placeholder="t('library.album')" class="preview-input" />
+            <input v-model="file.releaseDate" type="date" :placeholder="t('library.releaseDate')" class="preview-input" />
+            <div class="preview-meta">
+              <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
+              <span class="meta-file">{{ file.fileName }}</span>
+            </div>
+          </div>
+          <button class="btn-remove-file" @click="removeFile(index)" :title="t('library.removeFile')">&times;</button>
+        </div>
+      </div>
+      <div class="preview-actions">
+        <button class="btn btn-secondary" @click="close">{{ t('library.cancel') }}</button>
+        <button class="btn btn-primary" @click="upload" :disabled="uploading">
+          {{ uploading ? t('library.uploading') : t('library.uploadCount').replace('{count}', pendingFiles.length) }}
+        </button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Standalone mode: full modal with overlay -->
+  <div v-else-if="showUpload" class="modal" @click.self="close">
     <div class="modal-content modal-large">
       <div class="modal-header">
         <h3>{{ t('library.addTrack') }}</h3>
@@ -19,6 +72,14 @@
       </div>
 
       <div v-else class="preview-step">
+        <div class="global-artist-section">
+          <ArtistSelector v-model="globalArtistIds" :compact="true" :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
+          <button type="button" class="btn-apply-to-all" @click="applyArtistsToAll"
+                  :disabled="!globalArtistIds.length">
+            {{ t('library.applyToAll') || 'Aplicar a todas' }}
+          </button>
+        </div>
+
         <h4 class="preview-title">{{ t('library.previewTitle') }} ({{ pendingFiles.length }})</h4>
         <div class="preview-list">
           <div v-for="(file, index) in pendingFiles" :key="index" class="preview-row">
@@ -28,8 +89,9 @@
             </div>
             <div class="preview-fields">
               <input v-model="file.title" :placeholder="t('library.trackTitle')" class="preview-input" />
-              <input v-model="file.artist" :placeholder="t('library.trackArtist')" class="preview-input" />
+              <ArtistSelector v-model="file.artistIds" :compact="true" :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
               <input v-model="file.album" :placeholder="t('library.album')" class="preview-input" />
+              <input v-model="file.releaseDate" type="date" :placeholder="t('library.releaseDate')" class="preview-input" />
               <div class="preview-meta">
                 <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
                 <span class="meta-file">{{ file.fileName }}</span>
@@ -55,11 +117,13 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../services/api'
 import { formatDuration } from '../utils/format'
+import ArtistSelector from './ArtistSelector.vue'
 
 const { t } = useI18n()
 
 const props = defineProps({
-  showUpload: { type: Boolean, required: true }
+  showUpload: { type: Boolean, required: true },
+  embedded: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:showUpload', 'uploaded'])
@@ -68,6 +132,7 @@ const isDragOver = ref(false)
 const pendingFiles = ref([])
 const uploading = ref(false)
 const fileInput = ref(null)
+const globalArtistIds = ref([])
 
 const ACCEPTED_TYPES = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/flac', 'audio/mp4', 'audio/x-m4a', 'audio/aac']
 const ACCEPTED_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.flac', '.m4a']
@@ -81,6 +146,35 @@ const arrayBufferToBase64 = (buffer) => {
     result += String.fromCharCode(...chunk)
   }
   return btoa(result)
+}
+
+const ARTIST_DELIMITERS = /\s+(?:feat\.|ft\.|featuring|&)\s+|,\s*|\s+y\s+|\s+x\s+/i
+
+const parseAndLookupArtists = async (artistString) => {
+  if (!artistString || !artistString.trim()) return []
+
+  const names = artistString.split(ARTIST_DELIMITERS).map(n => n.trim()).filter(Boolean)
+  if (names.length === 0) return []
+
+  const ids = []
+  const seenIds = new Set()
+
+  for (const name of names) {
+    try {
+      const artists = await api.getArtists(name)
+      const match = artists.find(
+        a => a.name.toLowerCase() === name.toLowerCase()
+      )
+      if (match && !seenIds.has(match.id)) {
+        ids.push(match.id)
+        seenIds.add(match.id)
+      }
+    } catch (e) {
+      console.error(`Error looking up artist "${name}":`, e)
+    }
+  }
+
+  return ids
 }
 
 const processFiles = async (files) => {
@@ -101,17 +195,27 @@ const processFiles = async (files) => {
       coverFileObj = new File([pic.data], 'cover.jpg', { type: pic.format })
     }
 
+    const artistIds = await parseAndLookupArtists(metadata.common.artist)
+
     pendingFiles.value.push({
       file,
       fileName: file.name,
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ''),
-      artist: metadata.common.artist || '',
+      artistIds,
       album: metadata.common.album || '',
       duration: Math.round(metadata.format.duration),
       cover: coverDataUrl,
-      coverFile: coverFileObj
+      coverFile: coverFileObj,
+      releaseDate: ''
     })
   }
+}
+
+const applyArtistsToAll = () => {
+  if (!globalArtistIds.value.length) return
+  pendingFiles.value.forEach(f => {
+    f.artistIds = [...globalArtistIds.value]
+  })
 }
 
 const handleDrop = async (e) => {
@@ -134,6 +238,7 @@ const close = () => {
   emit('update:showUpload', false)
   pendingFiles.value = []
   isDragOver.value = false
+  globalArtistIds.value = []
 }
 
 const upload = async () => {
@@ -141,7 +246,16 @@ const upload = async () => {
   uploading.value = true
   try {
     for (const pf of pendingFiles.value) {
-      await api.uploadTrack(pf.title, pf.artist, pf.duration, pf.file, pf.album, pf.coverFile)
+      await api.uploadTrack(
+        pf.title,
+        pf.artistIds,
+        pf.duration,
+        pf.file,
+        pf.album,
+        null,
+        pf.coverFile,
+        pf.releaseDate
+      )
     }
     close()
     emit('uploaded')
@@ -206,6 +320,43 @@ const upload = async () => {
   color: var(--text-primary);
 }
 
+.global-artist-section {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.global-artist-section .artist-selector {
+  flex: 1;
+}
+
+.btn-apply-to-all {
+  padding: 10px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-apply-to-all:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.btn-apply-to-all:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .drop-zone {
   border: 2px dashed var(--border);
   border-radius: var(--radius-lg);
@@ -248,7 +399,7 @@ const upload = async () => {
 }
 
 .preview-list {
-  max-height: 400px;
+  max-height: 520px;
   overflow-y: auto;
   margin-bottom: 20px;
 }
@@ -289,18 +440,18 @@ const upload = async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
 .preview-input {
   width: 100%;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .preview-input:focus {

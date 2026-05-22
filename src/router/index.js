@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import LibraryView from '../views/LibraryView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
+import SettingsView from '../views/SettingsView.vue'
 
 const routes = [
   {
@@ -27,6 +28,11 @@ const routes = [
     name: 'library',
     component: LibraryView,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: SettingsView
   }
 ]
 

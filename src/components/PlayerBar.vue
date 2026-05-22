@@ -36,6 +36,8 @@
       <input type="range" :value="playerStore.state.volume" max="1" step="0.01" @input="onVolumeChange"
         class="volume-bar" />
     </div>
+
+    <router-link to="/settings" class="btn-control settings-btn" :title="t('settings.title')">⚙️</router-link>
   </div>
 
   <QueuePanel v-if="showQueue" :queue="playerStore.state.queue" @close="showQueue = false"
@@ -44,10 +46,12 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '../stores/playerStore'
 import { formatDuration } from '../utils/format'
 import QueuePanel from './QueuePanel.vue'
 
+const { t } = useI18n()
 const playerStore = usePlayerStore()
 const showQueue = ref(false)
 
@@ -64,7 +68,7 @@ const onVolumeChange = (e) => {
 .player-bar {
   position: fixed;
   bottom: 0;
-  left: 250px;
+  left: 0;
   right: 0;
   height: 90px;
   background: var(--bg-secondary);

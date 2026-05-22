@@ -39,7 +39,7 @@ defineEmits(['close', 'remove', 'clear'])
 .queue-panel {
   position: fixed;
   bottom: 90px;
-  left: 250px;
+  left: 0;
   right: 0;
   height: 300px;
   background: var(--bg-secondary);
