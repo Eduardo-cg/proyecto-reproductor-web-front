@@ -1,0 +1,25 @@
+.theme-retro {
+  --bg-primary: #f5f0e8;
+  --bg-secondary: #ece4d8;
+  --bg-tertiary: #e0d6c8;
+  --text-primary: #3a3228;
+  --text-secondary: #6a5a48;
+  --text-muted: #9a8a78;
+  --accent: #8a6a3a;
+  --accent-hover: #7a5a2a;
+  --accent-alpha: rgba(138, 106, 58, 0.1);
+  --border: #d4c8b8;
+}
+
+.theme-retro.dark-mode {
+  --bg-primary: #2a241c;
+  --bg-secondary: #353028;
+  --bg-tertiary: #403a32;
+  --text-primary: #f0e8d8;
+  --text-secondary: #c0b0a0;
+  --text-muted: #908070;
+  --accent: #c8a86a;
+  --accent-hover: #d8b880;
+  --accent-alpha: rgba(200, 168, 106, 0.15);
+  --border: #403a32;
+}

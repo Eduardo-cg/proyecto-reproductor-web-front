@@ -1,0 +1,25 @@
+.theme-ocean {
+  --bg-primary: #f0f5f7;
+  --bg-secondary: #e0ebf0;
+  --bg-tertiary: #d0dfe8;
+  --text-primary: #1a2a35;
+  --text-secondary: #3d5a6a;
+  --text-muted: #7a9aaa;
+  --accent: #1a6a8a;
+  --accent-hover: #0e5a70;
+  --accent-alpha: rgba(26, 106, 138, 0.1);
+  --border: #c0d0da;
+}
+
+.theme-ocean.dark-mode {
+  --bg-primary: #15202b;
+  --bg-secondary: #1e2d3a;
+  --bg-tertiary: #273a4a;
+  --text-primary: #e0ecf5;
+  --text-secondary: #a0bccd;
+  --text-muted: #708a9a;
+  --accent: #4ab0d4;
+  --accent-hover: #6ac0e0;
+  --accent-alpha: rgba(74, 176, 212, 0.15);
+  --border: #273a4a;
+}

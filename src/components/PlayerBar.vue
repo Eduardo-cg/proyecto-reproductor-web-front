@@ -1,5 +1,5 @@
 <template>
-  <div class="player-bar" role="region" aria-label="Reproductor">
+  <div class="player-bar" role="region" :aria-label="t('player.player')">
     <div class="track-info">
       <div v-if="playerStore.state.currentTrack" class="track-details">
         <img v-if="playerStore.state.currentTrack.cover" :src="playerStore.state.currentTrack.cover" alt="Cover"
@@ -16,41 +16,41 @@
 
     <div class="controls">
       <div class="controls-buttons">
-        <button class="btn-control" @click="playerStore.playPrevious()" aria-label="Canción anterior">
+        <button class="btn-control" @click="playerStore.playPrevious()" :aria-label="t('player.previous')">
           <Icon name="prev" size="18" />
         </button>
-        <button class="btn-play" @click="playerStore.togglePlay()" :aria-label="playerStore.state.isPlaying ? 'Pausar' : 'Reproducir'">
+        <button class="btn-play" @click="playerStore.togglePlay()" :aria-label="playerStore.state.isPlaying ? t('player.pause') : t('player.play')">
           <Icon :name="playerStore.state.isPlaying ? 'pause' : 'play'" size="18" />
         </button>
-        <button class="btn-control" @click="playerStore.playNext()" aria-label="Siguiente canción">
+        <button class="btn-control" @click="playerStore.playNext()" :aria-label="t('player.next')">
           <Icon name="next" size="18" />
         </button>
       </div>
       <div class="progress-container">
         <span class="time" aria-hidden="true">{{ formatDuration(playerStore.state.position) }}</span>
         <input type="range" :value="playerStore.state.position" :max="playerStore.state.duration || 0" @input="onSeek"
-          class="progress-bar" :aria-label="'Progreso: ' + formatDuration(playerStore.state.position) + ' de ' + formatDuration(playerStore.state.duration)" />
+          class="progress-bar" :aria-label="t('player.progress', { current: formatDuration(playerStore.state.position), total: formatDuration(playerStore.state.duration) })" />
         <span class="time" aria-hidden="true">{{ formatDuration(playerStore.state.duration) }}</span>
       </div>
     </div>
 
     <div class="right-controls">
       <button class="btn-control btn-icon-only" :class="{ active: showQueue }" @click="showQueue = !showQueue"
-        aria-label="Mostrar cola de reproducción" :aria-expanded="showQueue">
+        :aria-label="t('player.showQueue')" :aria-expanded="showQueue">
         <Icon name="queue" size="20" />
       </button>
 
-      <div class="volume" role="group" aria-label="Control de volumen">
+      <div class="volume" role="group" :aria-label="t('player.volumeControl')">
         <button class="btn-control btn-icon-only" @click="playerStore.mute()"
-          :aria-label="playerStore.state.volume === 0 ? 'Activar volumen' : 'Silenciar'">
+          :aria-label="playerStore.state.volume === 0 ? t('player.unmute') : t('player.mute')">
           <Icon :name="playerStore.state.volume === 0 ? 'volume-mute' : 'volume'" size="20" />
         </button>
         <input type="range" :value="playerStore.state.volume" max="1" step="0.01" @input="onVolumeChange"
-          class="volume-bar" aria-label="Volumen" />
+          class="volume-bar" :aria-label="t('player.volume')" />
       </div>
 
-      <router-link to="/settings" class="btn-control btn-icon-only settings-btn" :title="'Configuración'"
-        aria-label="Configuración">
+      <router-link to="/settings" class="btn-control btn-icon-only settings-btn" :title="t('settings.title')"
+        :aria-label="t('settings.title')">
         <Icon name="settings" size="20" />
       </router-link>
     </div>

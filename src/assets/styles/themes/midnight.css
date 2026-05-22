@@ -1,0 +1,25 @@
+.theme-midnight {
+  --bg-primary: #f0f2f5;
+  --bg-secondary: #e4e7ed;
+  --bg-tertiary: #d5d9e3;
+  --text-primary: #1a1d23;
+  --text-secondary: #4a4f5a;
+  --text-muted: #8a8f99;
+  --accent: #2c3e6b;
+  --accent-hover: #1a2a4a;
+  --accent-alpha: rgba(44, 62, 107, 0.1);
+  --border: #c5cad5;
+}
+
+.theme-midnight.dark-mode {
+  --bg-primary: #1a1d23;
+  --bg-secondary: #242830;
+  --bg-tertiary: #2d323c;
+  --text-primary: #e8ecf2;
+  --text-secondary: #b0b5c0;
+  --text-muted: #808590;
+  --accent: #7a9fd4;
+  --accent-hover: #9ab4e0;
+  --accent-alpha: rgba(122, 159, 212, 0.15);
+  --border: #2d323c;
+}

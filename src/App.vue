@@ -1,5 +1,5 @@
 <template>
-  <div id="app" :class="{ 'dark-mode': isDark }">
+  <div id="app" :class="[`theme-${themeId}`, { 'dark-mode': isDark }]">
     <router-view />
     <PlayerBar />
   </div>
@@ -9,7 +9,7 @@
 import PlayerBar from './components/PlayerBar.vue';
 import { useTheme } from './composables/useTheme';
 
-const { isDark } = useTheme()
+const { themeId, isDark } = useTheme()
 </script>
 
 <style>

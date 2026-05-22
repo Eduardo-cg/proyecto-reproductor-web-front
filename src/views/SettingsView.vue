@@ -34,8 +34,20 @@
 
         <section class="settings-section">
           <h2>{{ t('settings.appearance') }}</h2>
-          <div class="settings-card">
-            <ThemeSwitcher />
+          <div class="settings-card theme-card" @click="showThemePicker = !showThemePicker">
+            <div class="theme-header">
+              <span>{{ t('settings.theme') }}</span>
+              <div class="theme-header-right">
+                <span class="current-theme">{{ t(`settings.themes.${themeId}`) }}</span>
+                <Icon :name="showThemePicker ? 'chevron-up' : 'chevron-down'" size="16" />
+              </div>
+            </div>
+            <div v-show="showThemePicker" class="theme-picker-body" @click.stop>
+              <ThemeSwitcher />
+            </div>
+          </div>
+          <div class="settings-card dark-card">
+            <DarkModeToggle />
           </div>
         </section>
 
@@ -65,18 +77,24 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import Icon from '../components/icons/Icon.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import ThemeSwitcher from '../components/ThemeSwitcher.vue'
+import DarkModeToggle from '../components/DarkModeToggle.vue'
+import { useTheme } from '../composables/useTheme'
 import { useStreamingMode } from '../composables/useStreamingMode'
 import { useAuthStore } from '../stores/authStore'
 
 const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
+const { themeId } = useTheme()
 const { mode, setMode, MODES } = useStreamingMode()
+
+const showThemePicker = ref(false)
 
 const logout = () => {
   authStore.logout()
@@ -143,6 +161,46 @@ const logout = () => {
   text-align: center;
   gap: 12px;
   min-height: 120px;
+}
+
+.dark-card {
+  min-height: auto;
+  padding: 12px 24px;
+}
+
+.theme-card {
+  min-height: auto;
+  padding: 0;
+  cursor: pointer;
+  gap: 0;
+}
+
+.theme-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.theme-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-theme {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.theme-picker-body {
+  width: 100%;
+  padding: 0 20px 16px;
 }
 
 .user-avatar {
