@@ -124,6 +124,10 @@
     "loginPrompt": "Inicie sesión",
     "account": "Cuenta",
     "appearance": "Apariencia",
-    "language": "Idioma"
+    "language": "Idioma",
+    "playback": "Reproducción",
+    "streamingMode": "Modo de streaming",
+    "range": "Streaming parcial (Range)",
+    "blob": "Descarga completa"
   }
 }

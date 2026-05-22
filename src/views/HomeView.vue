@@ -24,7 +24,7 @@ const { t } = useI18n()
 <style scoped>
 .home {
   min-height: 100vh;
-  padding-bottom: 100px;
+  padding-bottom: 90px;
 }
 
 .container h1 {

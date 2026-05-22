@@ -12,7 +12,7 @@
           <div class="settings-card">
             <div class="user-avatar">👤</div>
             <template v-if="authStore.state.isAuthenticated">
-              <p class="user-name">{{ authStore.state.user?.name }}</p>
+              <p class="user-name">{{ authStore.state.user?.username }}</p>
               <button @click="logout" class="btn btn-secondary">
                 🚪 {{ t('nav.logout') }}
               </button>
@@ -39,6 +39,20 @@
             <LanguageSwitcher />
           </div>
         </section>
+
+        <section class="settings-section">
+          <h2>{{ t('settings.playback') }}</h2>
+          <div class="settings-card streaming-card">
+            <div class="streaming-toggle">
+              <button :class="{ active: mode === MODES.RANGE }" @click="setMode(MODES.RANGE)">
+                {{ t('settings.range') }}
+              </button>
+              <button :class="{ active: mode === MODES.BLOB }" @click="setMode(MODES.BLOB)">
+                {{ t('settings.blob') }}
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   </div>
@@ -47,13 +61,15 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/authStore'
-import ThemeSwitcher from '../components/ThemeSwitcher.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+import ThemeSwitcher from '../components/ThemeSwitcher.vue'
+import { useStreamingMode } from '../composables/useStreamingMode'
+import { useAuthStore } from '../stores/authStore'
 
 const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
+const { mode, setMode, MODES } = useStreamingMode()
 
 const logout = () => {
   authStore.logout()
@@ -64,14 +80,15 @@ const logout = () => {
 <style scoped>
 .settings {
   min-height: 100vh;
-  padding-bottom: 100px;
+  padding-bottom: 90px;
 }
 
 .settings-header {
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
   margin: 40px 0;
+  position: relative;
 }
 
 .settings-header h1 {
@@ -79,6 +96,8 @@ const logout = () => {
 }
 
 .btn-back {
+  position: absolute;
+  left: 0;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
@@ -95,8 +114,15 @@ const logout = () => {
 
 .settings-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
 }
 
 .settings-section h2 {
@@ -112,8 +138,13 @@ const logout = () => {
   padding: 24px;
   border-radius: var(--radius-lg);
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 16px;
+  min-height: 130px;
+  flex: 1;
 }
 
 .user-avatar {
@@ -130,6 +161,30 @@ const logout = () => {
 
 .user-name {
   font-weight: 600;
+}
+
+.streaming-toggle {
+  display: flex;
+  gap: 5px;
+}
+
+.streaming-toggle button {
   flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.streaming-toggle button.active {
+  background: var(--accent);
+  color: white;
+}
+
+.streaming-toggle button:hover:not(.active) {
+  background: var(--border);
 }
 </style>

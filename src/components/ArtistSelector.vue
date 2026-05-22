@@ -209,6 +209,16 @@ watch(() => props.modelValue, (newVal) => {
     const found = allArtists.value.find(a => a.id === id)
     return found || { id, name: `Artist ${id}` }
   })
+  const missingIds = ids.filter(id => !allArtists.value.find(a => a.id === id))
+  if (missingIds.length > 0) {
+    Promise.all(missingIds.map(id => api.getArtist(id).catch(() => null)))
+      .then(artists => {
+        const valid = artists.filter(Boolean)
+        if (valid.length > 0) {
+          allArtists.value = [...allArtists.value, ...valid]
+        }
+      })
+  }
 }, { immediate: true })
 
 watch(allArtists, () => {

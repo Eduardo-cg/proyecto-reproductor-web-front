@@ -186,6 +186,11 @@ export const api = {
     if (!res.ok) throw new Error('Error al eliminar la canción')
   },
 
+  getStreamUrl(id) {
+    const token = getToken()
+    return `${API_URL}/tracks/${id}/stream?token=${token}`
+  },
+
   async getTrackStreamBlob(id) {
     const res = await fetch(`${API_URL}/tracks/${id}/stream`, {
       headers: authHeaders()

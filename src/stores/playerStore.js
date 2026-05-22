@@ -1,10 +1,18 @@
 import { reactive } from 'vue'
 import { initMediaSession, updateMetadata, updatePlaybackState } from '../composables/useMediaSession'
+import { useStreamingMode } from '../composables/useStreamingMode'
 import { api } from '../services/api'
 
 let audio = null
 let currentBlobUrl = null
 let eventListenersBound = false
+
+const revokeCurrentBlob = () => {
+  if (currentBlobUrl) {
+    URL.revokeObjectURL(currentBlobUrl)
+    currentBlobUrl = null
+  }
+}
 
 const state = reactive({
   currentTrack: null,
@@ -15,13 +23,6 @@ const state = reactive({
   queue: [],
   backQueue: []
 })
-
-const revokeCurrentBlob = () => {
-  if (currentBlobUrl) {
-    URL.revokeObjectURL(currentBlobUrl)
-    currentBlobUrl = null
-  }
-}
 
 const bindEventListeners = () => {
   if (eventListenersBound) return
@@ -66,12 +67,22 @@ const playTrack = async (track, fromBackQueue = false) => {
   state.currentTrack = track
   updateMetadata(track)
 
+  if (audio.src) {
+    audio.pause()
+    audio.src = ''
+  }
+
   revokeCurrentBlob()
 
   try {
-    const blob = await api.getTrackStreamBlob(track.id)
-    currentBlobUrl = URL.createObjectURL(blob)
-    audio.src = currentBlobUrl
+    const { mode, MODES } = useStreamingMode()
+    if (mode.value === MODES.RANGE) {
+      audio.src = api.getStreamUrl(track.id)
+    } else {
+      const blob = await api.getTrackStreamBlob(track.id)
+      currentBlobUrl = URL.createObjectURL(blob)
+      audio.src = currentBlobUrl
+    }
     await audio.play()
     state.isPlaying = true
     updatePlaybackState(true)

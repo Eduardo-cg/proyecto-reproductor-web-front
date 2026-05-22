@@ -58,7 +58,7 @@ const handleUploaded = () => {
 <style scoped>
 .library {
   min-height: 100vh;
-  padding-bottom: 120px;
+  padding-bottom: 90px;
 }
 
 .header {
