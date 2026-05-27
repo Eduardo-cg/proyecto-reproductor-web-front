@@ -56,7 +56,7 @@ import { useI18n } from 'vue-i18n'
 import UploadSongsModal from './UploadSongsModal.vue'
 import UploadAlbumModal from './UploadAlbumModal.vue'
 import UploadArtistModal from './UploadArtistModal.vue'
-import Icon from './icons/Icon.vue'
+import Icon from '../icons/Icon.vue'
 
 const { t } = useI18n()
 

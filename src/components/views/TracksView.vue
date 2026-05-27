@@ -3,7 +3,8 @@
     <div class="search" role="search">
       <div class="search-wrapper">
         <Icon name="search" size="16" class="search-icon" />
-        <input v-model="search" type="text" :placeholder="t('library.searchPlaceholder')" aria-label="Buscar canciones" />
+        <input v-model="search" type="text" :placeholder="t('library.searchPlaceholder')"
+          aria-label="Buscar canciones" />
       </div>
     </div>
 
@@ -43,19 +44,38 @@
                 :aria-label="'Agregar ' + track.title + ' a la cola'">
                 <Icon name="plus" size="14" />
               </button>
-              <button class="btn-action" @click.stop="toggleInfo(track.id)" :aria-label="'Información de ' + track.title">
-                <Icon name="info" size="14" />
-              </button>
-              <button class="btn-action btn-action-danger" @click="deleteTrack(track.id)"
-                :aria-label="'Eliminar ' + track.title">
-                <Icon name="trash" size="14" />
-              </button>
+              <div class="actions-more" @click.stop>
+                <button class="btn-action" @click="openDropdownId = openDropdownId === track.id ? null : track.id"
+                  :aria-label="'Más opciones'">
+                  <Icon name="more-vertical" size="16" />
+                </button>
+                <div v-if="openDropdownId === track.id" class="track-dropdown">
+                  <button class="dropdown-item" @click="downloadTrackFile(track)">
+                    <Icon name="download" size="14" />
+                    <span>{{ t('common.download') }}</span>
+                  </button>
+                  <button class="dropdown-item" @click="editTrack(track)">
+                    <Icon name="edit" size="14" />
+                    <span>{{ t('common.edit') }}</span>
+                  </button>
+                  <button class="dropdown-item" @click="toggleInfo(track.id)">
+                    <Icon name="info" size="14" />
+                    <span>{{ t('common.info') }}</span>
+                  </button>
+                  <button class="dropdown-item dropdown-item-danger" @click="confirmDelete(track)">
+                    <Icon name="trash" size="14" />
+                    <span>{{ t('common.delete') }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div v-if="selectedTrackId === track.id" class="track-details" role="region" :aria-label="'Detalles de ' + track.title">
+          <div v-if="selectedTrackId === track.id" class="track-details" role="region"
+            :aria-label="'Detalles de ' + track.title">
             <div class="details-content">
               <span class="details-label">{{ t('library.releaseDate') }}:</span>
-              <span class="details-value">{{ track.releaseDate ? formatDate(track.releaseDate) : t('library.notSpecified') }}</span>
+              <span class="details-value">{{ track.releaseDate ? formatDate(track.releaseDate) :
+                t('library.notSpecified') }}</span>
             </div>
           </div>
         </div>
@@ -64,17 +84,25 @@
 
     <Pagination :current-page="currentPage" :total-pages="totalPages" :total-elements="totalElements"
       :page-size="pageSize" @page-change="goToPage" @page-size-change="changePageSize" />
+
+    <ConfirmDialog :show="showDeleteConfirm" :title="t('confirm.deleteTitle')" :message="deleteMessage"
+      :loading="deleteLoading" @confirm="handleDeleteConfirm" @cancel="showDeleteConfirm = false" />
+
+    <UploadSongsModal :showUpload="showEditModal" :editMode="true" :editData="trackToEdit"
+      @update:showUpload="showEditModal = false" @uploaded="onEditUploaded" />
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Pagination from '../components/Pagination.vue'
-import { api } from '../services/api'
-import { usePlayerStore } from '../stores/playerStore'
-import { formatDuration } from '../utils/format'
-import Icon from './icons/Icon.vue'
+import { api } from '../../services/api'
+import { usePlayerStore } from '../../stores/playerStore'
+import { formatDuration } from '../../utils/utils.js'
+import ConfirmDialog from '../common/ConfirmDialog.vue'
+import Pagination from '../common/Pagination.vue'
+import Icon from '../icons/Icon.vue'
+import UploadSongsModal from '../modals/UploadSongsModal.vue'
 
 const { t } = useI18n()
 const playerStore = usePlayerStore()
@@ -82,6 +110,27 @@ const playerStore = usePlayerStore()
 const loading = ref(true)
 const search = ref('')
 const selectedTrackId = ref(null)
+const openDropdownId = ref(null)
+
+const showDeleteConfirm = ref(false)
+const deleteLoading = ref(false)
+const trackToDelete = ref(null)
+const deleteMessage = ref('')
+
+const showEditModal = ref(false)
+const trackToEdit = ref(null)
+
+const editTrack = (track) => {
+  trackToEdit.value = track
+  showEditModal.value = true
+  openDropdownId.value = null
+}
+
+const onEditUploaded = () => {
+  showEditModal.value = false
+  trackToEdit.value = null
+  loadTracks()
+}
 
 const tracks = ref([])
 const currentPage = ref(0)
@@ -131,16 +180,43 @@ const playTrack = (track) => {
 }
 
 const handleDocumentClick = () => {
+  openDropdownId.value = null
   selectedTrackId.value = null
 }
 
 const toggleInfo = (id) => {
-  selectedTrackId.value = id
+  selectedTrackId.value = id === selectedTrackId.value ? null : id
+  openDropdownId.value = null
 }
 
-const deleteTrack = async (id) => {
-  await api.deleteTrack(id)
-  await loadTracks()
+const confirmDelete = (track) => {
+  trackToDelete.value = track
+  deleteMessage.value = t('confirm.deleteMessage', { item: track.title })
+  showDeleteConfirm.value = true
+}
+
+const handleDeleteConfirm = async () => {
+  if (!trackToDelete.value) return
+  deleteLoading.value = true
+  try {
+    await api.deleteTrack(trackToDelete.value.id)
+    showDeleteConfirm.value = false
+    trackToDelete.value = null
+    await loadTracks()
+  } catch (e) {
+    console.error(e)
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
+const downloadTrackFile = async (track) => {
+  openDropdownId.value = null
+  try {
+    await api.downloadTrack(track.id)
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const formatDate = (dateStr) => {
@@ -202,6 +278,7 @@ onUnmounted(() => {
   color: var(--text-muted);
   gap: 12px;
 }
+
 .empty p {
   font-size: 14px;
 }
@@ -233,6 +310,7 @@ onUnmounted(() => {
   border-radius: var(--radius-sm);
   transition: background 0.1s;
 }
+
 .track-row:hover {
   background: var(--bg-secondary);
 }
@@ -283,6 +361,49 @@ onUnmounted(() => {
   display: flex;
   gap: 4px;
   justify-content: flex-end;
+  align-items: center;
+}
+
+.actions-more {
+  position: relative;
+}
+
+.track-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 150px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.dropdown-item-danger:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
 }
 
 .btn-action {
@@ -296,10 +417,12 @@ onUnmounted(() => {
   color: var(--text-secondary);
   transition: background 0.1s, color 0.1s;
 }
+
 .btn-action:hover {
   background: var(--accent-alpha);
   color: var(--accent);
 }
+
 .btn-action-danger:hover {
   background: rgba(231, 76, 60, 0.1);
   color: #e74c3c;
@@ -339,6 +462,7 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(-4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

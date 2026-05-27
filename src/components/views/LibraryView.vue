@@ -22,6 +22,11 @@
           <Icon name="album" size="16" />
           {{ t('library.albums') }}
         </button>
+        <button :class="['tab-btn', { active: viewMode === 'artists' }]" @click="switchToArtists" role="tab"
+          :aria-selected="viewMode === 'artists'" :aria-controls="'panel-artists'">
+          <Icon name="artist" size="16" />
+          {{ t('library.artists') }}
+        </button>
       </div>
 
       <div v-if="viewMode === 'tracks'" id="panel-tracks" role="tabpanel">
@@ -29,6 +34,9 @@
       </div>
       <div v-if="viewMode === 'albums'" id="panel-albums" role="tabpanel">
         <AlbumsView ref="albumsRef" />
+      </div>
+      <div v-if="viewMode === 'artists'" id="panel-artists" role="tabpanel">
+        <ArtistsView ref="artistsRef" />
       </div>
 
       <UploadModal v-model:show="showUploadModal" @uploaded="handleUploaded" />
@@ -39,11 +47,12 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import AppLogo from '../components/AppLogo.vue'
-import TracksView from '../components/TracksView.vue'
-import AlbumsView from '../components/AlbumsView.vue'
-import UploadModal from '../components/UploadModal.vue'
-import Icon from '../components/icons/Icon.vue'
+import AppLogo from '../common/AppLogo.vue'
+import Icon from '../icons/Icon.vue'
+import UploadModal from '../modals/UploadModal.vue'
+import AlbumsView from './AlbumsView.vue'
+import ArtistsView from './ArtistsView.vue'
+import TracksView from './TracksView.vue'
 
 const { t } = useI18n()
 
@@ -51,6 +60,7 @@ const viewMode = ref('tracks')
 const showUploadModal = ref(false)
 const tracksRef = ref(null)
 const albumsRef = ref(null)
+const artistsRef = ref(null)
 
 const switchToTracks = () => {
   viewMode.value = 'tracks'
@@ -60,11 +70,17 @@ const switchToAlbums = () => {
   viewMode.value = 'albums'
 }
 
+const switchToArtists = () => {
+  viewMode.value = 'artists'
+}
+
 const handleUploaded = () => {
   if (viewMode.value === 'tracks') {
     tracksRef.value?.refresh()
-  } else {
+  } else if (viewMode.value === 'albums') {
     albumsRef.value?.refresh()
+  } else {
+    artistsRef.value?.refresh()
   }
 }
 </script>
@@ -109,9 +125,11 @@ const handleUploaded = () => {
   margin-bottom: -1px;
   transition: color var(--transition), border-color var(--transition);
 }
+
 .tab-btn:hover {
   color: var(--text-primary);
 }
+
 .tab-btn.active {
   color: var(--accent);
   border-bottom-color: var(--accent);

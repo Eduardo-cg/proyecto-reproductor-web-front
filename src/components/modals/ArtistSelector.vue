@@ -84,8 +84,6 @@
           <div v-for="artist in availableArtists" :key="artist.id"
             class="available-item" :class="{ disabled: isSelected(artist.id) }"
             @click="toggleArtist(artist)" role="option" :aria-selected="false">
-            <input type="checkbox" :checked="isSelected(artist.id)" :disabled="isSelected(artist.id)"
-              class="item-checkbox" @click.stop :aria-label="artist.name" />
             <img v-if="artist.image" :src="artist.image" alt="" class="item-image" />
             <div v-else class="item-image-placeholder" aria-hidden="true">
               <Icon name="artist" size="14" />
@@ -105,9 +103,9 @@
 import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Sortable from 'sortablejs'
-import { api } from '../services/api'
+import { api } from '../../services/api'
 import UploadArtistModal from './UploadArtistModal.vue'
-import Icon from './icons/Icon.vue'
+import Icon from '../icons/Icon.vue'
 
 const { t } = useI18n()
 
@@ -146,7 +144,8 @@ const isSelected = (id) => selectedArtists.value.some(a => a.id === id)
 const fetchArtists = async () => {
   loading.value = true
   try {
-    allArtists.value = await api.getArtists()
+    const data = await api.getArtists(0, 200)
+    allArtists.value = data.artists
   } catch (e) {
     console.error('Error fetching artists:', e)
     allArtists.value = []
@@ -585,13 +584,6 @@ onBeforeUnmount(() => {
 .available-item.disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.item-checkbox {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent);
-  flex-shrink: 0;
 }
 
 @media (max-width: 480px) {

@@ -1,10 +1,12 @@
 <template>
   <div v-if="totalPages > 0" class="pagination" role="navigation" aria-label="Paginación">
     <div class="pagination-info">
-      {{ currentPage * pageSize + 1 }}–{{ Math.min((currentPage + 1) * pageSize, totalElements) }} {{ t('pagination.of') }} {{ totalElements }}
+      {{ currentPage * pageSize + 1 }}–{{ Math.min((currentPage + 1) * pageSize, totalElements) }} {{ t('pagination.of')
+      }} {{ totalElements }}
     </div>
     <div class="pagination-controls">
-      <select v-model.number="localPageSize" class="pagination-size-select" @change="onSizeChange" aria-label="Elementos por página">
+      <select v-model.number="localPageSize" class="pagination-size-select" @change="onSizeChange"
+        aria-label="Elementos por página">
         <option :value="10">10</option>
         <option :value="20">20</option>
         <option :value="50">50</option>
@@ -17,14 +19,14 @@
       <template v-for="(page, i) in pageNumbers" :key="i">
         <span v-if="page === '...'" class="pagination-ellipsis" aria-hidden="true">…</span>
         <button v-else class="pagination-btn" :class="{ active: page === currentPage }"
-          @click="$emit('page-change', page)"
-          :aria-label="'Ir a página ' + (page + 1)" :aria-current="page === currentPage ? 'page' : undefined">
+          @click="$emit('page-change', page)" :aria-label="'Ir a página ' + (page + 1)"
+          :aria-current="page === currentPage ? 'page' : undefined">
           {{ page + 1 }}
         </button>
       </template>
       <button class="pagination-btn" :disabled="currentPage >= totalPages - 1"
         @click="$emit('page-change', currentPage + 1)" :aria-label="'Página siguiente'">
-        <Icon name="chevron-left" size="14" style="transform:rotate(180deg)" />
+        <Icon name="chevron-right" size="14" />
       </button>
     </div>
   </div>
@@ -33,7 +35,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Icon from './icons/Icon.vue'
+import Icon from '../icons/Icon.vue'
 
 const { t } = useI18n()
 
@@ -128,14 +130,17 @@ const pageNumbers = computed(() => {
   justify-content: center;
   transition: background 0.1s;
 }
+
 .pagination-btn:hover:not(:disabled) {
   background: var(--accent-alpha);
   color: var(--accent);
 }
+
 .pagination-btn:disabled {
   opacity: 0.3;
   cursor: default;
 }
+
 .pagination-btn.active {
   background: var(--accent);
   color: var(--bg-primary);

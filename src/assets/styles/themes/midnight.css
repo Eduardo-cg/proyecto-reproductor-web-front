@@ -9,6 +9,7 @@
   --accent-hover: #1a2a4a;
   --accent-alpha: rgba(44, 62, 107, 0.1);
   --border: #c5cad5;
+  --color-scheme: light;
 }
 
 .theme-midnight.dark-mode {
@@ -22,4 +23,5 @@
   --accent-hover: #9ab4e0;
   --accent-alpha: rgba(122, 159, 212, 0.15);
   --border: #2d323c;
+  --color-scheme: dark;
 }

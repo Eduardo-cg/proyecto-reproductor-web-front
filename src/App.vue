@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import PlayerBar from './components/PlayerBar.vue';
+import PlayerBar from './components/player/PlayerBar.vue';
 import { useTheme } from './composables/useTheme';
 
 const { themeId, isDark } = useTheme()

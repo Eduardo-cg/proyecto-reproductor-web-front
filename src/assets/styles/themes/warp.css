@@ -9,6 +9,7 @@
   --accent-hover: #4a423b;
   --accent-alpha: rgba(43, 38, 34, 0.1);
   --border: #d4cfc5;
+  --color-scheme: light;
 }
 
 .dark-mode, :root.dark-mode, .theme-warp.dark-mode {
@@ -22,4 +23,5 @@
   --accent-hover: #e8e0d0;
   --accent-alpha: rgba(247, 245, 240, 0.1);
   --border: #3f3a36;
+  --color-scheme: dark;
 }

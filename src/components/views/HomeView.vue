@@ -19,8 +19,8 @@
 </template>
 
 <script setup>
-import { useI18n } from 'vue-i18n'
-import Icon from '../components/icons/Icon.vue'
+import { useI18n } from 'vue-i18n';
+import Icon from '../icons/Icon.vue';
 
 const { t } = useI18n()
 </script>
@@ -63,6 +63,7 @@ const { t } = useI18n()
   transition: background var(--transition);
   color: var(--text-primary);
 }
+
 .feature-card:hover {
   background: var(--bg-tertiary);
 }

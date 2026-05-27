@@ -19,7 +19,8 @@
         <button class="btn-control" @click="playerStore.playPrevious()" :aria-label="t('player.previous')">
           <Icon name="prev" size="18" />
         </button>
-        <button class="btn-play" @click="playerStore.togglePlay()" :aria-label="playerStore.state.isPlaying ? t('player.pause') : t('player.play')">
+        <button class="btn-play" @click="playerStore.togglePlay()"
+          :aria-label="playerStore.state.isPlaying ? t('player.pause') : t('player.play')">
           <Icon :name="playerStore.state.isPlaying ? 'pause' : 'play'" size="18" />
         </button>
         <button class="btn-control" @click="playerStore.playNext()" :aria-label="t('player.next')">
@@ -28,8 +29,9 @@
       </div>
       <div class="progress-container">
         <span class="time" aria-hidden="true">{{ formatDuration(playerStore.state.position) }}</span>
-        <input type="range" :value="playerStore.state.position" :max="playerStore.state.duration || 0" @input="onSeek"
-          class="progress-bar" :aria-label="t('player.progress', { current: formatDuration(playerStore.state.position), total: formatDuration(playerStore.state.duration) })" />
+        <input type="range" :value="seekTemp" :max="playerStore.state.duration || 0" @input="onSeek" @change="applySeek" @mouseup="applySeek"
+          class="progress-bar"
+          :aria-label="t('player.progress', { current: formatDuration(seekTemp), total: formatDuration(playerStore.state.duration) })" />
         <span class="time" aria-hidden="true">{{ formatDuration(playerStore.state.duration) }}</span>
       </div>
     </div>
@@ -63,17 +65,23 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { usePlayerStore } from '../stores/playerStore'
-import { formatDuration } from '../utils/format'
+import { usePlayerStore } from '../../stores/playerStore'
+import { formatDuration } from '../../utils/utils'
 import QueuePanel from './QueuePanel.vue'
-import Icon from './icons/Icon.vue'
+import Icon from '../icons/Icon.vue'
 
 const { t } = useI18n()
 const playerStore = usePlayerStore()
 const showQueue = ref(false)
 
+const seekTemp = ref(playerStore.state.position)
+
+const applySeek = () => {
+  playerStore.seek(seekTemp.value)
+}
+
 const onSeek = (e) => {
-  playerStore.seek(parseFloat(e.target.value))
+  seekTemp.value = parseFloat(e.target.value)
 }
 
 const onVolumeChange = (e) => {
@@ -183,6 +191,7 @@ const onVolumeChange = (e) => {
   height: 40px;
   border-radius: var(--radius-sm);
 }
+
 .btn-icon-only:hover {
   background: var(--accent-alpha);
 }
@@ -199,6 +208,7 @@ const onVolumeChange = (e) => {
   flex-shrink: 0;
   transition: opacity var(--transition);
 }
+
 .btn-play:hover {
   opacity: 0.85;
 }
@@ -227,6 +237,7 @@ const onVolumeChange = (e) => {
   cursor: pointer;
   outline: none;
 }
+
 .progress-bar::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 12px;
@@ -235,6 +246,7 @@ const onVolumeChange = (e) => {
   background: var(--accent);
   cursor: pointer;
 }
+
 .progress-bar:focus-visible {
   outline: 1px solid var(--accent);
   outline-offset: 2px;
@@ -264,6 +276,7 @@ const onVolumeChange = (e) => {
   cursor: pointer;
   outline: none;
 }
+
 .volume-bar::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 10px;
@@ -272,6 +285,7 @@ const onVolumeChange = (e) => {
   background: var(--accent);
   cursor: pointer;
 }
+
 .volume-bar:focus-visible {
   outline: 1px solid var(--accent);
   outline-offset: 2px;

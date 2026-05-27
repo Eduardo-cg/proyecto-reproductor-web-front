@@ -9,6 +9,7 @@
   --accent-hover: #1d4a1d;
   --accent-alpha: rgba(45, 90, 45, 0.1);
   --border: #c4d0c0;
+  --color-scheme: light;
 }
 
 .theme-forest.dark-mode {
@@ -22,4 +23,5 @@
   --accent-hover: #8ac08a;
   --accent-alpha: rgba(106, 170, 106, 0.15);
   --border: #2d452d;
+  --color-scheme: dark;
 }

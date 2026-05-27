@@ -31,7 +31,6 @@
     "searchArtist": "Buscar artista...",
     "noTracks": "No se encontraron canciones",
     "noAlbums": "No se encontraron álbumes",
-    "noArtists": "No se encontraron artistas",
     "trackTitle": "Título",
     "trackArtist": "Artista",
     "trackArtists": "Artistas",
@@ -65,7 +64,24 @@
     "selectedArtists": "{count} artista(s) seleccionado(s)",
     "andMore": "y {count} más",
     "primary": "(principal)",
-    "albumName": "Nombre del Álbum"
+    "albumName": "Nombre del Álbum",
+    "artistSearchPlaceholder": "Buscar artistas...",
+    "noArtists": "No se encontraron artistas",
+    "noContent": "Sin contenido",
+    "artistTracks": "Canciones",
+    "artistAlbums": "Álbumes",
+    "downloadAlbum": "Descargar ZIP",
+    "addTracks": "Añadir canciones",
+    "new": "Nueva"
+  },
+  "confirm": {
+    "deleteTitle": "Confirmar eliminación",
+    "deleteMessage": "¿Estás seguro de que quieres eliminar \"{item}\"?",
+    "deleteArtistWithContent": "Este artista tiene {tracks} canciones y {albums} álbumes asociados. Se eliminará todo el contenido asociado.",
+    "deleteAlbumWarning": "Se eliminará el álbum y todas sus canciones.",
+    "confirm": "Eliminar",
+    "cancel": "Cancelar",
+    "deleting": "Eliminando..."
   },
   "pagination": {
     "of": "de"
@@ -85,7 +101,13 @@
     "addToQueue": "Añadir a la cola"
   },
   "common": {
-    "back": "Volver"
+    "back": "Volver",
+    "edit": "Editar",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "download": "Descargar",
+    "info": "Información",
+    "delete": "Eliminar"
   },
   "settings": {
     "title": "Configuración",

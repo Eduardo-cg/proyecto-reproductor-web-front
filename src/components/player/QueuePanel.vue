@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-import Icon from './icons/Icon.vue'
+import Icon from '../icons/Icon.vue'
 
 defineProps({
   queue: {

@@ -1,5 +1,42 @@
 <template>
-  <template v-if="embedded">
+  <template v-if="showUpload && editMode && editData">
+    <div class="modal" @click.self="closeEdit" role="dialog" aria-modal="true" aria-label="Editar canción">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <h3>{{ t('common.edit') + ': ' + editData.title }}</h3>
+          <button class="btn-close" @click="closeEdit" aria-label="Cerrar">
+            <Icon name="close" size="20" />
+          </button>
+        </div>
+        <div class="edit-form">
+          <div class="edit-cover" @click="$refs.editCoverInput.click()" :title="t('library.changeCover')" role="button" tabindex="0">
+            <img v-if="editCover" :src="editCover" alt="" class="edit-cover-img" />
+            <div v-else class="edit-cover-placeholder" aria-hidden="true">
+              <Icon name="music" size="24" />
+            </div>
+            <div class="edit-cover-overlay" aria-hidden="true">
+              <Icon name="upload" size="20" />
+            </div>
+            <input ref="editCoverInput" type="file" accept="image/*" class="file-input" @change="handleEditCoverSelect" />
+          </div>
+          <div class="edit-fields">
+            <input v-model="editTitle" :placeholder="t('library.trackTitle')" class="preview-input" />
+            <ArtistSelector v-model="editArtistIds" :compact="false" :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
+            <input v-model="editAlbum" :placeholder="t('library.album')" class="preview-input" />
+            <input v-model="editReleaseDate" type="date" :placeholder="t('library.releaseDate')" :title="t('library.releaseDate')" class="preview-input" />
+          </div>
+        </div>
+        <div class="preview-actions">
+          <button class="btn btn-secondary" @click="closeEdit">{{ t('library.cancel') }}</button>
+          <button class="btn btn-primary" @click="saveEdit" :disabled="editing || !editTitle.trim()">
+            {{ editing ? t('common.saving') : t('common.save') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template v-else-if="embedded">
     <div v-if="!pendingFiles.length" class="upload-step">
       <div class="drop-zone" :class="{ 'drop-zone-dragover': isDragOver }" @dragover.prevent="isDragOver = true"
         @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="$refs.fileInput.click()"
@@ -18,8 +55,7 @@
       <div class="global-artist-section">
         <ArtistSelector v-model="globalArtistIds" :compact="true"
           :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
-        <button type="button" class="btn-apply-to-all" @click="applyArtistsToAll"
-          :disabled="!globalArtistIds.length">
+        <button type="button" class="btn-apply-to-all" @click="applyArtistsToAll" :disabled="!globalArtistIds.length">
           <Icon name="check" size="14" />
           {{ t('library.applyToAll') || 'Aplicar a todas' }}
         </button>
@@ -39,13 +75,15 @@
             <ArtistSelector v-model="file.artistIds" :compact="true"
               :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
             <input v-model="file.album" :placeholder="t('library.album')" class="preview-input" />
-            <input v-model="file.releaseDate" type="date" :placeholder="t('library.releaseDate')" class="preview-input" />
+            <input v-model="file.releaseDate" type="date" :placeholder="t('library.releaseDate')"
+              :title="t('library.releaseDate')" class="preview-input" />
             <div class="preview-meta">
               <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
               <span class="meta-file">{{ file.fileName }}</span>
             </div>
           </div>
-          <button class="btn-remove-file" @click="removeFile(index)" :aria-label="'Eliminar ' + (file.title || file.fileName)">
+          <button class="btn-remove-file" @click="removeFile(index)"
+            :aria-label="'Eliminar ' + (file.title || file.fileName)">
             <Icon name="close" size="16" />
           </button>
         </div>
@@ -61,7 +99,8 @@
     </div>
   </template>
 
-  <div v-else-if="showUpload" class="modal" @click.self="close" role="dialog" aria-modal="true" aria-label="Subir canciones">
+  <div v-else-if="showUpload" class="modal" @click.self="close" role="dialog" aria-modal="true"
+    aria-label="Subir canciones">
     <div class="modal-content modal-large">
       <div class="modal-header">
         <h3>{{ t('library.addTrack') }}</h3>
@@ -88,8 +127,7 @@
         <div class="global-artist-section">
           <ArtistSelector v-model="globalArtistIds" :compact="true"
             :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
-          <button type="button" class="btn-apply-to-all" @click="applyArtistsToAll"
-            :disabled="!globalArtistIds.length">
+          <button type="button" class="btn-apply-to-all" @click="applyArtistsToAll" :disabled="!globalArtistIds.length">
             <Icon name="check" size="14" />
             {{ t('library.applyToAll') || 'Aplicar a todas' }}
           </button>
@@ -109,7 +147,8 @@
               <ArtistSelector v-model="file.artistIds" :compact="true"
                 :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
               <input v-model="file.album" :placeholder="t('library.album')" class="preview-input" />
-              <input v-model="file.releaseDate" type="date" :placeholder="t('library.releaseDate')" class="preview-input" />
+              <input v-model="file.releaseDate" type="date" :placeholder="t('library.releaseDate')"
+                :title="t('library.releaseDate')" class="preview-input" />
               <div class="preview-meta">
                 <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
                 <span class="meta-file">{{ file.fileName }}</span>
@@ -136,21 +175,81 @@
 
 <script setup>
 import { parseBlob } from 'music-metadata-browser'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { api } from '../services/api'
-import { formatDuration } from '../utils/format'
+import { api } from '../../services/api'
+import { formatDuration } from '../../utils/utils.js'
 import ArtistSelector from './ArtistSelector.vue'
-import Icon from './icons/Icon.vue'
+import Icon from '../icons/Icon.vue'
 
 const { t } = useI18n()
 
 const props = defineProps({
   showUpload: { type: Boolean, required: true },
-  embedded: { type: Boolean, default: false }
+  embedded: { type: Boolean, default: false },
+  editMode: { type: Boolean, default: false },
+  editData: { type: Object, default: null }
 })
 
 const emit = defineEmits(['update:showUpload', 'uploaded'])
+
+const editTitle = ref('')
+const editArtistIds = ref([])
+const editAlbum = ref('')
+const editReleaseDate = ref('')
+const editCover = ref(null)
+const editCoverFile = ref(null)
+const editing = ref(false)
+
+watch(() => props.editData, (data) => {
+  if (data && props.editMode) {
+    editTitle.value = data.title || ''
+    editArtistIds.value = data.artists ? data.artists.map(a => a.id) : []
+    editAlbum.value = data.album || ''
+    editReleaseDate.value = data.releaseDate || ''
+    editCover.value = data.cover || null
+    editCoverFile.value = null
+  }
+}, { immediate: true })
+
+const handleEditCoverSelect = (e) => {
+  const file = e.target.files?.[0]
+  if (file) {
+    editCoverFile.value = file
+    const reader = new FileReader()
+    reader.onload = () => {
+      editCover.value = reader.result
+    }
+    reader.readAsDataURL(file)
+  }
+  e.target.value = ''
+}
+
+const closeEdit = () => {
+  emit('update:showUpload', false)
+  editing.value = false
+}
+
+const saveEdit = async () => {
+  if (!editTitle.value.trim() || editing.value || !props.editData) return
+  editing.value = true
+  try {
+    await api.updateTrack(
+      props.editData.id,
+      editTitle.value.trim(),
+      editArtistIds.value,
+      editAlbum.value || null,
+      editReleaseDate.value || null,
+      editCoverFile.value || undefined
+    )
+    closeEdit()
+    emit('uploaded')
+  } catch (e) {
+    console.error(e)
+  } finally {
+    editing.value = false
+  }
+}
 
 const isDragOver = ref(false)
 const pendingFiles = ref([])
@@ -185,8 +284,8 @@ const parseAndLookupArtists = async (artistString) => {
 
   for (const name of names) {
     try {
-      const artists = await api.getArtists(name)
-      const match = artists.find(
+      const data = await api.getArtists(0, 20, name)
+      const match = data.artists.find(
         a => a.name.toLowerCase() === name.toLowerCase()
       )
       if (match && !seenIds.has(match.id)) {
@@ -343,6 +442,7 @@ const upload = async () => {
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
 }
+
 .btn-close:hover {
   background: var(--accent-alpha);
   color: var(--text-primary);
@@ -376,11 +476,13 @@ const upload = async () => {
   transition: background var(--transition), border-color var(--transition);
   white-space: nowrap;
 }
+
 .btn-apply-to-all:hover:not(:disabled) {
   background: var(--accent-alpha);
   border-color: var(--accent);
   color: var(--accent);
 }
+
 .btn-apply-to-all:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -394,6 +496,7 @@ const upload = async () => {
   cursor: pointer;
   transition: border-color var(--transition), background var(--transition);
 }
+
 .drop-zone:hover,
 .drop-zone-dragover {
   border-color: var(--accent);
@@ -481,6 +584,7 @@ const upload = async () => {
   color: var(--text-primary);
   font-size: 13px;
 }
+
 .preview-input:focus {
   outline: none;
   border-color: var(--accent);
@@ -513,6 +617,7 @@ const upload = async () => {
   border-radius: var(--radius-sm);
   color: var(--text-muted);
 }
+
 .btn-remove-file:hover {
   background: rgba(231, 76, 60, 0.1);
   color: #e74c3c;
@@ -527,6 +632,66 @@ const upload = async () => {
 .preview-actions .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.edit-form {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.edit-cover {
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  width: 64px;
+  height: 64px;
+}
+
+.edit-cover-img {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  display: block;
+}
+
+.edit-cover-placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.edit-cover-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: var(--radius-sm);
+  color: white;
+}
+
+.edit-cover:hover .edit-cover-overlay {
+  opacity: 1;
+}
+
+.edit-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 @media (max-width: 768px) {

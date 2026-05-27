@@ -1,5 +1,41 @@
 <template>
-  <template v-if="embedded">
+  <template v-if="showUpload && editMode && editData">
+    <div class="modal" @click.self="closeEdit" role="dialog" aria-modal="true" aria-label="Editar artista">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>{{ t('common.edit') + ': ' + editData.name }}</h3>
+          <button class="btn-close" @click="closeEdit" aria-label="Cerrar">
+            <Icon name="close" size="20" />
+          </button>
+        </div>
+        <div class="artist-form">
+          <div class="artist-global-fields">
+            <div class="artist-image-group" @click="$refs.editImageInput.click()" :title="t('library.changeImage')" role="button" tabindex="0">
+              <img v-if="editImage" :src="editImage" alt="" class="artist-image-img" />
+              <div v-else class="artist-image-placeholder" aria-hidden="true">
+                <Icon name="artist" size="32" />
+              </div>
+              <div class="artist-image-overlay" aria-hidden="true">
+                <Icon name="upload" size="20" />
+              </div>
+              <input ref="editImageInput" type="file" accept="image/*" class="file-input" @change="handleEditImageSelect" />
+            </div>
+            <div class="artist-meta-fields">
+              <input v-model="editName" :placeholder="t('library.artistName')" class="global-input" @keyup.enter="saveEdit" />
+            </div>
+          </div>
+          <div class="artist-actions">
+            <button class="btn btn-primary" @click="saveEdit" :disabled="editing || !editName.trim()">
+              {{ editing ? t('common.saving') : t('common.save') }}
+            </button>
+          </div>
+          <div v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template v-else-if="embedded">
     <div class="artist-form">
       <div class="artist-global-fields">
         <div class="artist-image-group" @click="$refs.imageInput.click()" :title="t('library.changeImage')" role="button"
@@ -68,19 +104,68 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { api } from '../services/api'
-import Icon from './icons/Icon.vue'
+import { api } from '../../services/api'
+import Icon from '../icons/Icon.vue'
 
 const { t } = useI18n()
 
 const props = defineProps({
   showUpload: { type: Boolean, required: true },
-  embedded: { type: Boolean, default: false }
+  embedded: { type: Boolean, default: false },
+  editMode: { type: Boolean, default: false },
+  editData: { type: Object, default: null }
 })
 
 const emit = defineEmits(['update:showUpload', 'uploaded', 'created'])
+
+const editName = ref('')
+const editImage = ref(null)
+const editImageFile = ref(null)
+const editing = ref(false)
+
+watch(() => props.editData, (data) => {
+  if (data && props.editMode) {
+    editName.value = data.name || ''
+    editImage.value = data.image || null
+    editImageFile.value = null
+  }
+}, { immediate: true })
+
+const handleEditImageSelect = (e) => {
+  const file = e.target.files?.[0]
+  if (file) {
+    editImageFile.value = file
+    const reader = new FileReader()
+    reader.onload = () => {
+      editImage.value = reader.result
+    }
+    reader.readAsDataURL(file)
+  }
+  e.target.value = ''
+}
+
+const closeEdit = () => {
+  emit('update:showUpload', false)
+  editing.value = false
+  errorMessage.value = ''
+}
+
+const saveEdit = async () => {
+  if (!editName.value.trim() || editing.value || !props.editData) return
+  editing.value = true
+  errorMessage.value = ''
+  try {
+    await api.updateArtist(props.editData.id, editName.value.trim(), editImageFile.value || undefined)
+    closeEdit()
+    emit('uploaded')
+  } catch (e) {
+    errorMessage.value = e.message || 'Error al actualizar el artista'
+  } finally {
+    editing.value = false
+  }
+}
 
 const artistName = ref('')
 const artistImage = ref(null)

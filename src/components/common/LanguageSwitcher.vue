@@ -1,10 +1,7 @@
 <template>
   <div class="lang-switcher" role="radiogroup" aria-label="Idioma">
-    <button v-for="lang in languages" :key="lang.code"
-      :class="{ active: currentLocale === lang.code }"
-      @click="changeLocale(lang.code)"
-      role="radio"
-      :aria-checked="currentLocale === lang.code">
+    <button v-for="lang in languages" :key="lang.code" :class="{ active: currentLocale === lang.code }"
+      @click="changeLocale(lang.code)" role="radio" :aria-checked="currentLocale === lang.code">
       {{ lang.label }}
     </button>
   </div>
@@ -13,7 +10,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { setLocale } from '../i18n'
+import { setLocale } from '../../i18n'
 
 const { locale } = useI18n()
 const currentLocale = ref(locale.value)
@@ -46,10 +43,12 @@ const changeLocale = (code) => {
   font-weight: 500;
   transition: background var(--transition), color var(--transition);
 }
+
 .lang-switcher button.active {
   background: var(--accent);
   color: var(--bg-primary);
 }
+
 .lang-switcher button:hover:not(.active) {
   background: var(--border);
 }

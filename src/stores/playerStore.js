@@ -28,6 +28,14 @@ const bindEventListeners = () => {
   if (eventListenersBound) return
   eventListenersBound = true
 
+  window.addEventListener('beforeunload', () => {
+    if (state.currentTrack?.id) {
+      localStorage.setItem('currentTrackId', state.currentTrack.id);
+    } else {
+      localStorage.removeItem('currentTrackId');
+    }
+  })
+
   window.addEventListener('media-session-previous', () => playPrevious())
   window.addEventListener('media-session-next', () => playNext())
 }
@@ -93,6 +101,14 @@ const playTrack = async (track, fromBackQueue = false) => {
   }
 }
 
+const storedTrackId = localStorage.getItem('currentTrackId');
+
+if (storedTrackId) {
+  state.currentTrack = { id: storedTrackId };
+  const track = await api.getTrack(storedTrackId)
+  playTrack(track)
+}
+
 const play = () => {
   if (audio) {
     audio.play()
@@ -108,6 +124,7 @@ const pause = () => {
 }
 
 const togglePlay = () => {
+
   state.isPlaying ? pause() : play()
 }
 

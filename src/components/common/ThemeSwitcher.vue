@@ -1,19 +1,9 @@
 <template>
   <div class="theme-grid">
-    <button
-      v-for="theme in themes"
-      :key="theme.id"
-      :class="['theme-card', { active: themeId === theme.id }]"
-      @click="setTheme(theme.id)"
-      :aria-label="t(`settings.themes.${theme.id}`)"
-    >
+    <button v-for="theme in themes" :key="theme.id" :class="['theme-card', { active: themeId === theme.id }]"
+      @click="setTheme(theme.id)" :aria-label="t(`settings.themes.${theme.id}`)">
       <div class="theme-preview">
-        <span
-          v-for="(color, i) in theme.palette"
-          :key="i"
-          class="theme-swatch"
-          :style="{ background: color }"
-        />
+        <span v-for="(color, i) in theme.palette" :key="i" class="theme-swatch" :style="{ background: color }" />
       </div>
       <span class="theme-name">{{ t(`settings.themes.${theme.id}`) }}</span>
     </button>
@@ -21,8 +11,8 @@
 </template>
 
 <script setup>
-import { useI18n } from 'vue-i18n'
-import { useTheme } from '../composables/useTheme'
+import { useI18n } from 'vue-i18n';
+import { useTheme } from '../../composables/useTheme';
 
 const { t } = useI18n()
 const { themeId, setTheme, themes } = useTheme()

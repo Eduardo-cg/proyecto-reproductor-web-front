@@ -31,7 +31,6 @@
     "searchArtist": "Search artist...",
     "noTracks": "No songs found",
     "noAlbums": "No albums found",
-    "noArtists": "No artists found",
     "trackTitle": "Title",
     "trackArtist": "Artist",
     "trackArtists": "Artists",
@@ -65,7 +64,24 @@
     "selectedArtists": "{count} artist(s) selected",
     "andMore": "and {count} more",
     "primary": "(primary)",
-    "albumName": "Album Name"
+    "albumName": "Album Name",
+    "artistSearchPlaceholder": "Search artists...",
+    "noArtists": "No artists found",
+    "noContent": "No content",
+    "artistTracks": "Tracks",
+    "artistAlbums": "Albums",
+    "downloadAlbum": "Download ZIP",
+    "addTracks": "Add songs",
+    "new": "New"
+  },
+  "confirm": {
+    "deleteTitle": "Confirm deletion",
+    "deleteMessage": "Are you sure you want to delete \"{item}\"?",
+    "deleteArtistWithContent": "This artist has {tracks} songs and {albums} albums associated. All associated content will be deleted.",
+    "deleteAlbumWarning": "The album and all its songs will be deleted.",
+    "confirm": "Delete",
+    "cancel": "Cancel",
+    "deleting": "Deleting..."
   },
   "pagination": {
     "of": "of"
@@ -85,7 +101,13 @@
     "addToQueue": "Add to queue"
   },
   "common": {
-    "back": "Back"
+    "back": "Back",
+    "edit": "Edit",
+    "save": "Save",
+    "saving": "Saving...",
+    "download": "Download",
+    "info": "Info",
+    "delete": "Delete"
   },
   "settings": {
     "title": "Settings",

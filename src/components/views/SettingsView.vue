@@ -80,13 +80,13 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import Icon from '../components/icons/Icon.vue'
-import LanguageSwitcher from '../components/LanguageSwitcher.vue'
-import ThemeSwitcher from '../components/ThemeSwitcher.vue'
-import DarkModeToggle from '../components/DarkModeToggle.vue'
-import { useTheme } from '../composables/useTheme'
-import { useStreamingMode } from '../composables/useStreamingMode'
-import { useAuthStore } from '../stores/authStore'
+import { useStreamingMode } from '../../composables/useStreamingMode'
+import { useTheme } from '../../composables/useTheme'
+import { useAuthStore } from '../../stores/authStore'
+import DarkModeToggle from '../common/DarkModeToggle.vue'
+import LanguageSwitcher from '../common/LanguageSwitcher.vue'
+import ThemeSwitcher from '../common/ThemeSwitcher.vue'
+import Icon from '../icons/Icon.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -236,10 +236,12 @@ const logout = () => {
   font-weight: 500;
   transition: background var(--transition), color var(--transition);
 }
+
 .streaming-toggle button.active {
   background: var(--accent);
   color: var(--bg-primary);
 }
+
 .streaming-toggle button:hover:not(.active) {
   background: var(--border);
 }

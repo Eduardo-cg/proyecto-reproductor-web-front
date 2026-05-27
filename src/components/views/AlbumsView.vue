@@ -3,7 +3,8 @@
     <div class="search" role="search">
       <div class="search-wrapper">
         <Icon name="search" size="16" class="search-icon" />
-        <input v-model="search" type="text" :placeholder="t('library.albumSearchPlaceholder')" aria-label="Buscar álbumes" />
+        <input v-model="search" type="text" :placeholder="t('library.albumSearchPlaceholder')"
+          aria-label="Buscar álbumes" />
       </div>
     </div>
 
@@ -23,7 +24,8 @@
           <div class="col-actions" role="columnheader"></div>
         </div>
         <div v-for="album in filteredAlbums" :key="album.id" class="track-wrapper">
-          <div class="track-row album-row" @click="toggleAlbum(album.id)" role="row" :aria-expanded="expandedAlbumId === album.id">
+          <div class="track-row album-row" @click="toggleAlbum(album.id)" role="row"
+            :aria-expanded="expandedAlbumId === album.id">
             <div class="col-cover" role="cell">
               <img v-if="album.cover" :src="album.cover" alt="" class="track-cover" />
               <div v-else class="cover-placeholder" aria-hidden="true">
@@ -31,7 +33,8 @@
               </div>
             </div>
             <div class="col-title track-title" role="cell">
-              <Icon :name="expandedAlbumId === album.id ? 'chevron-down' : 'chevron-up'" size="12" class="expand-icon" />
+              <Icon :name="expandedAlbumId === album.id ? 'chevron-down' : 'chevron-up'" size="12"
+                class="expand-icon" />
               {{ album.title }}
             </div>
             <div class="col-artist track-artist" role="cell">{{ album.artistDisplay || '-' }}</div>
@@ -44,45 +47,82 @@
                 :aria-label="'Agregar ' + album.title + ' a la cola'">
                 <Icon name="plus" size="14" />
               </button>
-              <button class="btn-action" @click.stop="toggleAlbumInfo(album.id)"
-                :aria-label="'Información de ' + album.title">
-                <Icon name="info" size="14" />
-              </button>
-              <button class="btn-action btn-action-danger" @click="deleteAlbum(album.id)"
-                :aria-label="'Eliminar ' + album.title">
-                <Icon name="trash" size="14" />
-              </button>
+              <div class="actions-more">
+                <button class="btn-action" @click="openDropdownId = openDropdownId === album.id ? null : album.id"
+                  :aria-label="'Más opciones'">
+                  <Icon name="more-vertical" size="16" />
+                </button>
+                <div v-if="openDropdownId === album.id" class="track-dropdown">
+                  <button class="dropdown-item" @click="downloadAlbumZip(album)">
+                    <Icon name="download" size="14" />
+                    <span>{{ t('common.download') }}</span>
+                  </button>
+                  <button class="dropdown-item" @click="editAlbum(album)">
+                    <Icon name="edit" size="14" />
+                    <span>{{ t('common.edit') }}</span>
+                  </button>
+                  <button class="dropdown-item" @click="toggleAlbumInfo(album.id)">
+                    <Icon name="info" size="14" />
+                    <span>{{ t('common.info') }}</span>
+                  </button>
+                  <button class="dropdown-item dropdown-item-danger" @click="confirmDeleteAlbum(album)">
+                    <Icon name="trash" size="14" />
+                    <span>{{ t('common.delete') }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div v-if="selectedAlbumId === album.id" class="track-details" role="region" :aria-label="'Detalles de ' + album.title">
+          <div v-if="selectedAlbumId === album.id" class="track-details" role="region"
+            :aria-label="'Detalles de ' + album.title">
             <div class="details-content">
               <span class="details-label">{{ t('library.releaseDate') }}:</span>
-              <span class="details-value">{{ album.releaseDate ? formatDate(album.releaseDate) : t('library.notSpecified') }}</span>
+              <span class="details-value">{{ album.releaseDate ? formatDate(album.releaseDate) :
+                t('library.notSpecified') }}</span>
             </div>
           </div>
 
-          <div v-if="expandedAlbumId === album.id" class="album-tracks" role="region" :aria-label="'Canciones de ' + album.title">
+          <div v-if="expandedAlbumId === album.id" class="album-tracks" role="region"
+            :aria-label="'Canciones de ' + album.title">
             <div v-if="albumTracksLoading.has(album.id)" class="loading">{{ t('auth.loading') }}</div>
             <div v-else-if="!albumTracksMap[album.id] || albumTracksMap[album.id].length === 0" class="empty-sub">
               <p>{{ t('library.noTracks') }}</p>
             </div>
             <template v-else>
-              <div v-for="track in albumTracksMap[album.id]" :key="track.id" class="track-row album-track-row">
+              <div v-for="(track, index) in albumTracksMap[album.id]" :key="track.id" class="track-row album-track-row">
+                <div class="col-number track-number">{{ index + 1 }}</div>
                 <div class="col-title track-title">{{ track.title }}</div>
                 <div class="col-artist track-artist">{{ track.artistDisplay || '-' }}</div>
                 <div class="col-duration track-duration">{{ formatDuration(track.duration) }}</div>
                 <div class="col-actions track-actions">
-                  <button class="btn-action" @click="playTrack(track)" :aria-label="'Reproducir ' + track.title">
+                  <button class="btn-action" @click="playTrack(album, track)" :aria-label="'Reproducir ' + track.title">
                     <Icon name="play" size="14" />
                   </button>
-                  <button v-if="playerStore.state.currentTrack" class="btn-action" @click="playerStore.addToQueue(track)"
-                    :aria-label="'Agregar ' + track.title + ' a la cola'">
+                  <button v-if="playerStore.state.currentTrack" class="btn-action"
+                    @click="playerStore.addToQueue(track)" :aria-label="'Agregar ' + track.title + ' a la cola'">
                     <Icon name="plus" size="14" />
                   </button>
-                  <button class="btn-action btn-action-danger" @click="deleteAlbumTrack(album.id, track.id)"
-                    :aria-label="'Eliminar ' + track.title">
-                    <Icon name="trash" size="14" />
-                  </button>
+                  <div class="actions-more" @click.stop>
+                    <button class="btn-action"
+                      @click="openTrackDropdownId = openTrackDropdownId === track.id ? null : track.id"
+                      :aria-label="'Más opciones'">
+                      <Icon name="more-vertical" size="16" />
+                    </button>
+                    <div v-if="openTrackDropdownId === track.id" class="track-dropdown">
+                      <button class="dropdown-item" @click="downloadTrackFile(track)">
+                        <Icon name="download" size="14" />
+                        <span>{{ t('common.download') }}</span>
+                      </button>
+                      <button class="dropdown-item" @click="editAlbumTrack(album, track)">
+                        <Icon name="edit" size="14" />
+                        <span>{{ t('common.edit') }}</span>
+                      </button>
+                      <button class="dropdown-item dropdown-item-danger" @click="confirmDeleteAlbumTrack(album, track)">
+                        <Icon name="trash" size="14" />
+                        <span>{{ t('common.delete') }}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </template>
@@ -93,24 +133,46 @@
 
     <Pagination :current-page="currentPage" :total-pages="totalPages" :total-elements="totalElements"
       :page-size="pageSize" @page-change="goToPage" @page-size-change="changePageSize" />
+
+    <ConfirmDialog :show="showDeleteConfirm" :title="t('confirm.deleteTitle')" :message="deleteMessage"
+      :warning="deleteWarning" :loading="deleteLoading" @confirm="handleDeleteConfirm"
+      @cancel="showDeleteConfirm = false" />
+
+    <UploadAlbumModal :showUpload="showEditModal" :editMode="true" :editData="albumToEdit"
+      @update:showUpload="showEditModal = false" @uploaded="onAlbumEditUploaded" />
+
+    <UploadSongsModal :showUpload="showTrackEditModal" :editMode="true" :editData="trackToEdit"
+      @update:showUpload="showTrackEditModal = false" @uploaded="onTrackEditUploaded" />
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Pagination from '../components/Pagination.vue'
-import { api } from '../services/api'
-import { usePlayerStore } from '../stores/playerStore'
-import { formatDuration } from '../utils/format'
-import Icon from './icons/Icon.vue'
+import { api } from '../../services/api'
+import { usePlayerStore } from '../../stores/playerStore'
+import { formatDuration } from '../../utils/utils.js'
+import ConfirmDialog from '../common/ConfirmDialog.vue'
+import Pagination from '../common/Pagination.vue'
+import Icon from '../icons/Icon.vue'
+import UploadAlbumModal from '../modals/UploadAlbumModal.vue'
+import UploadSongsModal from '../modals/UploadSongsModal.vue'
 
 const { t } = useI18n()
 const playerStore = usePlayerStore()
 
+const showDeleteConfirm = ref(false)
+const deleteLoading = ref(false)
+const deleteTarget = ref(null)
+const deleteMode = ref('')
+const deleteMessage = ref('')
+const deleteWarning = ref('')
+
 const loading = ref(true)
 const search = ref('')
 const selectedAlbumId = ref(null)
+const openDropdownId = ref(null)
+const openTrackDropdownId = ref(null)
 
 const albums = ref([])
 const expandedAlbumId = ref(null)
@@ -181,9 +243,16 @@ const toggleAlbum = async (albumId) => {
   }
 }
 
-const playTrack = (track) => {
+const playTrack = (album, track) => {
+  const tracks = albumTracksMap.value[album.id]
+  if (!tracks || tracks.length === 0) return
+
+  const index = tracks.findIndex(t => t.id === track.id)
+  if (index === -1) return
+
   playerStore.clearQueue()
   playerStore.playTrack(track)
+  tracks.slice(index + 1).forEach(t => playerStore.addToQueue(t))
 }
 
 const playAlbum = async (album) => {
@@ -220,27 +289,113 @@ const queueAlbum = async (album) => {
   tracks.forEach(t => playerStore.addToQueue(t))
 }
 
-const deleteAlbum = async (id) => {
-  await api.deleteAlbum(id)
-  expandedAlbumId.value = null
-  albumTracksMap.value = {}
-  await loadAlbums()
+const showEditModal = ref(false)
+const albumToEdit = ref(null)
+const showTrackEditModal = ref(false)
+const trackToEdit = ref(null)
+
+const editAlbum = async (album) => {
+  try {
+    albumToEdit.value = await api.getAlbum(album.id)
+  } catch (e) {
+    albumToEdit.value = album
+  }
+  showEditModal.value = true
+  openDropdownId.value = null
 }
 
-const deleteAlbumTrack = async (albumId, trackId) => {
-  await api.deleteTrack(trackId)
-  const tracks = (albumTracksMap.value[albumId] || []).filter(t => t.id !== trackId)
-  albumTracksMap.value = { ...albumTracksMap.value, [albumId]: tracks }
-  const album = albums.value.find(a => a.id === albumId)
-  if (album) album.trackCount--
+const onAlbumEditUploaded = () => {
+  showEditModal.value = false
+  albumToEdit.value = null
+  loadAlbums()
+}
+
+const editAlbumTrack = (album, track) => {
+  trackToEdit.value = { ...track, album: album.title }
+  showTrackEditModal.value = true
+  openTrackDropdownId.value = null
+}
+
+const onTrackEditUploaded = () => {
+  showTrackEditModal.value = false
+  trackToEdit.value = null
+  if (expandedAlbumId.value) {
+    const albumId = expandedAlbumId.value
+    api.getAlbum(albumId).then(data => {
+      albumTracksMap.value = { ...albumTracksMap.value, [albumId]: data.tracks }
+    })
+  }
+}
+
+const confirmDeleteAlbum = (album) => {
+  deleteMode.value = 'album'
+  deleteTarget.value = album
+  deleteMessage.value = t('confirm.deleteMessage', { item: album.title })
+  deleteWarning.value = t('confirm.deleteAlbumWarning')
+  showDeleteConfirm.value = true
+}
+
+const confirmDeleteAlbumTrack = (album, track) => {
+  deleteMode.value = 'track'
+  deleteTarget.value = { album, track }
+  deleteMessage.value = t('confirm.deleteMessage', { item: track.title })
+  deleteWarning.value = ''
+  showDeleteConfirm.value = true
+}
+
+const handleDeleteConfirm = async () => {
+  if (!deleteTarget.value) return
+  deleteLoading.value = true
+  try {
+    if (deleteMode.value === 'album') {
+      await api.deleteAlbum(deleteTarget.value.id)
+      expandedAlbumId.value = null
+      albumTracksMap.value = {}
+      await loadAlbums()
+    } else {
+      const { album, track } = deleteTarget.value
+      await api.deleteTrack(track.id)
+      const tracks = (albumTracksMap.value[album.id] || []).filter(t => t.id !== track.id)
+      albumTracksMap.value = { ...albumTracksMap.value, [album.id]: tracks }
+      const a = albums.value.find(x => x.id === album.id)
+      if (a) a.trackCount--
+    }
+    showDeleteConfirm.value = false
+    deleteTarget.value = null
+  } catch (e) {
+    console.error(e)
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
+const downloadAlbumZip = async (album) => {
+  openDropdownId.value = null
+  try {
+    await api.downloadAlbumZip(album.id)
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const downloadTrackFile = async (track) => {
+  openTrackDropdownId.value = null
+  try {
+    await api.downloadTrack(track.id)
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const handleDocumentClick = () => {
+  openDropdownId.value = null
+  openTrackDropdownId.value = null
   selectedAlbumId.value = null
 }
 
 const toggleAlbumInfo = (id) => {
-  selectedAlbumId.value = id
+  selectedAlbumId.value = id === selectedAlbumId.value ? null : id
+  openDropdownId.value = null
 }
 
 const formatDate = (dateStr) => {
@@ -302,9 +457,11 @@ onUnmounted(() => {
   color: var(--text-muted);
   gap: 12px;
 }
+
 .empty p {
   font-size: 14px;
 }
+
 .empty-sub {
   padding: 16px;
   text-align: center;
@@ -347,6 +504,7 @@ onUnmounted(() => {
   border-radius: var(--radius-sm);
   transition: background 0.1s;
 }
+
 .track-row:hover {
   background: var(--bg-secondary);
 }
@@ -359,12 +517,13 @@ onUnmounted(() => {
 }
 
 .album-track-row {
-  grid-template-columns: 2fr 1.5fr 80px 120px;
+  grid-template-columns: 36px 2fr 1.5fr 80px 120px;
   padding-left: 32px;
   background: transparent;
   margin: 1px 0;
   border-radius: 0;
 }
+
 .album-track-row:hover {
   background: var(--bg-tertiary);
 }
@@ -402,6 +561,13 @@ onUnmounted(() => {
   align-items: center;
 }
 
+.track-number {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 .track-artist {
   color: var(--text-secondary);
   font-size: 13px;
@@ -420,6 +586,49 @@ onUnmounted(() => {
   display: flex;
   gap: 4px;
   justify-content: flex-end;
+  align-items: center;
+}
+
+.actions-more {
+  position: relative;
+}
+
+.track-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 150px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.dropdown-item-danger:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
 }
 
 .btn-action {
@@ -433,10 +642,12 @@ onUnmounted(() => {
   color: var(--text-secondary);
   transition: background 0.1s, color 0.1s;
 }
+
 .btn-action:hover {
   background: var(--accent-alpha);
   color: var(--accent);
 }
+
 .btn-action-danger:hover {
   background: rgba(231, 76, 60, 0.1);
   color: #e74c3c;
@@ -476,6 +687,7 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(-4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -493,7 +705,7 @@ onUnmounted(() => {
   }
 
   .album-track-row {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 28px 1fr auto;
     padding-left: 20px;
   }
 
@@ -521,6 +733,7 @@ onUnmounted(() => {
   }
 
   .album-track-row {
+    grid-template-columns: 24px 1fr auto;
     padding-left: 16px;
     gap: 6px;
   }

@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { themes } from '../themes'
+import { themes } from '../assets/styles/themes/index'
 
 const THEME_KEY = 'theme'
 const DARK_KEY = 'darkMode'
