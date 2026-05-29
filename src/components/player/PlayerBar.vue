@@ -28,10 +28,16 @@
         </button>
       </div>
       <div class="progress-container">
-        <span class="time" aria-hidden="true">{{ formatDuration(playerStore.state.position) }}</span>
-        <input type="range" :value="seekTemp" :max="playerStore.state.duration || 0" @input="onSeek" @change="applySeek" @mouseup="applySeek"
-          class="progress-bar"
-          :aria-label="t('player.progress', { current: formatDuration(seekTemp), total: formatDuration(playerStore.state.duration) })" />
+        <span class="time" aria-hidden="true">{{ formatDuration(isSeeking ? seekTemp : playerStore.state.position)
+          }}</span>
+        <div class="progress-wrapper" ref="progressContainer">
+          <input class="progress-bar" type="range" :value="isSeeking ? seekTemp : playerStore.state.position"
+            :max="playerStore.state.duration || 0" @mousedown.prevent="onProgressMouseDown"
+            :aria-label="t('player.progress', { current: formatDuration(isSeeking ? seekTemp : playerStore.state.position), total: formatDuration(playerStore.state.duration) })" />
+          <div v-if="isSeeking" class="seek-tooltip" :style="tooltipStyle">
+            {{ formatDuration(seekTemp) }}
+          </div>
+        </div>
         <span class="time" aria-hidden="true">{{ formatDuration(playerStore.state.duration) }}</span>
       </div>
     </div>
@@ -59,29 +65,73 @@
   </div>
 
   <QueuePanel v-if="showQueue" :queue="playerStore.state.queue" @close="showQueue = false"
-    @remove="playerStore.removeFromQueue" @clear="playerStore.clearQueue" />
+    @remove="playerStore.removeFromQueue" @clear="playerStore.clearQueue"
+    @reorder="playerStore.reorderQueue" />
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '../../stores/playerStore'
 import { formatDuration } from '../../utils/utils'
-import QueuePanel from './QueuePanel.vue'
 import Icon from '../icons/Icon.vue'
+import QueuePanel from './QueuePanel.vue'
 
 const { t } = useI18n()
 const playerStore = usePlayerStore()
 const showQueue = ref(false)
 
-const seekTemp = ref(playerStore.state.position)
+const seekTemp = ref(0)
+const isSeeking = ref(false)
+const tooltipX = ref(0)
+const progressContainer = ref(null)
 
-const applySeek = () => {
-  playerStore.seek(seekTemp.value)
+const tooltipStyle = computed(() => ({
+  left: `${tooltipX.value}px`,
+  transform: 'translateX(-50%)'
+}))
+
+const calculateTimeFromEvent = (e) => {
+  if (!progressContainer.value) return 0
+  const input = progressContainer.value.querySelector('input[type="range"]')
+  if (!input) return 0
+  const inputRect = input.getBoundingClientRect()
+  const x = e.clientX - inputRect.left
+  const percentage = Math.max(0, Math.min(1, x / inputRect.width))
+  return percentage * (playerStore.state.duration || 0)
 }
 
-const onSeek = (e) => {
-  seekTemp.value = parseFloat(e.target.value)
+const THUMB_RADIUS = 6
+
+const clampTooltipX = (x) => {
+  const rect = progressContainer.value?.getBoundingClientRect()
+  if (!rect) return x
+  return Math.max(THUMB_RADIUS, Math.min(rect.width - THUMB_RADIUS, x))
+}
+
+const onProgressMouseDown = (e) => {
+  isSeeking.value = true
+  seekTemp.value = calculateTimeFromEvent(e)
+  const rect = progressContainer.value?.getBoundingClientRect()
+  tooltipX.value = clampTooltipX(e.clientX - (rect?.left || 0))
+  document.addEventListener('mousemove', onProgressMouseMove)
+  document.addEventListener('mouseup', onProgressMouseUp)
+}
+
+const onProgressMouseMove = (e) => {
+  if (!isSeeking.value) return
+  seekTemp.value = calculateTimeFromEvent(e)
+  const rect = progressContainer.value?.getBoundingClientRect()
+  tooltipX.value = clampTooltipX(e.clientX - (rect?.left || 0))
+}
+
+const onProgressMouseUp = () => {
+  if (isSeeking.value) {
+    playerStore.seek(seekTemp.value)
+    isSeeking.value = false
+  }
+  document.removeEventListener('mousemove', onProgressMouseMove)
+  document.removeEventListener('mouseup', onProgressMouseUp)
 }
 
 const onVolumeChange = (e) => {
@@ -98,16 +148,15 @@ const onVolumeChange = (e) => {
   height: var(--player-height);
   background: var(--bg-secondary);
   border-top: 1px solid var(--border);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 0 16px;
   z-index: 100;
 }
 
 .track-info {
-  width: 200px;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .track-details {
@@ -161,9 +210,6 @@ const onVolumeChange = (e) => {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  flex: 1;
-  max-width: 60%;
-  margin: 0 16px;
 }
 
 .controls-buttons {
@@ -218,6 +264,30 @@ const onVolumeChange = (e) => {
   align-items: center;
   gap: 10px;
   width: 100%;
+  cursor: pointer;
+}
+
+.progress-wrapper {
+  flex: 1;
+  position: relative;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.seek-tooltip {
+  position: absolute;
+  top: -28px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .time {
@@ -228,7 +298,7 @@ const onVolumeChange = (e) => {
 }
 
 .progress-bar {
-  flex: 1;
+  width: 100%;
   height: 4px;
   -webkit-appearance: none;
   appearance: none;
@@ -257,6 +327,7 @@ const onVolumeChange = (e) => {
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+  justify-self: end;
 }
 
 .volume {
@@ -299,10 +370,6 @@ const onVolumeChange = (e) => {
   .track-info {
     width: 140px;
   }
-
-  .controls {
-    max-width: none;
-  }
 }
 
 @media (max-width: 480px) {
@@ -331,10 +398,6 @@ const onVolumeChange = (e) => {
 
   .track-artist {
     display: none;
-  }
-
-  .controls {
-    margin: 0 8px;
   }
 
   .controls-buttons {

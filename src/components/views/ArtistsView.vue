@@ -1,23 +1,34 @@
 <template>
   <div>
-    <div class="search" role="search">
-      <div class="search-wrapper">
-        <Icon name="search" size="16" class="search-icon" />
-        <input v-model="search" type="text" :placeholder="t('library.artistSearchPlaceholder')"
-          aria-label="Buscar artistas" />
+    <div class="toolbar">
+      <div class="search" role="search">
+        <div class="search-wrapper">
+          <Icon name="search" size="16" class="search-icon" />
+          <input v-model="search" type="text" :placeholder="t('library.artistSearchPlaceholder')"
+            aria-label="Buscar artistas" @keyup.enter="handleSearch" />
+        </div>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn btn-primary" @click="handleSearch">
+          <Icon name="search" size="14" />
+          {{ t('library.search') }}
+        </button>
+        <button class="btn btn-secondary" @click="clearFilters">
+          {{ t('library.clearFilters') }}
+        </button>
       </div>
     </div>
 
     <div v-if="loading" class="loading" role="status">{{ t('auth.loading') }}</div>
 
     <template v-else>
-      <div v-if="filteredArtists.length === 0" class="empty">
+      <div v-if="artists.length === 0" class="empty">
         <Icon name="empty" size="48" />
         <p>{{ t('library.noArtists') }}</p>
       </div>
 
       <div v-else class="artists-grid" role="list" aria-label="Lista de artistas">
-        <div v-for="artist in filteredArtists" :key="artist.id" class="artist-card-wrapper">
+        <div v-for="artist in artists" :key="artist.id" class="artist-card-wrapper">
           <div class="artist-card" @click="toggleExpand(artist.id)" role="listitem"
             :aria-expanded="expandedArtistId === artist.id">
             <div class="artist-image">
@@ -79,7 +90,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
 import ConfirmDialog from '../common/ConfirmDialog.vue'
@@ -92,11 +103,14 @@ const { t } = useI18n()
 
 const loading = ref(true)
 const search = ref('')
+let searchTimeout
 const expandedArtistId = ref(null)
 
 const artists = ref([])
 const currentPage = ref(0)
 const pageSize = ref(20)
+const totalElements = ref(0)
+const totalPages = ref(0)
 const openDropdownId = ref(null)
 
 const showDeleteConfirm = ref(false)
@@ -105,35 +119,14 @@ const artistToDelete = ref(null)
 const deleteDialogMessage = ref('')
 const deleteDialogWarning = ref('')
 
-const allFiltered = computed(() => {
-  if (!search.value) return artists.value
-  const s = search.value.toLowerCase()
-  return artists.value.filter(a =>
-    a.name.toLowerCase().includes(s)
-  )
-})
-
-const filteredArtists = computed(() => {
-  const start = currentPage.value * pageSize.value
-  return allFiltered.value.slice(start, start + pageSize.value)
-})
-
-const totalPages = computed(() =>
-  Math.ceil(allFiltered.value.length / pageSize.value) || 0
-)
-
-const totalElements = computed(() => allFiltered.value.length)
-
-watch(search, () => {
-  currentPage.value = 0
-})
-
 const loadArtists = async () => {
   try {
     loading.value = true
-    const data = await api.getArtists(0, 9999)
+    const data = await api.getArtists(currentPage.value, pageSize.value, search.value)
     artists.value = data.artists
-    currentPage.value = 0
+    totalElements.value = data.totalElements
+    totalPages.value = data.totalPages
+    currentPage.value = data.currentPage
     expandedArtistId.value = null
   } catch (e) {
     console.error(e)
@@ -144,11 +137,13 @@ const loadArtists = async () => {
 
 const goToPage = (page) => {
   currentPage.value = page
+  loadArtists()
 }
 
 const changePageSize = (newSize) => {
   pageSize.value = newSize
   currentPage.value = 0
+  loadArtists()
 }
 
 const toggleExpand = (artistId) => {
@@ -217,6 +212,24 @@ const refresh = () => {
   loadArtists()
 }
 
+const handleSearch = () => {
+  currentPage.value = 0
+  loadArtists()
+}
+
+watch(search, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    handleSearch()
+  }, 300)
+})
+
+const clearFilters = () => {
+  search.value = ''
+  currentPage.value = 0
+  loadArtists()
+}
+
 defineExpose({ refresh })
 
 onMounted(() => {
@@ -230,8 +243,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.search {
+.toolbar {
+  display: flex;
+  gap: 12px;
   margin-bottom: 24px;
+  align-items: stretch;
+}
+
+.search {
+  flex: 2;
+  margin-bottom: 0;
 }
 
 .search-wrapper {
@@ -249,6 +270,46 @@ onUnmounted(() => {
 
 .search-wrapper input {
   padding-left: 36px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.toolbar-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary);
 }
 
 .loading {
@@ -434,6 +495,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+  }
+
   .artists-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;

@@ -1,7 +1,11 @@
 import { API_URL, authHeaders, handleResponse, downloadBlob } from './utils.js'
 
-export const getTracks = async (page = 0, size = 20) => {
-  const res = await fetch(`${API_URL}/tracks?page=${page}&size=${size}`, { headers: authHeaders() })
+export const getTracks = async (page = 0, size = 20, search = '', artistIds = [], albumIds = []) => {
+  const params = new URLSearchParams({ page, size })
+  if (search) params.set('search', search)
+  if (artistIds.length > 0) params.set('artistIds', artistIds.join(','))
+  if (albumIds.length > 0) params.set('albumIds', albumIds.join(','))
+  const res = await fetch(`${API_URL}/tracks?${params}`, { headers: authHeaders() })
   const data = await handleResponse(res, 'Error al obtener las canciones')
   return { tracks: data.content, totalElements: data.totalElements, totalPages: data.totalPages, currentPage: data.currentPage, pageSize: data.pageSize }
 }

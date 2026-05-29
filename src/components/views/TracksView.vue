@@ -1,17 +1,36 @@
 <template>
   <div>
-    <div class="search" role="search">
-      <div class="search-wrapper">
-        <Icon name="search" size="16" class="search-icon" />
-        <input v-model="search" type="text" :placeholder="t('library.searchPlaceholder')"
-          aria-label="Buscar canciones" />
+    <div class="toolbar">
+      <div class="search" role="search">
+        <div class="search-wrapper">
+          <Icon name="search" size="16" class="search-icon" />
+          <input v-model="search" type="text" :placeholder="t('library.searchPlaceholder')"
+            aria-label="Buscar canciones" @keyup.enter="handleSearch" />
+        </div>
+      </div>
+      <CombinedFilter
+        v-model:artistIds="selectedArtistIds"
+        v-model:albumIds="selectedAlbumIds"
+        :artistOptions="userArtists.map(a => ({ id: a.id, label: a.name }))"
+        :albumOptions="userAlbums.map(a => ({ id: a.id, label: a.title }))"
+        :artistPlaceholder="t('library.filterByArtist')"
+        :albumPlaceholder="t('library.filterByAlbum')"
+      />
+      <div class="toolbar-actions">
+        <button class="btn btn-primary" @click="handleSearch">
+          <Icon name="search" size="14" />
+          {{ t('library.search') }}
+        </button>
+        <button class="btn btn-secondary" @click="clearFilters">
+          {{ t('library.clearFilters') }}
+        </button>
       </div>
     </div>
 
     <div v-if="loading" class="loading" role="status">{{ t('auth.loading') }}</div>
 
     <template v-else>
-      <div v-if="filteredTracks.length === 0" class="empty">
+      <div v-if="tracks.length === 0" class="empty">
         <Icon name="empty" size="48" />
         <p>{{ t('library.noTracks') }}</p>
       </div>
@@ -24,7 +43,7 @@
           <div class="col-duration" role="columnheader">{{ t('library.duration') }}</div>
           <div class="col-actions" role="columnheader"></div>
         </div>
-        <div v-for="track in filteredTracks" :key="track.id" class="track-wrapper">
+        <div v-for="track in tracks" :key="track.id" class="track-wrapper">
           <div class="track-row" role="row">
             <div class="col-cover" role="cell">
               <img v-if="track.cover" :src="track.cover" alt="" class="track-cover" />
@@ -33,7 +52,7 @@
               </div>
             </div>
             <div class="col-title track-title" role="cell">{{ track.title }}</div>
-            <div class="col-artist track-artist" role="cell">{{ track.artistDisplay || '-' }}</div>
+            <div class="col-artist track-artist" role="cell">{{ track.artist || '-' }}</div>
             <div class="col-album track-album" role="cell">{{ track.album || '-' }}</div>
             <div class="col-duration track-duration" role="cell">{{ formatDuration(track.duration) }}</div>
             <div class="col-actions track-actions" role="cell">
@@ -94,11 +113,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
 import { usePlayerStore } from '../../stores/playerStore'
 import { formatDuration } from '../../utils/utils.js'
+import CombinedFilter from '../common/CombinedFilter.vue'
 import ConfirmDialog from '../common/ConfirmDialog.vue'
 import Pagination from '../common/Pagination.vue'
 import Icon from '../icons/Icon.vue'
@@ -109,6 +129,7 @@ const playerStore = usePlayerStore()
 
 const loading = ref(true)
 const search = ref('')
+let searchTimeout
 const selectedTrackId = ref(null)
 const openDropdownId = ref(null)
 
@@ -119,6 +140,11 @@ const deleteMessage = ref('')
 
 const showEditModal = ref(false)
 const trackToEdit = ref(null)
+
+const selectedArtistIds = ref([])
+const selectedAlbumIds = ref([])
+const userArtists = ref([])
+const userAlbums = ref([])
 
 const editTrack = (track) => {
   trackToEdit.value = track
@@ -138,20 +164,16 @@ const pageSize = ref(20)
 const totalElements = ref(0)
 const totalPages = ref(0)
 
-const filteredTracks = computed(() => {
-  if (!search.value) return tracks.value
-  const s = search.value.toLowerCase()
-  return tracks.value.filter(t =>
-    t.title.toLowerCase().includes(s) ||
-    (t.artistDisplay && t.artistDisplay.toLowerCase().includes(s)) ||
-    (t.album && t.album.toLowerCase().includes(s))
-  )
-})
-
 const loadTracks = async () => {
   try {
     loading.value = true
-    const res = await api.getTracks(currentPage.value, pageSize.value)
+    const res = await api.getTracks(
+      currentPage.value,
+      pageSize.value,
+      search.value,
+      selectedArtistIds.value,
+      selectedAlbumIds.value
+    )
     tracks.value = res.tracks
     totalElements.value = res.totalElements
     totalPages.value = res.totalPages
@@ -160,6 +182,22 @@ const loadTracks = async () => {
     console.error(e)
   } finally {
     loading.value = false
+  }
+}
+
+const loadUserArtists = async () => {
+  try {
+    userArtists.value = await api.getArtistsList()
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const loadUserAlbums = async (artistIds = []) => {
+  try {
+    userAlbums.value = await api.getAlbumsList(artistIds)
+  } catch (e) {
+    console.error(e)
   }
 }
 
@@ -229,10 +267,35 @@ const refresh = () => {
   loadTracks()
 }
 
+const handleSearch = () => {
+  currentPage.value = 0
+  loadTracks()
+}
+
+watch(search, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    handleSearch()
+  }, 300)
+})
+
+const clearFilters = () => {
+  search.value = ''
+  selectedArtistIds.value = []
+  selectedAlbumIds.value = []
+  currentPage.value = 0
+  loadTracks()
+}
+
+watch(selectedArtistIds, (newIds) => {
+  selectedAlbumIds.value = []
+  loadUserAlbums(newIds)
+}, { deep: true })
+
 defineExpose({ refresh })
 
-onMounted(() => {
-  loadTracks()
+onMounted(async () => {
+  await Promise.all([loadTracks(), loadUserArtists(), loadUserAlbums()])
   document.addEventListener('click', handleDocumentClick)
 })
 
@@ -242,8 +305,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.search {
+.toolbar {
+  display: flex;
+  gap: 12px;
   margin-bottom: 24px;
+  align-items: center;
+}
+
+.search {
+  flex: 1;
+  margin-bottom: 0;
 }
 
 .search-wrapper {
@@ -261,6 +332,46 @@ onUnmounted(() => {
 
 .search-wrapper input {
   padding-left: 36px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.toolbar-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary);
 }
 
 .loading {
@@ -470,6 +581,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+  }
+
   .tracks-header {
     display: none;
   }

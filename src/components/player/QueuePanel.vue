@@ -1,17 +1,20 @@
 <template>
-  <div class="queue-panel" role="dialog" aria-label="Cola de reproducción">
-    <div class="queue-header">
+  <div class="queue-panel" :style="panelStyle" role="dialog" aria-label="Cola de reproducción">
+    <div class="queue-header" @mousedown="startResize">
       <h3>Cola de reproducción</h3>
       <button class="close-btn" @click="$emit('close')" aria-label="Cerrar cola">
         <Icon name="close" size="18" />
       </button>
     </div>
-    <div class="queue-list">
+    <div class="queue-list" ref="queueListRef">
       <div v-if="queue.length === 0" class="empty-queue">
         <Icon name="queue" size="32" />
         <p>No hay canciones en la cola</p>
       </div>
-      <div v-for="(track, index) in queue" :key="index" class="queue-item">
+      <div v-for="(track, index) in queue" :key="track.id ?? index" class="queue-item" :data-index="index">
+        <button class="drag-handle" aria-label="Reordenar" tabindex="0">
+          <Icon name="drag" size="14" />
+        </button>
         <img v-if="track.cover" :src="track.cover" alt="" class="item-cover" />
         <div v-else class="item-cover-placeholder" aria-hidden="true">
           <Icon name="music" size="18" />
@@ -32,16 +35,82 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import Sortable from 'sortablejs'
 import Icon from '../icons/Icon.vue'
 
-defineProps({
+const props = defineProps({
   queue: {
     type: Array,
     default: () => []
   }
 })
 
-defineEmits(['close', 'remove', 'clear'])
+const emit = defineEmits(['close', 'remove', 'clear', 'reorder'])
+
+const panelHeight = ref(300)
+const isResizing = ref(false)
+const resizeStartY = ref(0)
+const resizeStartHeight = ref(300)
+
+const panelStyle = computed(() => {
+  if (window.innerWidth <= 480) return {}
+  return { height: panelHeight.value + 'px' }
+})
+
+const startResize = (e) => {
+  if (window.innerWidth <= 480) return
+  isResizing.value = true
+  resizeStartY.value = e.clientY
+  resizeStartHeight.value = panelHeight.value
+  document.addEventListener('mousemove', onResize)
+  document.addEventListener('mouseup', stopResize)
+}
+
+const onResize = (e) => {
+  if (!isResizing.value) return
+  const playerHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--player-height')) || 90
+  const maxHeight = window.innerHeight - playerHeight - 16
+  const newHeight = resizeStartHeight.value - (e.clientY - resizeStartY.value)
+  panelHeight.value = Math.max(120, Math.min(maxHeight, newHeight))
+}
+
+const stopResize = () => {
+  isResizing.value = false
+  document.removeEventListener('mousemove', onResize)
+  document.removeEventListener('mouseup', stopResize)
+}
+
+const queueListRef = ref(null)
+let sortableInstance = null
+
+const initSortable = () => {
+  if (!queueListRef.value || props.queue.length < 2) return
+  sortableInstance = Sortable.create(queueListRef.value, {
+    animation: 150,
+    handle: '.drag-handle',
+    ghostClass: 'sortable-ghost',
+    dragClass: 'sortable-drag',
+    onEnd: (evt) => {
+      if (evt.oldIndex === evt.newIndex) return
+      const reordered = [...props.queue]
+      const [moved] = reordered.splice(evt.oldIndex, 1)
+      reordered.splice(evt.newIndex, 0, moved)
+      emit('reorder', reordered)
+    }
+  })
+}
+
+onMounted(() => {
+  initSortable()
+})
+
+onBeforeUnmount(() => {
+  if (sortableInstance) {
+    sortableInstance.destroy()
+    sortableInstance = null
+  }
+})
 </script>
 
 <style scoped>
@@ -74,6 +143,8 @@ defineEmits(['close', 'remove', 'clear'])
   align-items: center;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
+  cursor: row-resize;
+  user-select: none;
 }
 
 .queue-header h3 {
@@ -187,6 +258,40 @@ defineEmits(['close', 'remove', 'clear'])
   color: var(--text-primary);
 }
 
+.drag-handle {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: grab;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.queue-item:hover .drag-handle {
+  opacity: 1;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.sortable-ghost {
+  opacity: 0.3;
+  background: var(--accent-alpha);
+}
+
+.sortable-drag {
+  opacity: 0.8;
+}
+
+.sortable-ghost .drag-handle,
+.sortable-drag .drag-handle {
+  opacity: 1;
+}
+
 .queue-footer {
   padding: 12px 16px;
   border-top: 1px solid var(--border);
@@ -208,6 +313,14 @@ defineEmits(['close', 'remove', 'clear'])
   .queue-panel {
     height: 100%;
     bottom: var(--player-height);
+  }
+
+  .queue-header {
+    cursor: default;
+  }
+
+  .drag-handle {
+    opacity: 1;
   }
 
   .remove-btn {

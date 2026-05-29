@@ -1,17 +1,35 @@
 <template>
   <div>
-    <div class="search" role="search">
-      <div class="search-wrapper">
-        <Icon name="search" size="16" class="search-icon" />
-        <input v-model="search" type="text" :placeholder="t('library.albumSearchPlaceholder')"
-          aria-label="Buscar álbumes" />
+    <div class="toolbar">
+      <div class="search" role="search">
+        <div class="search-wrapper">
+          <Icon name="search" size="16" class="search-icon" />
+          <input v-model="search" type="text" :placeholder="t('library.albumSearchPlaceholder')"
+            aria-label="Buscar álbumes" @keyup.enter="handleSearch" />
+        </div>
+      </div>
+      <div class="filters-bar">
+        <FilterSelector
+          v-model="selectedArtistIds"
+          :options="userArtists.map(a => ({ id: a.id, label: a.name }))"
+          :placeholder="t('library.filterByArtist')"
+        />
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn btn-primary" @click="handleSearch">
+          <Icon name="search" size="14" />
+          {{ t('library.search') }}
+        </button>
+        <button class="btn btn-secondary" @click="clearFilters">
+          {{ t('library.clearFilters') }}
+        </button>
       </div>
     </div>
 
     <div v-if="loading" class="loading" role="status">{{ t('auth.loading') }}</div>
 
     <template v-else>
-      <div v-if="filteredAlbums.length === 0" class="empty">
+      <div v-if="albums.length === 0" class="empty">
         <Icon name="empty" size="48" />
         <p>{{ t('library.noAlbums') }}</p>
       </div>
@@ -23,7 +41,7 @@
           <div class="col-duration" role="columnheader">{{ t('library.albumCount').replace('{count}', '') }}</div>
           <div class="col-actions" role="columnheader"></div>
         </div>
-        <div v-for="album in filteredAlbums" :key="album.id" class="track-wrapper">
+        <div v-for="album in albums" :key="album.id" class="track-wrapper">
           <div class="track-row album-row" @click="toggleAlbum(album.id)" role="row"
             :aria-expanded="expandedAlbumId === album.id">
             <div class="col-cover" role="cell">
@@ -37,7 +55,7 @@
                 class="expand-icon" />
               {{ album.title }}
             </div>
-            <div class="col-artist track-artist" role="cell">{{ album.artistDisplay || '-' }}</div>
+            <div class="col-artist track-artist" role="cell">{{ album.artist || '-' }}</div>
             <div class="col-duration track-duration" role="cell">{{ album.trackCount }}</div>
             <div class="col-actions track-actions" role="cell" @click.stop>
               <button class="btn-action" @click="playAlbum(album)" :aria-label="'Reproducir ' + album.title">
@@ -92,7 +110,7 @@
               <div v-for="(track, index) in albumTracksMap[album.id]" :key="track.id" class="track-row album-track-row">
                 <div class="col-number track-number">{{ index + 1 }}</div>
                 <div class="col-title track-title">{{ track.title }}</div>
-                <div class="col-artist track-artist">{{ track.artistDisplay || '-' }}</div>
+                <div class="col-artist track-artist">{{ track.artist || '-' }}</div>
                 <div class="col-duration track-duration">{{ formatDuration(track.duration) }}</div>
                 <div class="col-actions track-actions">
                   <button class="btn-action" @click="playTrack(album, track)" :aria-label="'Reproducir ' + track.title">
@@ -147,12 +165,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
 import { usePlayerStore } from '../../stores/playerStore'
 import { formatDuration } from '../../utils/utils.js'
 import ConfirmDialog from '../common/ConfirmDialog.vue'
+import FilterSelector from '../common/FilterSelector.vue'
 import Pagination from '../common/Pagination.vue'
 import Icon from '../icons/Icon.vue'
 import UploadAlbumModal from '../modals/UploadAlbumModal.vue'
@@ -170,6 +189,7 @@ const deleteWarning = ref('')
 
 const loading = ref(true)
 const search = ref('')
+let searchTimeout
 const selectedAlbumId = ref(null)
 const openDropdownId = ref(null)
 const openTrackDropdownId = ref(null)
@@ -184,19 +204,18 @@ const pageSize = ref(20)
 const totalElements = ref(0)
 const totalPages = ref(0)
 
-const filteredAlbums = computed(() => {
-  if (!search.value) return albums.value
-  const s = search.value.toLowerCase()
-  return albums.value.filter(a =>
-    a.title.toLowerCase().includes(s) ||
-    (a.artistDisplay && a.artistDisplay.toLowerCase().includes(s))
-  )
-})
+const selectedArtistIds = ref([])
+const userArtists = ref([])
 
 const loadAlbums = async () => {
   try {
     loading.value = true
-    const res = await api.getAlbums(currentPage.value, pageSize.value)
+    const res = await api.getAlbums(
+      currentPage.value,
+      pageSize.value,
+      search.value,
+      selectedArtistIds.value
+    )
     albums.value = res.albums
     totalElements.value = res.totalElements
     totalPages.value = res.totalPages
@@ -207,6 +226,14 @@ const loadAlbums = async () => {
     console.error(e)
   } finally {
     loading.value = false
+  }
+}
+
+const loadUserArtists = async () => {
+  try {
+    userArtists.value = await api.getArtistsList()
+  } catch (e) {
+    console.error(e)
   }
 }
 
@@ -408,10 +435,29 @@ const refresh = () => {
   loadAlbums()
 }
 
+const handleSearch = () => {
+  currentPage.value = 0
+  loadAlbums()
+}
+
+watch(search, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    handleSearch()
+  }, 300)
+})
+
+const clearFilters = () => {
+  search.value = ''
+  selectedArtistIds.value = []
+  currentPage.value = 0
+  loadAlbums()
+}
+
 defineExpose({ refresh })
 
-onMounted(() => {
-  loadAlbums()
+onMounted(async () => {
+  await Promise.all([loadAlbums(), loadUserArtists()])
   document.addEventListener('click', handleDocumentClick)
 })
 
@@ -421,8 +467,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.search {
+.toolbar {
+  display: flex;
+  gap: 12px;
   margin-bottom: 24px;
+  align-items: stretch;
+}
+
+.search {
+  flex: 2;
+  margin-bottom: 0;
 }
 
 .search-wrapper {
@@ -440,6 +494,54 @@ onUnmounted(() => {
 
 .search-wrapper input {
   padding-left: 36px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.filters-bar {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.toolbar-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary);
 }
 
 .loading {
@@ -695,6 +797,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+  }
+
   .tracks-header {
     display: none;
   }

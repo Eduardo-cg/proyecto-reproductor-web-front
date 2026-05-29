@@ -1,7 +1,10 @@
 import { API_URL, authHeaders, handleResponse } from './utils.js'
 
-export const getAlbums = async (page = 0, size = 20) => {
-  const res = await fetch(`${API_URL}/albums?page=${page}&size=${size}`, { headers: authHeaders() })
+export const getAlbums = async (page = 0, size = 20, search = '', artistIds = []) => {
+  const params = new URLSearchParams({ page, size })
+  if (search) params.set('search', search)
+  if (artistIds.length > 0) params.set('artistIds', artistIds.join(','))
+  const res = await fetch(`${API_URL}/albums?${params}`, { headers: authHeaders() })
   const data = await handleResponse(res, 'Error al obtener los álbumes')
   return { albums: data.content, totalElements: data.totalElements, totalPages: data.totalPages, currentPage: data.currentPage, pageSize: data.pageSize }
 }

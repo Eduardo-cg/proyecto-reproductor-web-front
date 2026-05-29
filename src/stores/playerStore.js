@@ -38,6 +38,7 @@ const bindEventListeners = () => {
 
   window.addEventListener('media-session-previous', () => playPrevious())
   window.addEventListener('media-session-next', () => playNext())
+  window.addEventListener('media-session-toggle', () => togglePlay())
 }
 
 const initAudio = () => {
@@ -52,6 +53,16 @@ const initAudio = () => {
 
     audio.addEventListener('loadedmetadata', () => {
       state.duration = audio.duration
+    })
+
+    audio.addEventListener('play', () => {
+      state.isPlaying = true
+      updatePlaybackState(true)
+    })
+
+    audio.addEventListener('pause', () => {
+      state.isPlaying = false
+      updatePlaybackState(false)
     })
 
     audio.addEventListener('ended', () => {
@@ -104,15 +115,25 @@ const playTrack = async (track, fromBackQueue = false) => {
 const storedTrackId = localStorage.getItem('currentTrackId');
 
 if (storedTrackId) {
-  state.currentTrack = { id: storedTrackId };
-  const track = await api.getTrack(storedTrackId)
-  playTrack(track)
+  const token = localStorage.getItem('token')
+  const user = localStorage.getItem('user')
+  if (token && user) {
+    try {
+      const track = await api.getTrack(storedTrackId)
+      state.currentTrack = track
+    } catch (e) {
+      console.error('Error al restaurar canción:', e)
+      localStorage.removeItem('currentTrackId')
+    }
+  }
 }
 
 const play = () => {
   if (audio) {
     audio.play()
     state.isPlaying = true
+  } else if (state.currentTrack) {
+    playTrack(state.currentTrack)
   }
 }
 
@@ -175,6 +196,10 @@ const removeFromQueue = (index) => {
   state.queue.splice(index, 1)
 }
 
+const reorderQueue = (newQueue) => {
+  state.queue.splice(0, state.queue.length, ...newQueue)
+}
+
 const mute = () => {
   if (state.volume === 0) {
     state.volume = 1
@@ -199,5 +224,6 @@ export const usePlayerStore = () => ({
   playPrevious,
   clearQueue,
   removeFromQueue,
+  reorderQueue,
   mute
 })

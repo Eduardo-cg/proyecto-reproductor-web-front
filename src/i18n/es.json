@@ -72,7 +72,14 @@
     "artistAlbums": "Álbumes",
     "downloadAlbum": "Descargar ZIP",
     "addTracks": "Añadir canciones",
-    "new": "Nueva"
+    "new": "Nueva",
+    "filterByArtist": "Filtrar por artista",
+    "filterByAlbum": "Filtrar por álbum",
+    "filters": "Filtros",
+    "selectedCount": "{count} seleccionados",
+    "noResults": "Sin resultados",
+    "search": "Buscar...",
+    "clearFilters": "Limpiar filtros"
   },
   "confirm": {
     "deleteTitle": "Confirmar eliminación",
