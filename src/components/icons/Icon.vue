@@ -214,6 +214,13 @@
       <line x1="12" y1="15" x2="12" y2="3" />
     </template>
 
+    <!-- Sort -->
+    <template v-else-if="name === 'sort'">
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="4" y1="12" x2="16" y2="12" />
+      <line x1="4" y1="18" x2="12" y2="18" />
+    </template>
+
     <!-- Empty state placeholder -->
     <template v-else-if="name === 'empty'">
       <circle cx="12" cy="12" r="10" />

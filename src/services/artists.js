@@ -11,16 +11,18 @@ export const getArtists = async (page = 0, size = 20, search = '') => {
   return { artists: data.content || [], totalElements: data.totalElements || 0, totalPages: data.totalPages || 0, currentPage: data.currentPage != null ? data.currentPage : page, pageSize: data.pageSize || size }
 }
 
-export const getArtistsList = async () => {
-  const res = await fetch(`${API_URL}/artists/list`, { headers: authHeaders() })
+export const getArtistsList = async (page = 0, size = 10, search = '') => {
+  const params = new URLSearchParams({ page, size })
+  if (search) params.set('search', search)
+  const res = await fetch(`${API_URL}/artists/list?${params}`, { headers: authHeaders() })
   return handleResponse(res, 'Error al obtener la lista de artistas')
 }
 
-export const getAlbumsList = async (artistIds = []) => {
-  const params = new URLSearchParams()
+export const getAlbumsList = async (artistIds = [], page = 0, size = 10, search = '') => {
+  const params = new URLSearchParams({ page, size })
+  if (search) params.set('search', search)
   if (artistIds.length > 0) params.set('artistIds', artistIds.join(','))
-  const url = params.toString() ? `${API_URL}/albums/list?${params}` : `${API_URL}/albums/list`
-  const res = await fetch(url, { headers: authHeaders() })
+  const res = await fetch(`${API_URL}/albums/list?${params}`, { headers: authHeaders() })
   return handleResponse(res, 'Error al obtener la lista de álbumes')
 }
 

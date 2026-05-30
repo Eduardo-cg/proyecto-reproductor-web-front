@@ -15,6 +15,9 @@
         <button class="drag-handle" aria-label="Reordenar" tabindex="0">
           <Icon name="drag" size="14" />
         </button>
+        <button class="play-btn" @click.stop="$emit('play', index)" :aria-label="'Reproducir ' + track.title" tabindex="0">
+          <Icon name="play" size="14" />
+        </button>
         <img v-if="track.cover" :src="track.cover" alt="" class="item-cover" />
         <div v-else class="item-cover-placeholder" aria-hidden="true">
           <Icon name="music" size="18" />
@@ -46,7 +49,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'remove', 'clear', 'reorder'])
+const emit = defineEmits(['close', 'remove', 'clear', 'reorder', 'play'])
 
 const panelHeight = ref(300)
 const isResizing = ref(false)
@@ -258,6 +261,23 @@ onBeforeUnmount(() => {
   color: var(--text-primary);
 }
 
+.play-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.play-btn:hover {
+  background: var(--accent-alpha);
+  color: var(--accent);
+}
+
 .drag-handle {
   width: 24px;
   height: 24px;
@@ -271,7 +291,8 @@ onBeforeUnmount(() => {
   opacity: 0;
   transition: opacity 0.1s;
 }
-.queue-item:hover .drag-handle {
+.queue-item:hover .drag-handle,
+.queue-item:hover .play-btn {
   opacity: 1;
 }
 .drag-handle:active {
@@ -288,7 +309,9 @@ onBeforeUnmount(() => {
 }
 
 .sortable-ghost .drag-handle,
-.sortable-drag .drag-handle {
+.sortable-drag .drag-handle,
+.sortable-ghost .play-btn,
+.sortable-drag .play-btn {
   opacity: 1;
 }
 
@@ -319,7 +342,8 @@ onBeforeUnmount(() => {
     cursor: default;
   }
 
-  .drag-handle {
+  .drag-handle,
+  .play-btn {
     opacity: 1;
   }
 

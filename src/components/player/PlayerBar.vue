@@ -66,7 +66,7 @@
 
   <QueuePanel v-if="showQueue" :queue="playerStore.state.queue" @close="showQueue = false"
     @remove="playerStore.removeFromQueue" @clear="playerStore.clearQueue"
-    @reorder="playerStore.reorderQueue" />
+    @reorder="playerStore.reorderQueue" @play="playerStore.playFromQueue" />
 </template>
 
 <script setup>

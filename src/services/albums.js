@@ -1,7 +1,7 @@
 import { API_URL, authHeaders, handleResponse } from './utils.js'
 
-export const getAlbums = async (page = 0, size = 20, search = '', artistIds = []) => {
-  const params = new URLSearchParams({ page, size })
+export const getAlbums = async (page = 0, size = 20, search = '', artistIds = [], sortBy = 'title', sortDirection = 'asc') => {
+  const params = new URLSearchParams({ page, size, sortBy, sortDirection })
   if (search) params.set('search', search)
   if (artistIds.length > 0) params.set('artistIds', artistIds.join(','))
   const res = await fetch(`${API_URL}/albums?${params}`, { headers: authHeaders() })

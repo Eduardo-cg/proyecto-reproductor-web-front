@@ -9,7 +9,8 @@
           </button>
         </div>
         <div class="album-global-fields">
-          <div class="album-cover-group" @click="$refs.editCoverInput.click()" :title="t('library.changeCover')" role="button" tabindex="0">
+          <div class="album-cover-group" @click="$refs.editCoverInput.click()" :title="t('library.changeCover')"
+            role="button" tabindex="0">
             <img v-if="editCover" :src="editCover" alt="" class="album-cover-img" />
             <div v-else class="album-cover-placeholder" aria-hidden="true">
               <Icon name="album" size="24" />
@@ -17,12 +18,14 @@
             <div class="album-cover-overlay" aria-hidden="true">
               <Icon name="upload" size="20" />
             </div>
-            <input ref="editCoverInput" type="file" accept="image/*" class="file-input" @change="handleEditCoverSelect" />
+            <input ref="editCoverInput" type="file" accept="image/*" class="file-input"
+              @change="handleEditCoverSelect" />
           </div>
           <div class="album-meta-fields">
             <input v-model="editAlbumName" :placeholder="t('library.albumName')" class="global-input" />
             <ArtistSelector v-model="editArtistIds" :compact="false" />
-            <input v-model="editReleaseDate" type="date" :placeholder="t('library.releaseDate')" :title="t('library.releaseDate')" class="global-input" />
+            <input v-model="editReleaseDate" type="date" :placeholder="t('library.releaseDate')"
+              :title="t('library.releaseDate')" class="global-input" />
           </div>
         </div>
         <div v-if="editTracks.length" class="preview-step">
@@ -39,6 +42,8 @@
                   :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
                 <div class="preview-meta">
                   <span class="meta-duration">{{ track.duration ? formatDuration(track.duration) : '--:--' }}</span>
+                  <span v-if="track._isNew && track.file" class="meta-size">{{ formatFileSize(track.file?.size)
+                    }}</span>
                   <span v-if="track._isNew" class="meta-file">({{ t('library.new') }})</span>
                 </div>
               </div>
@@ -55,8 +60,8 @@
             <Icon name="plus" size="24" class="add-zone-icon" />
             <span class="add-zone-text">{{ t('library.addTracks') }}</span>
             <input ref="editFileInput" type="file"
-              accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a" multiple
-              class="file-input" @change="handleEditAddFiles" aria-hidden="true" />
+              accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a"
+              multiple class="file-input" @change="handleEditAddFiles" aria-hidden="true" />
           </div>
         </div>
         <div class="preview-actions">
@@ -118,6 +123,7 @@
               :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
             <div class="preview-meta">
               <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
+              <span class="meta-size">{{ formatFileSize(file.file?.size) }}</span>
               <span class="meta-file">{{ file.fileName }}</span>
             </div>
           </div>
@@ -126,6 +132,10 @@
             <Icon name="close" size="16" />
           </button>
         </div>
+      </div>
+      <div v-if="storageError" class="storage-error">
+        <Icon name="close" size="16" />
+        {{ storageError }}
       </div>
       <div class="preview-actions">
         <button class="btn btn-secondary" @click="close">{{ t('library.cancel') }}</button>
@@ -195,6 +205,7 @@
                 :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
               <div class="preview-meta">
                 <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
+                <span class="meta-size">{{ formatFileSize(file.file?.size) }}</span>
                 <span class="meta-file">{{ file.fileName }}</span>
               </div>
             </div>
@@ -203,6 +214,10 @@
               <Icon name="close" size="16" />
             </button>
           </div>
+        </div>
+        <div v-if="storageError" class="storage-error">
+          <Icon name="close" size="16" />
+          {{ storageError }}
         </div>
         <div class="preview-actions">
           <button class="btn btn-secondary" @click="close">{{ t('library.cancel') }}</button>
@@ -223,7 +238,7 @@ import Sortable from 'sortablejs'
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
-import { formatDuration } from '../../utils/utils.js'
+import { formatDuration, formatFileSize } from '../../utils/utils.js'
 import ArtistSelector from './ArtistSelector.vue'
 import Icon from '../icons/Icon.vue'
 
@@ -359,6 +374,7 @@ const saveEdit = async () => {
 const isDragOver = ref(false)
 const pendingFiles = ref([])
 const uploading = ref(false)
+const storageError = ref('')
 const fileInput = ref(null)
 const sortableContainer = ref(null)
 
@@ -388,9 +404,8 @@ const parseAndLookupArtists = async (artistString) => {
   for (const name of names) {
     try {
       const data = await api.getArtists(0, 20, name)
-      const match = data.artists.find(
-        a => a.name.toLowerCase() === name.toLowerCase()
-      )
+      const match = data.artists[0]
+      
       if (match && !seenIds.has(match.id)) {
         ids.push(match.id)
         seenIds.add(match.id)
@@ -609,7 +624,22 @@ const upload = async () => {
   if (!pendingFiles.value.length || uploading.value) return
   if (!albumName.value.trim()) return
   uploading.value = true
+  storageError.value = ''
   try {
+    const totalNewSize = pendingFiles.value.reduce((sum, pf) => sum + (pf.file?.size || 0), 0)
+    try {
+      const storage = await api.getStorageUsage()
+      if (storage.roleName !== 'ADMIN' && totalNewSize > storage.availableBytes) {
+        storageError.value = t('library.storageError')
+          .replace('{needed}', formatFileSize(totalNewSize))
+          .replace('{available}', formatFileSize(storage.availableBytes))
+        uploading.value = false
+        return
+      }
+    } catch {
+      // If storage check fails, proceed with upload (server will validate)
+    }
+
     const album = await api.createAlbum(
       albumName.value,
       selectedArtistIds.value,
@@ -954,6 +984,24 @@ onBeforeUnmount(() => {
 .preview-actions .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.storage-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: var(--radius-sm);
+  color: #e74c3c;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.meta-size {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
 }
 
 .add-tracks-area {

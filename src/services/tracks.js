@@ -1,7 +1,7 @@
 import { API_URL, authHeaders, handleResponse, downloadBlob } from './utils.js'
 
-export const getTracks = async (page = 0, size = 20, search = '', artistIds = [], albumIds = []) => {
-  const params = new URLSearchParams({ page, size })
+export const getTracks = async (page = 0, size = 20, search = '', artistIds = [], albumIds = [], sortBy = 'title', sortDirection = 'asc') => {
+  const params = new URLSearchParams({ page, size, sortBy, sortDirection })
   if (search) params.set('search', search)
   if (artistIds.length > 0) params.set('artistIds', artistIds.join(','))
   if (albumIds.length > 0) params.set('albumIds', albumIds.join(','))

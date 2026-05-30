@@ -8,13 +8,13 @@
             aria-label="Buscar álbumes" @keyup.enter="handleSearch" />
         </div>
       </div>
-      <div class="filters-bar">
-        <FilterSelector
-          v-model="selectedArtistIds"
-          :options="userArtists.map(a => ({ id: a.id, label: a.name }))"
-          :placeholder="t('library.filterByArtist')"
-        />
-      </div>
+      <CombinedFilter
+        v-model:artistIds="selectedArtistIds"
+        v-model:sortBy="sortBy"
+        v-model:sortDirection="sortDirection"
+        :showAlbums="false"
+        :sortOptions="albumSortOptions"
+      />
       <div class="toolbar-actions">
         <button class="btn btn-primary" @click="handleSearch">
           <Icon name="search" size="14" />
@@ -98,6 +98,10 @@
               <span class="details-value">{{ album.releaseDate ? formatDate(album.releaseDate) :
                 t('library.notSpecified') }}</span>
             </div>
+            <div v-if="album.totalSize" class="details-content">
+              <span class="details-label">{{ t('library.totalSize') }}:</span>
+              <span class="details-value">{{ formatFileSize(album.totalSize) }}</span>
+            </div>
           </div>
 
           <div v-if="expandedAlbumId === album.id" class="album-tracks" role="region"
@@ -169,9 +173,9 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
 import { usePlayerStore } from '../../stores/playerStore'
-import { formatDuration } from '../../utils/utils.js'
+import { formatDuration, formatFileSize } from '../../utils/utils.js'
 import ConfirmDialog from '../common/ConfirmDialog.vue'
-import FilterSelector from '../common/FilterSelector.vue'
+import CombinedFilter from '../common/CombinedFilter.vue'
 import Pagination from '../common/Pagination.vue'
 import Icon from '../icons/Icon.vue'
 import UploadAlbumModal from '../modals/UploadAlbumModal.vue'
@@ -205,7 +209,14 @@ const totalElements = ref(0)
 const totalPages = ref(0)
 
 const selectedArtistIds = ref([])
-const userArtists = ref([])
+
+const sortBy = ref('title')
+const sortDirection = ref('asc')
+const albumSortOptions = [
+  { value: 'title', label: 'Título' },
+  { value: 'artist', label: 'Artista' },
+  { value: 'year', label: 'Año' },
+]
 
 const loadAlbums = async () => {
   try {
@@ -214,7 +225,9 @@ const loadAlbums = async () => {
       currentPage.value,
       pageSize.value,
       search.value,
-      selectedArtistIds.value
+      selectedArtistIds.value,
+      sortBy.value,
+      sortDirection.value
     )
     albums.value = res.albums
     totalElements.value = res.totalElements
@@ -226,14 +239,6 @@ const loadAlbums = async () => {
     console.error(e)
   } finally {
     loading.value = false
-  }
-}
-
-const loadUserArtists = async () => {
-  try {
-    userArtists.value = await api.getArtistsList()
-  } catch (e) {
-    console.error(e)
   }
 }
 
@@ -450,6 +455,8 @@ watch(search, () => {
 const clearFilters = () => {
   search.value = ''
   selectedArtistIds.value = []
+  sortBy.value = 'title'
+  sortDirection.value = 'asc'
   currentPage.value = 0
   loadAlbums()
 }
@@ -457,7 +464,7 @@ const clearFilters = () => {
 defineExpose({ refresh })
 
 onMounted(async () => {
-  await Promise.all([loadAlbums(), loadUserArtists()])
+  await loadAlbums()
   document.addEventListener('click', handleDocumentClick)
 })
 

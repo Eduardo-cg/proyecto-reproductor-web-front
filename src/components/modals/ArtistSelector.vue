@@ -1,6 +1,8 @@
 <template>
   <div class="artist-selector" :class="{ open: isOpen }">
-    <div class="selector-trigger" @click="toggleDropdown" role="combobox" :aria-expanded="isOpen" :aria-label="placeholder || t('library.selectArtist')" tabindex="0" @keydown.enter.prevent="toggleDropdown" @keydown.space.prevent="toggleDropdown">
+    <div class="selector-trigger" @click="toggleDropdown" role="combobox" :aria-expanded="isOpen"
+      :aria-label="placeholder || t('library.selectArtist')" tabindex="0" @keydown.enter.prevent="toggleDropdown"
+      @keydown.space.prevent="toggleDropdown">
       <div class="selector-display">
         <template v-if="selectedArtists.length === 0">
           <span class="placeholder">{{ placeholder || t('library.selectArtist') }}</span>
@@ -31,8 +33,8 @@
         </template>
       </div>
       <div class="selector-actions">
-        <button type="button" class="btn-add-artist" @click.stop="openCreateModal"
-          :title="t('library.createArtist')" aria-label="Crear nuevo artista">
+        <button type="button" class="btn-add-artist" @click.stop="openCreateModal" :title="t('library.createArtist')"
+          aria-label="Crear nuevo artista">
           <Icon name="plus" size="14" />
         </button>
         <Icon name="chevron-down" size="12" class="dropdown-arrow" :class="{ rotated: isOpen }" />
@@ -43,8 +45,8 @@
       <div class="dropdown-search">
         <div class="search-wrapper">
           <Icon name="search" size="14" class="search-icon-inline" />
-          <input v-model="searchQuery" type="text" :placeholder="t('library.searchArtist')"
-            class="search-input" ref="searchInput" aria-label="Buscar artista" />
+          <input v-model="searchQuery" type="text" :placeholder="t('library.searchArtist')" class="search-input"
+            ref="searchInput" aria-label="Buscar artista" />
         </div>
       </div>
 
@@ -72,7 +74,9 @@
 
       <div class="available-section">
         <div class="section-label">
-          {{ availableArtists.length === 0 ? t('library.noArtists') : `${availableArtists.length} ${t('library.artists')}` }}
+          {{ availableArtists.length === 0 ? t('library.noArtists') : `${availableArtists.length}
+          ${t('library.artists')}`
+          }}
         </div>
         <div class="available-list">
           <div v-if="availableArtists.length === 0 && !loading" class="empty-state">
@@ -81,9 +85,9 @@
           <div v-else-if="loading" class="loading-state">
             {{ t('auth.loading') }}
           </div>
-          <div v-for="artist in availableArtists" :key="artist.id"
-            class="available-item" :class="{ disabled: isSelected(artist.id) }"
-            @click="toggleArtist(artist)" role="option" :aria-selected="false">
+          <div v-for="artist in availableArtists" :key="artist.id" class="available-item"
+            :class="{ disabled: isSelected(artist.id) }" @click="toggleArtist(artist)" role="option"
+            :aria-selected="false">
             <img v-if="artist.image" :src="artist.image" alt="" class="item-image" />
             <div v-else class="item-image-placeholder" aria-hidden="true">
               <Icon name="artist" size="14" />
@@ -100,12 +104,12 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { useI18n } from 'vue-i18n'
 import Sortable from 'sortablejs'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
-import UploadArtistModal from './UploadArtistModal.vue'
 import Icon from '../icons/Icon.vue'
+import UploadArtistModal from './UploadArtistModal.vue'
 
 const { t } = useI18n()
 
@@ -188,6 +192,7 @@ const onArtistCreated = (artist) => {
   allArtists.value = [...allArtists.value, artist]
   selectedArtists.value = [...selectedArtists.value, artist]
   emitValue()
+  showCreateModal.value = false
 }
 
 const initSortable = () => {
@@ -285,9 +290,11 @@ onBeforeUnmount(() => {
   cursor: pointer;
   transition: border-color var(--transition);
 }
+
 .selector-trigger:hover {
   border-color: var(--accent);
 }
+
 .open .selector-trigger {
   border-color: var(--accent);
 }
@@ -362,6 +369,7 @@ onBeforeUnmount(() => {
   border-radius: 2px;
   color: var(--text-muted);
 }
+
 .chip-remove:hover {
   background: rgba(231, 76, 60, 0.1);
   color: #e74c3c;
@@ -385,6 +393,7 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-sm);
   transition: opacity var(--transition);
 }
+
 .btn-add-artist:hover {
   opacity: 0.85;
 }
@@ -394,6 +403,7 @@ onBeforeUnmount(() => {
   transition: transform 0.15s;
   flex-shrink: 0;
 }
+
 .dropdown-arrow.rotated {
   transform: rotate(180deg);
 }
@@ -440,6 +450,7 @@ onBeforeUnmount(() => {
   color: var(--text-primary);
   font-size: 13px;
 }
+
 .search-input:focus {
   outline: none;
   border-color: var(--accent);
@@ -488,6 +499,7 @@ onBeforeUnmount(() => {
   padding: 6px 10px;
   transition: background 0.1s;
 }
+
 .selected-item:hover {
   background: var(--bg-secondary);
 }
@@ -505,10 +517,12 @@ onBeforeUnmount(() => {
   padding: 2px;
   border-radius: 2px;
 }
+
 .drag-handle:hover {
   background: var(--bg-tertiary);
   color: var(--text-primary);
 }
+
 .drag-handle:active {
   cursor: grabbing;
 }
@@ -562,9 +576,11 @@ onBeforeUnmount(() => {
   color: var(--text-muted);
   visibility: hidden;
 }
+
 .selected-item:hover .item-remove {
   visibility: visible;
 }
+
 .item-remove:hover {
   background: rgba(231, 76, 60, 0.1);
   color: #e74c3c;
@@ -578,9 +594,11 @@ onBeforeUnmount(() => {
   cursor: pointer;
   transition: background 0.1s;
 }
+
 .available-item:hover:not(.disabled) {
   background: var(--bg-secondary);
 }
+
 .available-item.disabled {
   opacity: 0.4;
   cursor: not-allowed;

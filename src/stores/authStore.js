@@ -66,6 +66,14 @@ const logout = () => {
   localStorage.removeItem('user')
 }
 
+const getRoleName = () => {
+  return state.user?.roleName || 'STANDARD'
+}
+
+const isAdmin = () => {
+  return getRoleName() === 'ADMIN'
+}
+
 init()
 
-export const useAuthStore = () => ({ state, login, register, logout })
+export const useAuthStore = () => ({ state, login, register, logout, getRoleName, isAdmin })

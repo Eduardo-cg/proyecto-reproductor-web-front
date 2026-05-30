@@ -1,14 +1,18 @@
 <template>
-  <div class="combined-filter" :class="{ open: isOpen }">
+  <div class="combined-filter" :class="[isOpen ? 'open' : '', tabSizeClass]">
     <div class="filter-trigger" @click="toggleDropdown" role="combobox" :aria-expanded="isOpen"
       :aria-label="t('library.filters')" tabindex="0" @keydown.enter.prevent="toggleDropdown"
       @keydown.space.prevent="toggleDropdown">
       <div class="trigger-display">
-        <template v-if="totalSelected === 0">
+        <template v-if="totalSelected === 0 && !sortBy">
           <span class="placeholder">{{ t('library.filters') }}</span>
         </template>
         <template v-else>
-          <span class="selected-text">{{ t('library.selectedCount', { count: totalSelected }) }}</span>
+          <span class="selected-text">
+            <template v-if="totalSelected > 0">{{ t('library.selectedCount', { count: totalSelected }) }}</template>
+            <template v-if="totalSelected > 0 && sortBy"> · </template>
+            <template v-if="sortBy">{{ t('library.sortBy') }}: {{ currentSortLabel }}</template>
+          </span>
         </template>
       </div>
       <Icon name="chevron-down" size="12" class="dropdown-arrow" :class="{ rotated: isOpen }" />
@@ -16,37 +20,68 @@
 
     <div v-if="isOpen" class="filter-dropdown" @click.stop>
       <div class="filter-tabs">
-        <button class="tab-btn" :class="{ active: activeTab === 'artist' }" @click="switchTab('artist')">
+        <button v-if="showArtists" class="tab-btn" :class="{ active: activeTab === 'artist' }" @click="switchTab('artist')">
           <Icon name="artist" size="14" />
-          <span>{{ artistPlaceholder }}</span>
+          <span>{{ t('library.filterByArtist') }}</span>
         </button>
-        <button class="tab-btn" :class="{ active: activeTab === 'album' }" @click="switchTab('album')">
+        <button v-if="showAlbums && hasAlbums" class="tab-btn" :class="{ active: activeTab === 'album' }" @click="switchTab('album')">
           <Icon name="album" size="14" />
-          <span>{{ albumPlaceholder }}</span>
+          <span>{{ t('library.filterByAlbum') }}</span>
+        </button>
+        <button v-if="showSort" class="tab-btn" :class="{ active: activeTab === 'sort' }" @click="switchTab('sort')">
+          <Icon name="sort" size="14" />
+          <span>{{ t('library.sort') }}</span>
         </button>
       </div>
 
-      <div class="dropdown-search">
-        <div class="search-wrapper">
-          <Icon name="search" size="14" class="search-icon-inline" />
-          <input v-model="searchQuery" type="text" :placeholder="t('library.search')"
-            class="search-input" ref="searchInput" :aria-label="t('library.search')" />
-        </div>
-      </div>
-
-      <div class="options-list">
-        <div v-if="filteredOptions.length === 0" class="empty-state">
-          {{ t('library.noResults') }}
-        </div>
-        <div v-for="option in filteredOptions" :key="option.id" class="option-item"
-          :class="{ selected: isSelected(option.id) }" @click="toggleOption(option)" role="option"
-          :aria-selected="isSelected(option.id)">
-          <div class="option-checkbox" :class="{ checked: isSelected(option.id) }">
-            <Icon v-if="isSelected(option.id)" name="check" size="12" />
+      <template v-if="activeTab === 'sort'">
+        <div class="sort-section">
+          <div class="sort-field">
+            <label class="sort-label">{{ t('library.sortBy') }}</label>
+            <select v-model="localSortBy" class="sort-select" @change="emitSort">
+              <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+            </select>
           </div>
-          <span class="option-label">{{ option.label }}</span>
+          <div class="sort-field">
+            <label class="sort-label">{{ t('library.sortDirection') }}</label>
+            <select v-model="localSortDirection" class="sort-select" @change="emitSort">
+              <option value="asc">{{ t('library.ascending') }}</option>
+              <option value="desc">{{ t('library.descending') }}</option>
+            </select>
+          </div>
         </div>
-      </div>
+      </template>
+
+      <template v-else>
+        <div class="dropdown-search">
+          <div class="search-wrapper">
+            <Icon name="search" size="14" class="search-icon-inline" />
+            <input v-model="currentSearchQuery" type="text" :placeholder="t('library.search')"
+              class="search-input" ref="searchInput" :aria-label="t('library.search')" />
+          </div>
+        </div>
+
+        <div class="options-list">
+          <div v-if="currentLoading" class="loading-state">{{ t('auth.loading') }}</div>
+          <div v-else-if="currentContent.length === 0" class="empty-state">
+            {{ t('library.noResults') }}
+          </div>
+          <div v-else v-for="option in currentContent" :key="option.id" class="option-item"
+            :class="{ selected: isSelected(option.id) }" @click="toggleOption(option)" role="option"
+            :aria-selected="isSelected(option.id)">
+            <div class="option-checkbox" :class="{ checked: isSelected(option.id) }">
+              <Icon v-if="isSelected(option.id)" name="check" size="12" />
+            </div>
+            <span class="option-label">{{ option.title || option.name }}</span>
+          </div>
+        </div>
+
+        <div v-if="currentTotalPages > 1" class="pagination-controls">
+          <button class="page-btn" :disabled="currentCurrentPage <= 1" @click="prevPage">◀</button>
+          <span class="page-info">{{ currentCurrentPage }} / {{ currentTotalPages }}</span>
+          <button class="page-btn" :disabled="currentCurrentPage >= currentTotalPages" @click="nextPage">▶</button>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -54,6 +89,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { api } from '../../services/api.js'
 import Icon from '../icons/Icon.vue'
 
 const { t } = useI18n()
@@ -61,35 +97,75 @@ const { t } = useI18n()
 const props = defineProps({
   artistIds: { type: Array, default: () => [] },
   albumIds: { type: Array, default: () => [] },
-  artistOptions: { type: Array, default: () => [] },
-  albumOptions: { type: Array, default: () => [] },
-  artistPlaceholder: { type: String, default: '' },
-  albumPlaceholder: { type: String, default: '' },
+  showArtists: { type: Boolean, default: true },
+  showAlbums: { type: Boolean, default: true },
+  showSort: { type: Boolean, default: true },
+  sortBy: { type: String, default: '' },
+  sortDirection: { type: String, default: 'asc' },
+  sortOptions: { type: Array, default: () => [] },
 })
 
-const emit = defineEmits(['update:artistIds', 'update:albumIds'])
+const emit = defineEmits(['update:artistIds', 'update:albumIds', 'update:sortBy', 'update:sortDirection'])
 
 const isOpen = ref(false)
 const activeTab = ref('artist')
-const searchQuery = ref('')
 const searchInput = ref(null)
+const localSortBy = ref(props.sortBy)
+const localSortDirection = ref(props.sortDirection)
+
+const artistSearchQuery = ref('')
+const albumSearchQuery = ref('')
+const artistPage = ref(0)
+const albumPage = ref(0)
+const artistData = ref({ content: [], totalElements: 0, totalPages: 0, currentPage: 0 })
+const albumData = ref({ content: [], totalElements: 0, totalPages: 0, currentPage: 0 })
+const artistLoading = ref(false)
+const albumLoading = ref(false)
+
+let searchDebounce = null
 
 const totalSelected = computed(() => {
   return (props.artistIds?.length || 0) + (props.albumIds?.length || 0)
 })
 
-const currentOptions = computed(() => {
-  return activeTab.value === 'artist' ? props.artistOptions : props.albumOptions
+const currentSortLabel = computed(() => {
+  const opt = props.sortOptions.find(o => o.value === localSortBy.value)
+  return opt ? opt.label : ''
 })
 
-const filteredOptions = computed(() => {
-  let opts = currentOptions.value
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.toLowerCase()
-    opts = opts.filter(o => o.label.toLowerCase().includes(q))
-  }
-  return opts
+const tabCount = computed(() => {
+  let count = 0
+  if (props.showArtists) count++
+  if (props.showAlbums) count++
+  if (props.showSort) count++
+  return count
 })
+
+const tabSizeClass = computed(() => `tabs-${tabCount.value}`)
+
+const hasAlbums = computed(() => {
+  return albumData.value.totalElements > 0 || albumLoading.value || albumSearchQuery.value.length > 0
+})
+
+const currentPaginatedData = computed(() =>
+  activeTab.value === 'artist' ? artistData.value : albumData.value
+)
+
+const currentLoading = computed(() =>
+  activeTab.value === 'artist' ? artistLoading.value : albumLoading.value
+)
+
+const currentSearchQuery = computed({
+  get: () => activeTab.value === 'artist' ? artistSearchQuery.value : albumSearchQuery.value,
+  set: (val) => {
+    if (activeTab.value === 'artist') artistSearchQuery.value = val
+    else albumSearchQuery.value = val
+  }
+})
+
+const currentContent = computed(() => currentPaginatedData.value.content || [])
+const currentTotalPages = computed(() => currentPaginatedData.value.totalPages || 0)
+const currentCurrentPage = computed(() => (currentPaginatedData.value.currentPage || 0) + 1)
 
 const isSelected = (id) => {
   const ids = activeTab.value === 'artist' ? (props.artistIds || []) : (props.albumIds || [])
@@ -100,19 +176,56 @@ const toggleOption = (option) => {
   const current = activeTab.value === 'artist'
     ? [...(props.artistIds || [])]
     : [...(props.albumIds || [])]
-  const index = current.indexOf(option.id)
+  const id = option.id
+  const index = current.indexOf(id)
   if (index >= 0) {
     current.splice(index, 1)
   } else {
-    current.push(option.id)
+    current.push(id)
   }
   const event = activeTab.value === 'artist' ? 'update:artistIds' : 'update:albumIds'
   emit(event, current)
 }
 
+const emitSort = () => {
+  emit('update:sortBy', localSortBy.value)
+  emit('update:sortDirection', localSortDirection.value)
+}
+
+const loadArtists = async () => {
+  artistLoading.value = true
+  try {
+    artistData.value = await api.getArtistsList(artistPage.value, 10, artistSearchQuery.value)
+  } catch (e) { console.error(e) }
+  artistLoading.value = false
+}
+
+const loadAlbums = async () => {
+  albumLoading.value = true
+  try {
+    albumData.value = await api.getAlbumsList(props.artistIds, albumPage.value, 10, albumSearchQuery.value)
+  } catch (e) { console.error(e) }
+  albumLoading.value = false
+}
+
+const nextPage = () => {
+  if (activeTab.value === 'artist') {
+    if (artistPage.value < artistData.value.totalPages - 1) artistPage.value++
+  } else {
+    if (albumPage.value < albumData.value.totalPages - 1) albumPage.value++
+  }
+}
+
+const prevPage = () => {
+  if (activeTab.value === 'artist') {
+    if (artistPage.value > 0) artistPage.value--
+  } else {
+    if (albumPage.value > 0) albumPage.value--
+  }
+}
+
 const switchTab = (tab) => {
   activeTab.value = tab
-  searchQuery.value = ''
   nextTick(() => {
     searchInput.value?.focus()
   })
@@ -121,12 +234,19 @@ const switchTab = (tab) => {
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
   if (isOpen.value) {
-    searchQuery.value = ''
-    if ((props.albumIds?.length || 0) > 0 && (props.artistIds?.length || 0) === 0) {
-      activeTab.value = 'album'
-    } else {
+    artistSearchQuery.value = ''
+    albumSearchQuery.value = ''
+    artistPage.value = 0
+    albumPage.value = 0
+    if (props.showArtists) {
       activeTab.value = 'artist'
+    } else if (props.showAlbums) {
+      activeTab.value = 'album'
+    } else if (props.showSort) {
+      activeTab.value = 'sort'
     }
+    if (props.showArtists) loadArtists()
+    if (props.showAlbums) loadAlbums()
     nextTick(() => {
       searchInput.value?.focus()
     })
@@ -145,11 +265,38 @@ const handleClickOutside = (e) => {
   }
 }
 
+watch(artistSearchQuery, () => {
+  clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(() => { artistPage.value = 0; loadArtists() }, 300)
+})
+
+watch(artistPage, () => loadArtists())
+
+watch(albumSearchQuery, () => {
+  clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(() => { albumPage.value = 0; loadAlbums() }, 300)
+})
+
+watch(albumPage, () => loadAlbums())
+
+watch(() => props.artistIds, () => {
+  emit('update:albumIds', [])
+  albumPage.value = 0
+  albumSearchQuery.value = ''
+  if (isOpen.value && props.showAlbums) loadAlbums()
+}, { deep: true })
+
 watch(isOpen, (open) => {
   if (!open) {
-    searchQuery.value = ''
+    artistSearchQuery.value = ''
+    albumSearchQuery.value = ''
+    artistPage.value = 0
+    albumPage.value = 0
   }
 })
+
+watch(() => props.sortBy, (val) => { localSortBy.value = val })
+watch(() => props.sortDirection, (val) => { localSortDirection.value = val })
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
@@ -157,14 +304,29 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
+  clearTimeout(searchDebounce)
 })
 </script>
 
 <style scoped>
 .combined-filter {
   position: relative;
-  min-width: 200px;
   flex-shrink: 0;
+}
+
+.tabs-1 .filter-dropdown {
+  min-width: 240px;
+  width: 240px;
+}
+
+.tabs-2 .filter-dropdown {
+  min-width: 300px;
+  width: 300px;
+}
+
+.tabs-3 .filter-dropdown {
+  min-width: 360px;
+  width: 360px;
 }
 
 .filter-trigger {
@@ -217,12 +379,11 @@ onBeforeUnmount(() => {
   top: 100%;
   left: 0;
   margin-top: 4px;
-  width: 280px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   z-index: 100;
-  max-height: 320px;
+  max-height: 380px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -293,6 +454,43 @@ onBeforeUnmount(() => {
   border-color: var(--accent);
 }
 
+.sort-section {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sort-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sort-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sort-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .options-list {
   flex: 1;
   overflow-y: auto;
@@ -301,6 +499,13 @@ onBeforeUnmount(() => {
 }
 
 .empty-state {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.loading-state {
   padding: 16px;
   text-align: center;
   color: var(--text-muted);
@@ -351,5 +556,38 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.page-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-btn:not(:disabled):hover {
+  background: var(--bg-secondary);
+}
+
+.page-info {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 </style>

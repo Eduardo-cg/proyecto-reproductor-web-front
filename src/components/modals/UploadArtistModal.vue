@@ -209,6 +209,7 @@ const create = async () => {
     const artist = await api.createArtist(artistName.value.trim(), artistImageFile.value || undefined)
     emit('created', artist)
     emit('uploaded')
+    emit('close')
     reset()
   } catch (e) {
     errorMessage.value = e.message || 'Error al crear el artista'

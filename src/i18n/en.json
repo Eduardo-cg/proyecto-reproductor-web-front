@@ -53,6 +53,8 @@
     "changeImage": "Change image",
     "clickToSelectImage": "Click to select image",
     "releaseDate": "Release Date",
+    "fileSize": "File size",
+    "totalSize": "Total size",
     "notSpecified": "Not specified",
     "tracks": "Tracks",
     "albums": "Albums",
@@ -79,7 +81,14 @@
     "selectedCount": "{count} selected",
     "noResults": "No results",
     "search": "Search...",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "sort": "Sort",
+    "sortBy": "Sort by",
+    "sortDirection": "Direction",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "toggleSortDirection": "Toggle sort direction",
+    "storageError": "Not enough storage space."
   },
   "confirm": {
     "deleteTitle": "Confirm deletion",
@@ -135,6 +144,9 @@
     "language": "Language",
     "playback": "Playback",
     "range": "Partial streaming (Range)",
-    "blob": "Full download"
+    "blob": "Full download",
+    "storage": "Storage",
+    "storageUnlimited": "Unlimited storage",
+    "storageRemaining": "remaining"
   }
 }

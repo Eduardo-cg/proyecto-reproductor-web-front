@@ -12,22 +12,28 @@
       <div class="settings-grid">
         <section class="settings-section">
           <h2>{{ t('settings.account') }}</h2>
-          <div class="settings-card">
-            <div class="user-avatar" aria-hidden="true">
-              <Icon name="artist" size="20" />
+          <div class="settings-card user-card">
+            <div class="user-card-top">
+              <div class="user-avatar" aria-hidden="true">
+                <Icon name="artist" size="20" />
+              </div>
+              <template v-if="authStore.state.isAuthenticated">
+                <p class="user-name">{{ authStore.state.user?.username }}</p>
+                <button @click="logout" class="btn btn-secondary">
+                  <Icon name="logout" size="16" />
+                  {{ t('nav.logout') }}
+                </button>
+              </template>
+              <template v-else>
+                <p class="user-name">{{ t('settings.loginPrompt') }}</p>
+                <router-link to="/login" class="btn btn-primary">
+                  {{ t('settings.login') }}
+                </router-link>
+              </template>
             </div>
             <template v-if="authStore.state.isAuthenticated">
-              <p class="user-name">{{ authStore.state.user?.username }}</p>
-              <button @click="logout" class="btn btn-secondary">
-                <Icon name="logout" size="16" />
-                {{ t('nav.logout') }}
-              </button>
-            </template>
-            <template v-else>
-              <p class="user-name">{{ t('settings.loginPrompt') }}</p>
-              <router-link to="/login" class="btn btn-primary">
-                {{ t('settings.login') }}
-              </router-link>
+              <div class="user-card-divider"></div>
+              <StorageBar :storage-data="storageData" />
             </template>
           </div>
         </section>
@@ -77,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useStreamingMode } from '../../composables/useStreamingMode'
@@ -85,6 +91,7 @@ import { useTheme } from '../../composables/useTheme'
 import { useAuthStore } from '../../stores/authStore'
 import DarkModeToggle from '../common/DarkModeToggle.vue'
 import LanguageSwitcher from '../common/LanguageSwitcher.vue'
+import StorageBar from '../common/StorageBar.vue'
 import ThemeSwitcher from '../common/ThemeSwitcher.vue'
 import Icon from '../icons/Icon.vue'
 
@@ -95,6 +102,18 @@ const { themeId } = useTheme()
 const { mode, setMode, MODES } = useStreamingMode()
 
 const showThemePicker = ref(false)
+const storageData = ref(null)
+
+onMounted(async () => {
+  if (authStore.state.isAuthenticated) {
+    try {
+      const { api } = await import('../../services/api')
+      storageData.value = await api.getStorageUsage()
+    } catch {
+      storageData.value = null
+    }
+  }
+})
 
 const logout = () => {
   authStore.logout()
@@ -161,6 +180,25 @@ const logout = () => {
   text-align: center;
   gap: 12px;
   min-height: 120px;
+}
+
+.user-card {
+  gap: 0;
+}
+
+.user-card-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.user-card-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
 }
 
 .dark-card {

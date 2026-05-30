@@ -192,6 +192,13 @@ const clearQueue = () => {
   state.queue.length = 0
 }
 
+const playFromQueue = (index) => {
+  if (index < 0 || index >= state.queue.length) return
+  const removed = state.queue.splice(0, index + 1)
+  const track = removed[index]
+  playTrack(track)
+}
+
 const removeFromQueue = (index) => {
   state.queue.splice(index, 1)
 }
@@ -223,6 +230,7 @@ export const usePlayerStore = () => ({
   playNext,
   playPrevious,
   clearQueue,
+  playFromQueue,
   removeFromQueue,
   reorderQueue,
   mute

@@ -53,6 +53,8 @@
     "changeImage": "Cambiar imagen",
     "clickToSelectImage": "Clic para seleccionar imagen",
     "releaseDate": "Fecha de lanzamiento",
+    "fileSize": "Tamaño del archivo",
+    "totalSize": "Tamaño total",
     "notSpecified": "No especificada",
     "tracks": "Canciones",
     "albums": "Álbumes",
@@ -79,7 +81,14 @@
     "selectedCount": "{count} seleccionados",
     "noResults": "Sin resultados",
     "search": "Buscar...",
-    "clearFilters": "Limpiar filtros"
+    "clearFilters": "Limpiar filtros",
+    "sort": "Ordenar",
+    "sortBy": "Ordenar por",
+    "sortDirection": "Dirección",
+    "ascending": "Ascendente",
+    "descending": "Descendente",
+    "toggleSortDirection": "Cambiar dirección de orden",
+    "storageError": "No tienes suficiente espacio de almacenamiento."
   },
   "confirm": {
     "deleteTitle": "Confirmar eliminación",
@@ -135,6 +144,9 @@
     "language": "Idioma",
     "playback": "Reproducción",
     "range": "Streaming parcial (Range)",
-    "blob": "Descarga completa"
+    "blob": "Descarga completa",
+    "storage": "Almacenamiento",
+    "storageUnlimited": "Almacenamiento ilimitado",
+    "storageRemaining": "disponibles"
   }
 }

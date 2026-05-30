@@ -77,25 +77,30 @@
             <input v-model="file.album" :placeholder="t('library.album')" class="preview-input" />
             <input v-model="file.releaseDate" type="date" :placeholder="t('library.releaseDate')"
               :title="t('library.releaseDate')" class="preview-input" />
-            <div class="preview-meta">
-              <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
-              <span class="meta-file">{{ file.fileName }}</span>
+              <div class="preview-meta">
+                <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
+                <span class="meta-size">{{ formatFileSize(file.file?.size) }}</span>
+                <span class="meta-file">{{ file.fileName }}</span>
+              </div>
             </div>
+            <button class="btn-remove-file" @click="removeFile(index)"
+              :aria-label="'Eliminar ' + (file.title || file.fileName)">
+              <Icon name="close" size="16" />
+            </button>
           </div>
-          <button class="btn-remove-file" @click="removeFile(index)"
-            :aria-label="'Eliminar ' + (file.title || file.fileName)">
-            <Icon name="close" size="16" />
+        </div>
+        <div v-if="storageError" class="storage-error">
+          <Icon name="close" size="16" />
+          {{ storageError }}
+        </div>
+        <div class="preview-actions">
+          <button class="btn btn-secondary" @click="close">
+            {{ t('library.cancel') }}
+          </button>
+          <button class="btn btn-primary" @click="upload" :disabled="uploading">
+            {{ uploading ? t('library.uploading') : t('library.uploadCount').replace('{count}', pendingFiles.length) }}
           </button>
         </div>
-      </div>
-      <div class="preview-actions">
-        <button class="btn btn-secondary" @click="close">
-          {{ t('library.cancel') }}
-        </button>
-        <button class="btn btn-primary" @click="upload" :disabled="uploading">
-          {{ uploading ? t('library.uploading') : t('library.uploadCount').replace('{count}', pendingFiles.length) }}
-        </button>
-      </div>
     </div>
   </template>
 
@@ -151,6 +156,7 @@
                 :title="t('library.releaseDate')" class="preview-input" />
               <div class="preview-meta">
                 <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
+                <span class="meta-size">{{ formatFileSize(file.file?.size) }}</span>
                 <span class="meta-file">{{ file.fileName }}</span>
               </div>
             </div>
@@ -178,7 +184,7 @@ import { parseBlob } from 'music-metadata-browser'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
-import { formatDuration } from '../../utils/utils.js'
+import { formatDuration, formatFileSize } from '../../utils/utils.js'
 import ArtistSelector from './ArtistSelector.vue'
 import Icon from '../icons/Icon.vue'
 
@@ -254,6 +260,7 @@ const saveEdit = async () => {
 const isDragOver = ref(false)
 const pendingFiles = ref([])
 const uploading = ref(false)
+const storageError = ref('')
 const fileInput = ref(null)
 const globalArtistIds = ref([])
 
@@ -285,9 +292,8 @@ const parseAndLookupArtists = async (artistString) => {
   for (const name of names) {
     try {
       const data = await api.getArtists(0, 20, name)
-      const match = data.artists.find(
-        a => a.name.toLowerCase() === name.toLowerCase()
-      )
+      const match = data.artists[0]
+      
       if (match && !seenIds.has(match.id)) {
         ids.push(match.id)
         seenIds.add(match.id)
@@ -367,7 +373,22 @@ const close = () => {
 const upload = async () => {
   if (!pendingFiles.value.length || uploading.value) return
   uploading.value = true
+  storageError.value = ''
   try {
+    const totalNewSize = pendingFiles.value.reduce((sum, pf) => sum + (pf.file?.size || 0), 0)
+    try {
+      const storage = await api.getStorageUsage()
+      if (storage.roleName !== 'ADMIN' && totalNewSize > storage.availableBytes) {
+        storageError.value = t('library.storageError')
+          .replace('{needed}', formatFileSize(totalNewSize))
+          .replace('{available}', formatFileSize(storage.availableBytes))
+        uploading.value = false
+        return
+      }
+    } catch {
+      // If storage check fails, proceed with upload (server will validate)
+    }
+
     for (const pf of pendingFiles.value) {
       await api.uploadTrack(
         pf.title,
@@ -632,6 +653,24 @@ const upload = async () => {
 .preview-actions .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.storage-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: var(--radius-sm);
+  color: #e74c3c;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.meta-size {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
 }
 
 .edit-form {

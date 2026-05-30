@@ -11,10 +11,9 @@
       <CombinedFilter
         v-model:artistIds="selectedArtistIds"
         v-model:albumIds="selectedAlbumIds"
-        :artistOptions="userArtists.map(a => ({ id: a.id, label: a.name }))"
-        :albumOptions="userAlbums.map(a => ({ id: a.id, label: a.title }))"
-        :artistPlaceholder="t('library.filterByArtist')"
-        :albumPlaceholder="t('library.filterByAlbum')"
+        v-model:sortBy="sortBy"
+        v-model:sortDirection="sortDirection"
+        :sortOptions="trackSortOptions"
       />
       <div class="toolbar-actions">
         <button class="btn btn-primary" @click="handleSearch">
@@ -96,6 +95,10 @@
               <span class="details-value">{{ track.releaseDate ? formatDate(track.releaseDate) :
                 t('library.notSpecified') }}</span>
             </div>
+            <div v-if="track.fileSize" class="details-content">
+              <span class="details-label">{{ t('library.fileSize') }}:</span>
+              <span class="details-value">{{ formatFileSize(track.fileSize) }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -117,7 +120,7 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
 import { usePlayerStore } from '../../stores/playerStore'
-import { formatDuration } from '../../utils/utils.js'
+import { formatDuration, formatFileSize } from '../../utils/utils.js'
 import CombinedFilter from '../common/CombinedFilter.vue'
 import ConfirmDialog from '../common/ConfirmDialog.vue'
 import Pagination from '../common/Pagination.vue'
@@ -143,8 +146,16 @@ const trackToEdit = ref(null)
 
 const selectedArtistIds = ref([])
 const selectedAlbumIds = ref([])
-const userArtists = ref([])
-const userAlbums = ref([])
+
+const sortBy = ref('title')
+const sortDirection = ref('asc')
+const trackSortOptions = [
+  { value: 'title', label: 'Título' },
+  { value: 'artist', label: 'Artista' },
+  { value: 'album', label: 'Álbum' },
+  { value: 'year', label: 'Año' },
+  { value: 'duration', label: 'Duración' },
+]
 
 const editTrack = (track) => {
   trackToEdit.value = track
@@ -172,7 +183,9 @@ const loadTracks = async () => {
       pageSize.value,
       search.value,
       selectedArtistIds.value,
-      selectedAlbumIds.value
+      selectedAlbumIds.value,
+      sortBy.value,
+      sortDirection.value
     )
     tracks.value = res.tracks
     totalElements.value = res.totalElements
@@ -182,22 +195,6 @@ const loadTracks = async () => {
     console.error(e)
   } finally {
     loading.value = false
-  }
-}
-
-const loadUserArtists = async () => {
-  try {
-    userArtists.value = await api.getArtistsList()
-  } catch (e) {
-    console.error(e)
-  }
-}
-
-const loadUserAlbums = async (artistIds = []) => {
-  try {
-    userAlbums.value = await api.getAlbumsList(artistIds)
-  } catch (e) {
-    console.error(e)
   }
 }
 
@@ -283,19 +280,16 @@ const clearFilters = () => {
   search.value = ''
   selectedArtistIds.value = []
   selectedAlbumIds.value = []
+  sortBy.value = 'title'
+  sortDirection.value = 'asc'
   currentPage.value = 0
   loadTracks()
 }
 
-watch(selectedArtistIds, (newIds) => {
-  selectedAlbumIds.value = []
-  loadUserAlbums(newIds)
-}, { deep: true })
-
 defineExpose({ refresh })
 
 onMounted(async () => {
-  await Promise.all([loadTracks(), loadUserArtists(), loadUserAlbums()])
+  await loadTracks()
   document.addEventListener('click', handleDocumentClick)
 })
 
