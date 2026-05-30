@@ -110,31 +110,6 @@ const handleUploaded = () => {
   border-bottom: 1px solid var(--border);
 }
 
-.tab-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color var(--transition), border-color var(--transition);
-}
-
-.tab-btn:hover {
-  color: var(--text-primary);
-}
-
-.tab-btn.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-
 @media (max-width: 480px) {
   .header {
     flex-direction: column;
@@ -146,11 +121,6 @@ const handleUploaded = () => {
 
   .header-buttons {
     justify-content: center;
-  }
-
-  .tab-btn {
-    padding: 10px 14px;
-    font-size: 13px;
   }
 }
 </style>

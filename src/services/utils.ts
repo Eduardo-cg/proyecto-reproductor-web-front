@@ -1,21 +1,23 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+export const API_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
-const getToken = () => localStorage.getItem('token')
+export const getToken = (): string | null => localStorage.getItem('token')
 
-const authHeaders = () => ({
+export const authHeaders = (): Record<string, string> => ({
   Authorization: `Bearer ${getToken()}`
 })
 
-const jsonHeaders = () => ({
+export const jsonHeaders = (): Record<string, string> => ({
   'Content-Type': 'application/json',
   ...authHeaders()
 })
 
-const handleResponse = async (res, errorMessage = 'Error en la petición') => {
+export async function handleResponse<T>(res: Response, errorMessage?: string): Promise<T>
+export async function handleResponse(res: Response, errorMessage?: string): Promise<Blob>
+export async function handleResponse<T>(res: Response, errorMessage: string = 'Error en la petición'): Promise<T | Blob> {
   if (!res.ok) {
     let msg = errorMessage
     try {
-      const body = await res.json()
+      const body = await res.json() as { message?: string }
       if (body?.message) msg = body.message
     } catch {
       msg = res.statusText || errorMessage
@@ -24,12 +26,12 @@ const handleResponse = async (res, errorMessage = 'Error en la petición') => {
   }
   const contentType = res.headers.get('content-type')
   if (contentType?.includes('application/json')) {
-    return res.json()
+    return res.json() as Promise<T>
   }
   return res.blob()
 }
 
-const downloadBlob = async (url, defaultFilename) => {
+export const downloadBlob = async (url: string, defaultFilename: string): Promise<void> => {
   const res = await fetch(url, { headers: authHeaders() })
   if (!res.ok) throw new Error('Error al descargar')
   const disposition = res.headers.get('Content-Disposition')
@@ -53,5 +55,3 @@ const downloadBlob = async (url, defaultFilename) => {
   document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(objectUrl), 10000)
 }
-
-export { API_URL, getToken, authHeaders, jsonHeaders, handleResponse, downloadBlob }

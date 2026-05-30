@@ -20,11 +20,13 @@
 
     <div v-if="isOpen" class="filter-dropdown" @click.stop>
       <div class="filter-tabs">
-        <button v-if="showArtists" class="tab-btn" :class="{ active: activeTab === 'artist' }" @click="switchTab('artist')">
+        <button v-if="showArtists" class="tab-btn" :class="{ active: activeTab === 'artist' }"
+          @click="switchTab('artist')">
           <Icon name="artist" size="14" />
           <span>{{ t('library.filterByArtist') }}</span>
         </button>
-        <button v-if="showAlbums && hasAlbums" class="tab-btn" :class="{ active: activeTab === 'album' }" @click="switchTab('album')">
+        <button v-if="showAlbums && hasAlbums" class="tab-btn" :class="{ active: activeTab === 'album' }"
+          @click="switchTab('album')">
           <Icon name="album" size="14" />
           <span>{{ t('library.filterByAlbum') }}</span>
         </button>
@@ -56,8 +58,8 @@
         <div class="dropdown-search">
           <div class="search-wrapper">
             <Icon name="search" size="14" class="search-icon-inline" />
-            <input v-model="currentSearchQuery" type="text" :placeholder="t('library.search')"
-              class="search-input" ref="searchInput" :aria-label="t('library.search')" />
+            <input v-model="currentSearchQuery" type="text" :placeholder="t('library.search')" class="search-input"
+              ref="searchInput" :aria-label="t('library.search')" />
           </div>
         </div>
 
@@ -87,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api.js'
 import Icon from '../icons/Icon.vue'
@@ -364,16 +366,6 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-.dropdown-arrow {
-  color: var(--text-muted);
-  transition: transform 0.15s;
-  flex-shrink: 0;
-}
-
-.dropdown-arrow.rotated {
-  transform: rotate(180deg);
-}
-
 .filter-dropdown {
   position: absolute;
   top: 100%;
@@ -420,40 +412,6 @@ onBeforeUnmount(() => {
   border-bottom-color: var(--accent);
 }
 
-.dropdown-search {
-  padding: 8px;
-  border-bottom: 1px solid var(--border);
-}
-
-.dropdown-search .search-wrapper {
-  position: relative;
-}
-
-.search-icon-inline {
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  padding: 6px 8px 6px 28px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 12px;
-  box-sizing: border-box;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
 .sort-section {
   padding: 12px;
   display: flex;
@@ -489,73 +447,6 @@ onBeforeUnmount(() => {
 .sort-select:focus {
   outline: none;
   border-color: var(--accent);
-}
-
-.options-list {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 40px;
-  max-height: 220px;
-}
-
-.empty-state {
-  padding: 16px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.loading-state {
-  padding: 16px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.option-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-
-.option-item:hover {
-  background: var(--bg-secondary);
-}
-
-.option-item.selected {
-  background: var(--accent-alpha);
-}
-
-.option-checkbox {
-  width: 16px;
-  height: 16px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.1s;
-  color: transparent;
-}
-
-.option-checkbox.checked {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-}
-
-.option-label {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text-primary);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .pagination-controls {

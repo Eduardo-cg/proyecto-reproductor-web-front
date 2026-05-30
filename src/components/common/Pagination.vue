@@ -17,7 +17,7 @@
         <Icon name="chevron-left" size="14" />
       </button>
       <template v-for="(page, i) in pageNumbers" :key="i">
-        <span v-if="page === '...'" class="pagination-ellipsis" aria-hidden="true">…</span>
+        <span v-if="page < 0" class="pagination-ellipsis" aria-hidden="true">…</span>
         <button v-else class="pagination-btn" :class="{ active: page === currentPage }"
           @click="$emit('page-change', page)" :aria-label="'Ir a página ' + (page + 1)"
           :aria-current="page === currentPage ? 'page' : undefined">
@@ -32,21 +32,24 @@
   </div>
 </template>
 
-<script setup>
-import { computed, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import Icon from '../icons/Icon.vue'
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import Icon from '../icons/Icon.vue';
 
 const { t } = useI18n()
 
-const props = defineProps({
-  currentPage: { type: Number, required: true },
-  totalPages: { type: Number, required: true },
-  totalElements: { type: Number, required: true },
-  pageSize: { type: Number, required: true }
-})
+const props = defineProps<{
+  currentPage: number
+  totalPages: number
+  totalElements: number
+  pageSize: number
+}>()
 
-const emit = defineEmits(['page-change', 'page-size-change'])
+const emit = defineEmits<{
+  'page-change': [page: number]
+  'page-size-change': [size: number]
+}>()
 
 const localPageSize = ref(props.pageSize)
 
@@ -54,7 +57,7 @@ watch(() => props.pageSize, (val) => {
   localPageSize.value = val
 })
 
-const onSizeChange = () => {
+const onSizeChange = (): void => {
   emit('page-size-change', localPageSize.value)
 }
 
@@ -63,7 +66,7 @@ const pageNumbers = computed(() => {
   if (total <= 7) {
     return Array.from({ length: total }, (_, i) => i)
   }
-  const pages = [0]
+  const pages: number[] = [0]
   let start = Math.max(1, props.currentPage - 2)
   let end = Math.min(total - 2, props.currentPage + 2)
   if (props.currentPage < 4) {
@@ -74,9 +77,9 @@ const pageNumbers = computed(() => {
     start = total - 5
     end = total - 2
   }
-  if (start > 1) pages.push('...')
+  if (start > 1) pages.push(-1)
   for (let i = start; i <= end; i++) pages.push(i)
-  if (end < total - 2) pages.push('...')
+  if (end < total - 2) pages.push(-2)
   pages.push(total - 1)
   return pages
 })

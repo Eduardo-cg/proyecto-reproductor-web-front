@@ -1,0 +1,120 @@
+.track-cover {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  display: block;
+}
+
+.cover-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.track-title {
+  font-weight: 500;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+}
+
+.track-number {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.track-artist,
+.track-album {
+  color: var(--text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-duration {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.track-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.actions-more {
+  position: relative;
+}
+
+.track-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.track-details {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  margin: 0 12px 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  animation: slideDown 0.15s ease;
+}
+
+.details-content {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.details-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.details-value {
+  color: var(--text-primary);
+}
+
+.tracks-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.tracks-header {
+  display: grid;
+  grid-template-columns: 50px 2fr 1.5fr 1.5fr 80px 160px;
+  gap: 12px;
+  padding: 10px 12px;
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

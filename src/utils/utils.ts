@@ -1,11 +1,11 @@
-export const formatDuration = (seconds) => {
+export const formatDuration = (seconds: number | undefined | null): string => {
   if (!seconds || isNaN(seconds)) return '--:--'
   const mins = Math.floor(seconds / 60)
   const secs = Math.floor(seconds % 60)
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-export const formatFileSize = (bytes) => {
+export const formatFileSize = (bytes: number | undefined | null): string => {
   if (bytes == null || bytes === 0) return '0 B'
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   const k = 1024

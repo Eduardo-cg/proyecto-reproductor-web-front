@@ -8,7 +8,8 @@
           <span class="placeholder">{{ placeholder }}</span>
         </template>
         <template v-else>
-          <span class="selected-text">{{ selectedIds.length }} seleccionado{{ selectedIds.length !== 1 ? 's' : '' }}</span>
+          <span class="selected-text">{{ selectedIds.length }} seleccionado{{ selectedIds.length !== 1 ? 's' : ''
+            }}</span>
         </template>
       </div>
       <div class="selector-actions">
@@ -20,8 +21,8 @@
       <div class="dropdown-search">
         <div class="search-wrapper">
           <Icon name="search" size="14" class="search-icon-inline" />
-          <input v-model="searchQuery" type="text" :placeholder="t('library.search')"
-            class="search-input" ref="searchInput" :aria-label="t('library.search')" />
+          <input v-model="searchQuery" type="text" :placeholder="t('library.search')" class="search-input"
+            ref="searchInput" :aria-label="t('library.search')" />
         </div>
       </div>
 
@@ -47,7 +48,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '../icons/Icon.vue'
 
@@ -175,16 +176,6 @@ onBeforeUnmount(() => {
   margin-left: 8px;
 }
 
-.dropdown-arrow {
-  color: var(--text-muted);
-  transition: transform 0.15s;
-  flex-shrink: 0;
-}
-
-.dropdown-arrow.rotated {
-  transform: rotate(180deg);
-}
-
 .selector-dropdown {
   position: absolute;
   top: 100%;
@@ -199,100 +190,6 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.dropdown-search {
-  padding: 8px;
-  border-bottom: 1px solid var(--border);
-}
-
-.search-wrapper {
-  position: relative;
-}
-
-.search-icon-inline {
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  padding: 6px 8px 6px 28px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 12px;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.options-list {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 40px;
-  max-height: 220px;
-}
-
-.empty-state,
-.loading-state {
-  padding: 16px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.option-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-
-.option-item:hover {
-  background: var(--bg-secondary);
-}
-
-.option-item.selected {
-  background: var(--accent-alpha);
-}
-
-.option-checkbox {
-  width: 16px;
-  height: 16px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.1s;
-  color: transparent;
-}
-
-.option-checkbox.checked {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-}
-
-.option-label {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text-primary);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 @media (max-width: 480px) {

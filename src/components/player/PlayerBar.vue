@@ -1,7 +1,7 @@
 <template>
   <div class="player-bar" role="region" :aria-label="t('player.player')">
     <div class="track-info">
-      <div v-if="playerStore.state.currentTrack" class="track-details">
+      <div v-if="playerStore.state.currentTrack" class="track-info">
         <img v-if="playerStore.state.currentTrack.cover" :src="playerStore.state.currentTrack.cover" alt="Cover"
           class="cover" />
         <div v-else class="cover-placeholder" aria-hidden="true">
@@ -65,11 +65,11 @@
   </div>
 
   <QueuePanel v-if="showQueue" :queue="playerStore.state.queue" @close="showQueue = false"
-    @remove="playerStore.removeFromQueue" @clear="playerStore.clearQueue"
-    @reorder="playerStore.reorderQueue" @play="playerStore.playFromQueue" />
+    @remove="playerStore.removeFromQueue" @clear="playerStore.clearQueue" @reorder="playerStore.reorderQueue"
+    @play="playerStore.playFromQueue" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '../../stores/playerStore'
@@ -84,16 +84,16 @@ const showQueue = ref(false)
 const seekTemp = ref(0)
 const isSeeking = ref(false)
 const tooltipX = ref(0)
-const progressContainer = ref(null)
+const progressContainer = ref<HTMLElement | null>(null)
 
 const tooltipStyle = computed(() => ({
   left: `${tooltipX.value}px`,
   transform: 'translateX(-50%)'
 }))
 
-const calculateTimeFromEvent = (e) => {
+const calculateTimeFromEvent = (e: MouseEvent): number => {
   if (!progressContainer.value) return 0
-  const input = progressContainer.value.querySelector('input[type="range"]')
+  const input = progressContainer.value.querySelector('input[type="range"]') as HTMLInputElement | null
   if (!input) return 0
   const inputRect = input.getBoundingClientRect()
   const x = e.clientX - inputRect.left
@@ -103,13 +103,13 @@ const calculateTimeFromEvent = (e) => {
 
 const THUMB_RADIUS = 6
 
-const clampTooltipX = (x) => {
+const clampTooltipX = (x: number): number => {
   const rect = progressContainer.value?.getBoundingClientRect()
   if (!rect) return x
   return Math.max(THUMB_RADIUS, Math.min(rect.width - THUMB_RADIUS, x))
 }
 
-const onProgressMouseDown = (e) => {
+const onProgressMouseDown = (e: MouseEvent) => {
   isSeeking.value = true
   seekTemp.value = calculateTimeFromEvent(e)
   const rect = progressContainer.value?.getBoundingClientRect()
@@ -118,7 +118,7 @@ const onProgressMouseDown = (e) => {
   document.addEventListener('mouseup', onProgressMouseUp)
 }
 
-const onProgressMouseMove = (e) => {
+const onProgressMouseMove = (e: MouseEvent) => {
   if (!isSeeking.value) return
   seekTemp.value = calculateTimeFromEvent(e)
   const rect = progressContainer.value?.getBoundingClientRect()
@@ -134,8 +134,8 @@ const onProgressMouseUp = () => {
   document.removeEventListener('mouseup', onProgressMouseUp)
 }
 
-const onVolumeChange = (e) => {
-  playerStore.setVolume(parseFloat(e.target.value))
+const onVolumeChange = (e: Event) => {
+  playerStore.setVolume(parseFloat((e.target as HTMLInputElement).value))
 }
 </script>
 
@@ -156,10 +156,6 @@ const onVolumeChange = (e) => {
 }
 
 .track-info {
-  min-width: 0;
-}
-
-.track-details {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -380,9 +376,6 @@ const onVolumeChange = (e) => {
   .track-info {
     width: auto;
     max-width: 100px;
-  }
-
-  .track-details {
     gap: 6px;
   }
 

@@ -9,7 +9,8 @@
           </button>
         </div>
         <div class="edit-form">
-          <div class="edit-cover" @click="$refs.editCoverInput.click()" :title="t('library.changeCover')" role="button" tabindex="0">
+          <div class="edit-cover" @click="editCoverInput?.click()" :title="t('library.changeCover')" role="button"
+            tabindex="0">
             <img v-if="editCover" :src="editCover" alt="" class="edit-cover-img" />
             <div v-else class="edit-cover-placeholder" aria-hidden="true">
               <Icon name="music" size="24" />
@@ -17,13 +18,16 @@
             <div class="edit-cover-overlay" aria-hidden="true">
               <Icon name="upload" size="20" />
             </div>
-            <input ref="editCoverInput" type="file" accept="image/*" class="file-input" @change="handleEditCoverSelect" />
+            <input ref="editCoverInput" type="file" accept="image/*" class="file-input"
+              @change="handleEditCoverSelect" />
           </div>
           <div class="edit-fields">
             <input v-model="editTitle" :placeholder="t('library.trackTitle')" class="preview-input" />
-            <ArtistSelector v-model="editArtistIds" :compact="false" :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
+            <ArtistSelector v-model="editArtistIds" :compact="false"
+              :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
             <input v-model="editAlbum" :placeholder="t('library.album')" class="preview-input" />
-            <input v-model="editReleaseDate" type="date" :placeholder="t('library.releaseDate')" :title="t('library.releaseDate')" class="preview-input" />
+            <input v-model="editReleaseDate" type="date" :placeholder="t('library.releaseDate')"
+              :title="t('library.releaseDate')" class="preview-input" />
           </div>
         </div>
         <div class="preview-actions">
@@ -39,9 +43,9 @@
   <template v-else-if="embedded">
     <div v-if="!pendingFiles.length" class="upload-step">
       <div class="drop-zone" :class="{ 'drop-zone-dragover': isDragOver }" @dragover.prevent="isDragOver = true"
-        @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="$refs.fileInput.click()"
-        role="button" :aria-label="t('library.dragDropZone')" tabindex="0"
-        @keydown.enter.prevent="$refs.fileInput.click()" @keydown.space.prevent="$refs.fileInput.click()">
+        @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="fileInput?.click()" role="button"
+        :aria-label="t('library.dragDropZone')" tabindex="0" @keydown.enter.prevent="fileInput?.click()"
+        @keydown.space.prevent="fileInput?.click()">
         <input ref="fileInput" type="file"
           accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a" multiple
           class="file-input" @change="handleFileSelect" aria-hidden="true" />
@@ -77,30 +81,31 @@
             <input v-model="file.album" :placeholder="t('library.album')" class="preview-input" />
             <input v-model="file.releaseDate" type="date" :placeholder="t('library.releaseDate')"
               :title="t('library.releaseDate')" class="preview-input" />
-              <div class="preview-meta">
-                <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
-                <span class="meta-size">{{ formatFileSize(file.file?.size) }}</span>
-                <span class="meta-file">{{ file.fileName }}</span>
-              </div>
+            <div class="preview-meta">
+              <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
+              <span class="meta-size">{{ formatFileSize(file.file?.size) }}</span>
+              <span class="meta-file">{{ file.fileName }}</span>
             </div>
-            <button class="btn-remove-file" @click="removeFile(index)"
-              :aria-label="'Eliminar ' + (file.title || file.fileName)">
-              <Icon name="close" size="16" />
-            </button>
           </div>
-        </div>
-        <div v-if="storageError" class="storage-error">
-          <Icon name="close" size="16" />
-          {{ storageError }}
-        </div>
-        <div class="preview-actions">
-          <button class="btn btn-secondary" @click="close">
-            {{ t('library.cancel') }}
-          </button>
-          <button class="btn btn-primary" @click="upload" :disabled="uploading">
-            {{ uploading ? t('library.uploading') : t('library.uploadCount').replace('{count}', pendingFiles.length) }}
+          <button class="btn-remove-file" @click="removeFile(index)"
+            :aria-label="'Eliminar ' + (file.title || file.fileName)">
+            <Icon name="close" size="16" />
           </button>
         </div>
+      </div>
+      <div v-if="storageError" class="storage-error">
+        <Icon name="close" size="16" />
+        {{ storageError }}
+      </div>
+      <div class="preview-actions">
+        <button class="btn btn-secondary" @click="close">
+          {{ t('library.cancel') }}
+        </button>
+        <button class="btn btn-primary" @click="upload" :disabled="uploading">
+          {{ uploading ? t('library.uploading') : t('library.uploadCount').replace('{count}',
+            String(pendingFiles.length)) }}
+        </button>
+      </div>
     </div>
   </template>
 
@@ -116,9 +121,9 @@
 
       <div v-if="!pendingFiles.length" class="upload-step">
         <div class="drop-zone" :class="{ 'drop-zone-dragover': isDragOver }" @dragover.prevent="isDragOver = true"
-          @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="$refs.fileInput.click()"
-          role="button" :aria-label="t('library.dragDropZone')" tabindex="0"
-          @keydown.enter.prevent="$refs.fileInput.click()" @keydown.space.prevent="$refs.fileInput.click()">
+          @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="fileInput?.click()" role="button"
+          :aria-label="t('library.dragDropZone')" tabindex="0" @keydown.enter.prevent="fileInput?.click()"
+          @keydown.space.prevent="fileInput?.click()">
           <input ref="fileInput" type="file"
             accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a" multiple
             class="file-input" @change="handleFileSelect" aria-hidden="true" />
@@ -171,7 +176,8 @@
             {{ t('library.cancel') }}
           </button>
           <button class="btn btn-primary" @click="upload" :disabled="uploading">
-            {{ uploading ? t('library.uploading') : t('library.uploadCount').replace('{count}', pendingFiles.length) }}
+            {{ uploading ? t('library.uploading') : t('library.uploadCount').replace('{count}',
+              String(pendingFiles.length)) }}
           </button>
         </div>
       </div>
@@ -179,14 +185,26 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { parseBlob } from 'music-metadata-browser'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
-import { formatDuration, formatFileSize } from '../../utils/utils.js'
-import ArtistSelector from './ArtistSelector.vue'
+import { formatDuration, formatFileSize } from '../../utils/utils'
 import Icon from '../icons/Icon.vue'
+import ArtistSelector from './ArtistSelector.vue'
+
+interface PendingFile {
+  file: File
+  fileName: string
+  title: string
+  artistIds: number[]
+  album: string
+  duration: number
+  cover: string | null
+  coverFile: File | null
+  releaseDate: string
+}
 
 const { t } = useI18n()
 
@@ -200,17 +218,18 @@ const props = defineProps({
 const emit = defineEmits(['update:showUpload', 'uploaded'])
 
 const editTitle = ref('')
-const editArtistIds = ref([])
+const editArtistIds = ref<number[]>([])
 const editAlbum = ref('')
 const editReleaseDate = ref('')
-const editCover = ref(null)
-const editCoverFile = ref(null)
+const editCover = ref<string | null>(null)
+const editCoverFile = ref<File | null>(null)
 const editing = ref(false)
+const editCoverInput = ref<HTMLInputElement | null>(null)
 
-watch(() => props.editData, (data) => {
+watch(() => props.editData, (data: any) => {
   if (data && props.editMode) {
     editTitle.value = data.title || ''
-    editArtistIds.value = data.artists ? data.artists.map(a => a.id) : []
+    editArtistIds.value = data.artists ? data.artists.map((a: any) => a.id) : []
     editAlbum.value = data.album || ''
     editReleaseDate.value = data.releaseDate || ''
     editCover.value = data.cover || null
@@ -218,17 +237,18 @@ watch(() => props.editData, (data) => {
   }
 }, { immediate: true })
 
-const handleEditCoverSelect = (e) => {
-  const file = e.target.files?.[0]
+const handleEditCoverSelect = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
   if (file) {
     editCoverFile.value = file
     const reader = new FileReader()
     reader.onload = () => {
-      editCover.value = reader.result
+      editCover.value = reader.result as string | null
     }
     reader.readAsDataURL(file)
   }
-  e.target.value = ''
+  target.value = ''
 }
 
 const closeEdit = () => {
@@ -244,8 +264,8 @@ const saveEdit = async () => {
       props.editData.id,
       editTitle.value.trim(),
       editArtistIds.value,
-      editAlbum.value || null,
-      editReleaseDate.value || null,
+      editAlbum.value || undefined,
+      editReleaseDate.value || undefined,
       editCoverFile.value || undefined
     )
     closeEdit()
@@ -258,16 +278,16 @@ const saveEdit = async () => {
 }
 
 const isDragOver = ref(false)
-const pendingFiles = ref([])
+const pendingFiles = ref<PendingFile[]>([])
 const uploading = ref(false)
 const storageError = ref('')
-const fileInput = ref(null)
-const globalArtistIds = ref([])
+const fileInput = ref<HTMLInputElement | null>(null)
+const globalArtistIds = ref<number[]>([])
 
 const ACCEPTED_TYPES = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/flac', 'audio/mp4', 'audio/x-m4a', 'audio/aac']
 const ACCEPTED_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.flac', '.m4a']
 
-const arrayBufferToBase64 = (buffer) => {
+const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
   const bytes = new Uint8Array(buffer)
   const CHUNK = 8192
   let result = ''
@@ -280,20 +300,20 @@ const arrayBufferToBase64 = (buffer) => {
 
 const ARTIST_DELIMITERS = /\s+(?:feat\.|ft\.|featuring|&)\s+|,\s*|\s+y\s+|\s+x\s+/i
 
-const parseAndLookupArtists = async (artistString) => {
+const parseAndLookupArtists = async (artistString: string) => {
   if (!artistString || !artistString.trim()) return []
 
   const names = artistString.split(ARTIST_DELIMITERS).map(n => n.trim()).filter(Boolean)
   if (names.length === 0) return []
 
-  const ids = []
-  const seenIds = new Set()
+  const ids: number[] = []
+  const seenIds = new Set<number>()
 
   for (const name of names) {
     try {
       const data = await api.getArtists(0, 20, name)
       const match = data.artists[0]
-      
+
       if (match && !seenIds.has(match.id)) {
         ids.push(match.id)
         seenIds.add(match.id)
@@ -306,9 +326,9 @@ const parseAndLookupArtists = async (artistString) => {
   return ids
 }
 
-const processFiles = async (files) => {
+const processFiles = async (files: FileList) => {
   const validFiles = Array.from(files).filter(f => {
-    const ext = '.' + f.name.split('.').pop().toLowerCase()
+    const ext = '.' + (f.name.split('.').pop() ?? '').toLowerCase()
     return ACCEPTED_EXTENSIONS.includes(ext) || ACCEPTED_TYPES.includes(f.type)
   })
 
@@ -324,7 +344,7 @@ const processFiles = async (files) => {
       coverFileObj = new File([pic.data], 'cover.jpg', { type: pic.format })
     }
 
-    const artistIds = await parseAndLookupArtists(metadata.common.artist)
+    const artistIds = await parseAndLookupArtists(metadata.common.artist ?? '')
 
     pendingFiles.value.push({
       file,
@@ -332,7 +352,7 @@ const processFiles = async (files) => {
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ''),
       artistIds,
       album: metadata.common.album || '',
-      duration: Math.round(metadata.format.duration),
+      duration: Math.round(metadata.format.duration ?? 0),
       cover: coverDataUrl,
       coverFile: coverFileObj,
       releaseDate: ''
@@ -347,19 +367,20 @@ const applyArtistsToAll = () => {
   })
 }
 
-const handleDrop = async (e) => {
+const handleDrop = async (e: DragEvent) => {
   isDragOver.value = false
-  await processFiles(e.dataTransfer.files)
+  await processFiles(e.dataTransfer!.files)
 }
 
-const handleFileSelect = async (e) => {
-  if (e.target.files) {
-    await processFiles(e.target.files)
-    e.target.value = ''
+const handleFileSelect = async (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (target.files) {
+    await processFiles(target.files)
+    target.value = ''
   }
 }
 
-const removeFile = (index) => {
+const removeFile = (index: number) => {
   pendingFiles.value.splice(index, 1)
 }
 
@@ -396,8 +417,8 @@ const upload = async () => {
         pf.duration,
         pf.file,
         pf.album,
-        null,
-        pf.coverFile,
+        undefined,
+        pf.coverFile ?? undefined,
         pf.releaseDate
       )
     }
@@ -412,63 +433,6 @@ const upload = async () => {
 </script>
 
 <style scoped>
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  padding: 16px;
-}
-
-.modal-content {
-  background: var(--bg-primary);
-  padding: 24px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  width: 100%;
-  max-width: 400px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-large {
-  max-width: 680px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.btn-close {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-}
-
-.btn-close:hover {
-  background: var(--accent-alpha);
-  color: var(--text-primary);
-}
-
 .global-artist-section {
   display: flex;
   gap: 10px;
@@ -509,168 +473,9 @@ const upload = async () => {
   cursor: not-allowed;
 }
 
-.drop-zone {
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-md);
-  padding: 40px 24px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color var(--transition), background var(--transition);
-}
-
-.drop-zone:hover,
-.drop-zone-dragover {
-  border-color: var(--accent);
-  background: var(--accent-alpha);
-}
-
-.drop-zone-icon {
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-
-.drop-zone-text {
-  font-size: 15px;
-  font-weight: 500;
-  margin-bottom: 6px;
-}
-
-.drop-zone-formats {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.file-input {
-  display: none;
-}
-
-.preview-title {
-  margin-bottom: 12px;
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-.preview-list {
-  max-height: 420px;
-  overflow-y: auto;
-  margin-bottom: 16px;
-}
-
 .preview-row {
-  display: flex;
   gap: 12px;
-  padding: 10px;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
   align-items: flex-start;
-}
-
-.preview-cover {
-  flex-shrink: 0;
-}
-
-.preview-cover-img {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
-}
-
-.preview-cover-placeholder {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-}
-
-.preview-fields {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.preview-input {
-  width: 100%;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 13px;
-}
-
-.preview-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.preview-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.meta-duration {
-  font-variant-numeric: tabular-nums;
-}
-
-.meta-file {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.btn-remove-file {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-}
-
-.btn-remove-file:hover {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
-}
-
-.preview-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.preview-actions .btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.storage-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: rgba(231, 76, 60, 0.1);
-  border: 1px solid rgba(231, 76, 60, 0.3);
-  border-radius: var(--radius-sm);
-  color: #e74c3c;
-  font-size: 13px;
-  margin-bottom: 12px;
-}
-
-.meta-size {
-  font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
 }
 
 .edit-form {
@@ -734,30 +539,6 @@ const upload = async () => {
 }
 
 @media (max-width: 768px) {
-  .modal {
-    padding: 0;
-    align-items: flex-start;
-  }
-
-  .modal-content {
-    max-width: 100%;
-    border-radius: 0;
-    height: 100vh;
-    height: 100dvh;
-    max-height: none;
-    border: none;
-    padding: 16px;
-  }
-
-  .preview-row {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .preview-fields {
-    width: 100%;
-  }
-
   .global-artist-section {
     flex-direction: column;
     align-items: stretch;
@@ -770,19 +551,6 @@ const upload = async () => {
 
   .drop-zone {
     padding: 24px 16px;
-  }
-
-  .preview-list {
-    max-height: none;
-  }
-
-  .preview-actions {
-    flex-direction: column;
-  }
-
-  .preview-actions .btn {
-    width: 100%;
-    text-align: center;
   }
 }
 </style>

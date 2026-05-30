@@ -15,7 +15,8 @@
         <button class="drag-handle" aria-label="Reordenar" tabindex="0">
           <Icon name="drag" size="14" />
         </button>
-        <button class="play-btn" @click.stop="$emit('play', index)" :aria-label="'Reproducir ' + track.title" tabindex="0">
+        <button class="play-btn" @click.stop="$emit('play', index)" :aria-label="'Reproducir ' + track.title"
+          tabindex="0">
           <Icon name="play" size="14" />
         </button>
         <img v-if="track.cover" :src="track.cover" alt="" class="item-cover" />
@@ -37,19 +38,25 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import Sortable from 'sortablejs'
-import Icon from '../icons/Icon.vue'
+<script setup lang="ts">
+import Sortable from 'sortablejs';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import type { TrackDTO } from '../../types';
+import Icon from '../icons/Icon.vue';
 
-const props = defineProps({
-  queue: {
-    type: Array,
-    default: () => []
-  }
+const props = withDefaults(defineProps<{
+  queue?: TrackDTO[]
+}>(), {
+  queue: () => []
 })
 
-const emit = defineEmits(['close', 'remove', 'clear', 'reorder', 'play'])
+const emit = defineEmits<{
+  'close': []
+  'remove': [index: number]
+  'clear': []
+  'reorder': [newQueue: TrackDTO[]]
+  'play': [index: number]
+}>()
 
 const panelHeight = ref(300)
 const isResizing = ref(false)
@@ -61,7 +68,7 @@ const panelStyle = computed(() => {
   return { height: panelHeight.value + 'px' }
 })
 
-const startResize = (e) => {
+const startResize = (e: MouseEvent) => {
   if (window.innerWidth <= 480) return
   isResizing.value = true
   resizeStartY.value = e.clientY
@@ -70,7 +77,7 @@ const startResize = (e) => {
   document.addEventListener('mouseup', stopResize)
 }
 
-const onResize = (e) => {
+const onResize = (e: MouseEvent) => {
   if (!isResizing.value) return
   const playerHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--player-height')) || 90
   const maxHeight = window.innerHeight - playerHeight - 16
@@ -84,8 +91,8 @@ const stopResize = () => {
   document.removeEventListener('mouseup', stopResize)
 }
 
-const queueListRef = ref(null)
-let sortableInstance = null
+const queueListRef = ref<HTMLElement | null>(null)
+let sortableInstance: Sortable | null = null
 
 const initSortable = () => {
   if (!queueListRef.value || props.queue.length < 2) return
@@ -97,8 +104,8 @@ const initSortable = () => {
     onEnd: (evt) => {
       if (evt.oldIndex === evt.newIndex) return
       const reordered = [...props.queue]
-      const [moved] = reordered.splice(evt.oldIndex, 1)
-      reordered.splice(evt.newIndex, 0, moved)
+      const [moved] = reordered.splice(evt.oldIndex!, 1)
+      reordered.splice(evt.newIndex!, 0, moved)
       emit('reorder', reordered)
     }
   })
@@ -135,6 +142,7 @@ onBeforeUnmount(() => {
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
   }
@@ -165,6 +173,7 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
 }
+
 .close-btn:hover {
   background: var(--accent-alpha);
   color: var(--text-primary);
@@ -197,6 +206,7 @@ onBeforeUnmount(() => {
   padding: 8px 16px;
   transition: background 0.1s;
 }
+
 .queue-item:hover {
   background: var(--bg-secondary);
 }
@@ -253,9 +263,11 @@ onBeforeUnmount(() => {
   opacity: 0;
   transition: opacity 0.1s;
 }
+
 .queue-item:hover .remove-btn {
   opacity: 1;
 }
+
 .remove-btn:hover {
   background: var(--accent-alpha);
   color: var(--text-primary);
@@ -273,6 +285,7 @@ onBeforeUnmount(() => {
   opacity: 0;
   transition: opacity 0.1s;
 }
+
 .play-btn:hover {
   background: var(--accent-alpha);
   color: var(--accent);
@@ -291,10 +304,12 @@ onBeforeUnmount(() => {
   opacity: 0;
   transition: opacity 0.1s;
 }
+
 .queue-item:hover .drag-handle,
 .queue-item:hover .play-btn {
   opacity: 1;
 }
+
 .drag-handle:active {
   cursor: grabbing;
 }
@@ -328,6 +343,7 @@ onBeforeUnmount(() => {
   font-size: 13px;
   transition: background 0.1s;
 }
+
 .clear-btn:hover {
   background: var(--accent-alpha);
 }

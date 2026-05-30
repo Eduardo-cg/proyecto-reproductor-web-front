@@ -1,6 +1,8 @@
-let audioElement = null
+import type { TrackDTO } from '../types'
 
-export function initMediaSession(audio) {
+let audioElement: HTMLAudioElement | null = null
+
+export function initMediaSession(audio: HTMLAudioElement): void {
   audioElement = audio
 
   if (!('mediaSession' in navigator)) {
@@ -25,13 +27,13 @@ export function initMediaSession(audio) {
   })
 
   navigator.mediaSession.setActionHandler('seekto', (details) => {
-    if (audioElement) {
+    if (audioElement && details.seekTime != null) {
       audioElement.currentTime = details.seekTime
     }
   })
 }
 
-export function updateMetadata(track) {
+export function updateMetadata(track: TrackDTO): void {
   if (!('mediaSession' in navigator) || !track) return
 
   const metadata = new MediaMetadata({
@@ -46,18 +48,18 @@ export function updateMetadata(track) {
   navigator.mediaSession.metadata = metadata
 }
 
-export function updatePlaybackState(isPlaying) {
+export function updatePlaybackState(isPlaying: boolean): void {
   if (!('mediaSession' in navigator)) return
   navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
 }
 
-let keyboardHandler = null
+let keyboardHandler: ((e: KeyboardEvent) => void) | null = null
 
-export function setupKeyboardShortcuts() {
+export function setupKeyboardShortcuts(): void {
   if (keyboardHandler) return
 
-  keyboardHandler = (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+  keyboardHandler = (e: KeyboardEvent) => {
+    if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return
     if (e.code === 'Space') {
       e.preventDefault()
       window.dispatchEvent(new CustomEvent('media-session-toggle'))
@@ -67,7 +69,7 @@ export function setupKeyboardShortcuts() {
   window.addEventListener('keydown', keyboardHandler)
 }
 
-export function cleanupKeyboardShortcuts() {
+export function cleanupKeyboardShortcuts(): void {
   if (keyboardHandler) {
     window.removeEventListener('keydown', keyboardHandler)
     keyboardHandler = null

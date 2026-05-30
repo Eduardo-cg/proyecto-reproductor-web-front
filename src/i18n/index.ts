@@ -14,9 +14,9 @@ export const i18n = createI18n({
   }
 })
 
-export const setLocale = (locale) => {
-  i18n.global.locale.value = locale
+export const setLocale = (locale: string): void => {
+  (i18n.global.locale as { value: string }).value = locale
   localStorage.setItem('locale', locale)
 }
 
-export const getLocale = () => i18n.global.locale.value
+export const getLocale = (): string => (i18n.global.locale as { value: string }).value

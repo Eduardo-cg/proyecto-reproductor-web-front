@@ -14,15 +14,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { formatFileSize } from '../../utils/utils.js'
+import type { StorageUsage } from '../../types'
+import { formatFileSize } from '../../utils/utils'
 
 const { t } = useI18n()
 
-const props = defineProps({
-  storageData: { type: Object, default: null }
+const props = withDefaults(defineProps<{
+  storageData?: StorageUsage | null
+}>(), {
+  storageData: null
 })
 
 const storagePercent = computed(() => {

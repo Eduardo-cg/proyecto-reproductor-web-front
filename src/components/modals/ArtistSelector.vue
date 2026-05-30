@@ -11,7 +11,7 @@
           <span class="selected-summary">
             {{ selectedArtists[0].name }}
             <span v-if="selectedArtists.length > 1" class="and-more">
-              {{ t('library.andMore').replace('{count}', selectedArtists.length - 1) }}
+              {{ t('library.andMore').replace('{count}', String(selectedArtists.length - 1)) }}
             </span>
           </span>
         </template>
@@ -51,7 +51,8 @@
       </div>
 
       <div v-if="selectedArtists.length > 0" class="selected-section">
-        <div class="section-label">{{ t('library.selectedArtists').replace('{count}', selectedArtists.length) }}</div>
+        <div class="section-label">{{ t('library.selectedArtists').replace('{count}', String(selectedArtists.length)) }}
+        </div>
         <div class="selected-list" ref="sortableContainer">
           <div v-for="(artist, index) in selectedArtists" :key="artist.id" class="selected-item"
             :class="{ 'primary-item': index === 0 }" :data-id="artist.id" role="option" :aria-selected="true">
@@ -103,33 +104,41 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import Sortable from 'sortablejs'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
+import type { ArtistDTO } from '../../types'
 import Icon from '../icons/Icon.vue'
 import UploadArtistModal from './UploadArtistModal.vue'
 
 const { t } = useI18n()
 
-const props = defineProps({
-  modelValue: { type: Array, default: () => [] },
-  placeholder: { type: String, default: '' },
-  compact: { type: Boolean, default: false }
+const props = withDefaults(defineProps<{
+  modelValue?: number[]
+  placeholder?: string
+  compact?: boolean
+}>(), {
+  modelValue: () => [],
+  placeholder: '',
+  compact: false
 })
 
-const emit = defineEmits(['update:modelValue', 'artistCreated'])
+const emit = defineEmits<{
+  'update:modelValue': [value: number[]]
+  'artistCreated': []
+}>()
 
 const isOpen = ref(false)
 const searchQuery = ref('')
-const allArtists = ref([])
-const selectedArtists = ref([])
+const allArtists = ref<ArtistDTO[]>([])
+const selectedArtists = ref<ArtistDTO[]>([])
 const loading = ref(false)
 const showCreateModal = ref(false)
-const searchInput = ref(null)
-const sortableContainer = ref(null)
-let sortableInstance = null
+const searchInput = ref<HTMLInputElement | null>(null)
+const sortableContainer = ref<HTMLElement | null>(null)
+let sortableInstance: Sortable | null = null
 
 const availableArtists = computed(() => {
   const selectedIds = new Set(selectedArtists.value.map(a => a.id))
@@ -143,7 +152,7 @@ const availableArtists = computed(() => {
   return filtered
 })
 
-const isSelected = (id) => selectedArtists.value.some(a => a.id === id)
+const isSelected = (id: number) => selectedArtists.value.some(a => a.id === id)
 
 const fetchArtists = async () => {
   loading.value = true
@@ -158,13 +167,13 @@ const fetchArtists = async () => {
   }
 }
 
-const toggleArtist = (artist) => {
+const toggleArtist = (artist: ArtistDTO) => {
   if (isSelected(artist.id)) return
   selectedArtists.value = [...selectedArtists.value, { ...artist }]
   emitValue()
 }
 
-const removeArtist = (index) => {
+const removeArtist = (index: number) => {
   selectedArtists.value.splice(index, 1)
   selectedArtists.value = [...selectedArtists.value]
   emitValue()
@@ -188,7 +197,7 @@ const openCreateModal = () => {
   showCreateModal.value = true
 }
 
-const onArtistCreated = (artist) => {
+const onArtistCreated = (artist: ArtistDTO) => {
   allArtists.value = [...allArtists.value, artist]
   selectedArtists.value = [...selectedArtists.value, artist]
   emitValue()
@@ -202,8 +211,8 @@ const initSortable = () => {
     handle: '.drag-handle',
     animation: 150,
     onEnd: (evt) => {
-      const oldIndex = evt.oldIndex
-      const newIndex = evt.newIndex
+      const oldIndex = evt.oldIndex!
+      const newIndex = evt.newIndex!
       if (oldIndex !== newIndex) {
         const [removed] = selectedArtists.value.splice(oldIndex, 1)
         selectedArtists.value.splice(newIndex, 0, removed)
@@ -225,13 +234,13 @@ watch(() => props.modelValue, (newVal) => {
   const ids = newVal || []
   selectedArtists.value = ids.map(id => {
     const found = allArtists.value.find(a => a.id === id)
-    return found || { id, name: `Artist ${id}` }
+    return found || { id, name: `Artist ${id}`, image: undefined, userId: 0, trackCount: 0, albumCount: 0 } as ArtistDTO
   })
   const missingIds = ids.filter(id => !allArtists.value.find(a => a.id === id))
   if (missingIds.length > 0) {
     Promise.all(missingIds.map(id => api.getArtist(id).catch(() => null)))
       .then(artists => {
-        const valid = artists.filter(Boolean)
+        const valid = artists.filter(Boolean) as ArtistDTO[]
         if (valid.length > 0) {
           allArtists.value = [...allArtists.value, ...valid]
         }
@@ -243,7 +252,7 @@ watch(allArtists, () => {
   const ids = props.modelValue || []
   selectedArtists.value = ids.map(id => {
     const found = allArtists.value.find(a => a.id === id)
-    return found || { id, name: `Artist ${id}` }
+    return found || { id, name: `Artist ${id}`, image: undefined, userId: 0, trackCount: 0, albumCount: 0 } as ArtistDTO
   })
 })
 
@@ -255,8 +264,8 @@ watch(isOpen, (open) => {
   }
 })
 
-const handleClickOutside = (e) => {
-  if (isOpen.value && !e.target.closest('.artist-selector')) {
+const handleClickOutside = (e: MouseEvent) => {
+  if (isOpen.value && !(e.target as HTMLElement).closest('.artist-selector')) {
     isOpen.value = false
   }
 }
@@ -398,16 +407,6 @@ onBeforeUnmount(() => {
   opacity: 0.85;
 }
 
-.dropdown-arrow {
-  color: var(--text-muted);
-  transition: transform 0.15s;
-  flex-shrink: 0;
-}
-
-.dropdown-arrow.rotated {
-  transform: rotate(180deg);
-}
-
 .selector-dropdown {
   position: absolute;
   top: 100%;
@@ -484,14 +483,6 @@ onBeforeUnmount(() => {
   min-height: 80px;
 }
 
-.empty-state,
-.loading-state {
-  padding: 16px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
 .selected-item {
   display: flex;
   align-items: center;
@@ -506,25 +497,6 @@ onBeforeUnmount(() => {
 
 .primary-item {
   background: var(--accent-alpha);
-}
-
-.drag-handle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: grab;
-  color: var(--text-muted);
-  padding: 2px;
-  border-radius: 2px;
-}
-
-.drag-handle:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-}
-
-.drag-handle:active {
-  cursor: grabbing;
 }
 
 .item-image {

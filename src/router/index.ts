@@ -2,8 +2,16 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../components/views/HomeView.vue'
 import LibraryView from '../components/views/LibraryView.vue'
 import LoginView from '../components/views/LoginView.vue'
+import NotFoundView from '../components/views/NotFoundView.vue'
 import RegisterView from '../components/views/RegisterView.vue'
 import SettingsView from '../components/views/SettingsView.vue'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    guest?: boolean
+    requiresAuth?: boolean
+  }
+}
 
 const routes = [
   {
@@ -33,6 +41,11 @@ const routes = [
     path: '/settings',
     name: 'settings',
     component: SettingsView
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'notFound',
+    component: NotFoundView
   }
 ]
 

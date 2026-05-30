@@ -148,5 +148,10 @@
     "storage": "Storage",
     "storageUnlimited": "Unlimited storage",
     "storageRemaining": "remaining"
+  },
+  "notfound": {
+    "title": "404 - Page not found",
+    "message": "We're sorry, the page you're looking for doesn't exist.",
+    "home": "Back to the home page"
   }
 }

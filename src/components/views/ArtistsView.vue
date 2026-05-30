@@ -89,37 +89,38 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
+import type { ArtistDTO } from '../../types'
 import ConfirmDialog from '../common/ConfirmDialog.vue'
 import Pagination from '../common/Pagination.vue'
 import Icon from '../icons/Icon.vue'
-import ArtistExpanded from './ArtistExpanded.vue'
 import UploadArtistModal from '../modals/UploadArtistModal.vue'
+import ArtistExpanded from './ArtistExpanded.vue'
 
 const { t } = useI18n()
 
-const loading = ref(true)
-const search = ref('')
-let searchTimeout
-const expandedArtistId = ref(null)
+const loading = ref<boolean>(true)
+const search = ref<string>('')
+let searchTimeout: ReturnType<typeof setTimeout>
+const expandedArtistId = ref<number | null>(null)
 
-const artists = ref([])
-const currentPage = ref(0)
-const pageSize = ref(20)
-const totalElements = ref(0)
-const totalPages = ref(0)
-const openDropdownId = ref(null)
+const artists = ref<ArtistDTO[]>([])
+const currentPage = ref<number>(0)
+const pageSize = ref<number>(20)
+const totalElements = ref<number>(0)
+const totalPages = ref<number>(0)
+const openDropdownId = ref<number | null>(null)
 
-const showDeleteConfirm = ref(false)
-const deleteLoading = ref(false)
-const artistToDelete = ref(null)
-const deleteDialogMessage = ref('')
-const deleteDialogWarning = ref('')
+const showDeleteConfirm = ref<boolean>(false)
+const deleteLoading = ref<boolean>(false)
+const artistToDelete = ref<ArtistDTO | null>(null)
+const deleteDialogMessage = ref<string>('')
+const deleteDialogWarning = ref<string>('')
 
-const loadArtists = async () => {
+const loadArtists = async (): Promise<void> => {
   try {
     loading.value = true
     const data = await api.getArtists(currentPage.value, pageSize.value, search.value)
@@ -135,22 +136,22 @@ const loadArtists = async () => {
   }
 }
 
-const goToPage = (page) => {
+const goToPage = (page: number): void => {
   currentPage.value = page
   loadArtists()
 }
 
-const changePageSize = (newSize) => {
+const changePageSize = (newSize: number): void => {
   pageSize.value = newSize
   currentPage.value = 0
   loadArtists()
 }
 
-const toggleExpand = (artistId) => {
+const toggleExpand = (artistId: number): void => {
   expandedArtistId.value = expandedArtistId.value === artistId ? null : artistId
 }
 
-const downloadArtist = async (artist) => {
+const downloadArtist = async (artist: ArtistDTO): Promise<void> => {
   openDropdownId.value = null
   try {
     await api.downloadArtistZip(artist.id)
@@ -159,26 +160,26 @@ const downloadArtist = async (artist) => {
   }
 }
 
-const handleDocumentClick = () => {
+const handleDocumentClick = (): void => {
   openDropdownId.value = null
 }
 
-const showEditModal = ref(false)
-const artistToEdit = ref(null)
+const showEditModal = ref<boolean>(false)
+const artistToEdit = ref<ArtistDTO | null>(null)
 
-const editArtist = (artist) => {
+const editArtist = (artist: ArtistDTO): void => {
   artistToEdit.value = artist
   showEditModal.value = true
   openDropdownId.value = null
 }
 
-const onEditUploaded = () => {
+const onEditUploaded = (): void => {
   showEditModal.value = false
   artistToEdit.value = null
   loadArtists()
 }
 
-const confirmDeleteArtist = (artist) => {
+const confirmDeleteArtist = (artist: ArtistDTO): void => {
   artistToDelete.value = artist
   deleteDialogMessage.value = t('confirm.deleteMessage', { item: artist.name })
 
@@ -193,7 +194,7 @@ const confirmDeleteArtist = (artist) => {
   showDeleteConfirm.value = true
 }
 
-const handleDeleteConfirm = async () => {
+const handleDeleteConfirm = async (): Promise<void> => {
   if (!artistToDelete.value) return
   deleteLoading.value = true
   try {
@@ -208,11 +209,11 @@ const handleDeleteConfirm = async () => {
   }
 }
 
-const refresh = () => {
+const refresh = (): void => {
   loadArtists()
 }
 
-const handleSearch = () => {
+const handleSearch = (): void => {
   currentPage.value = 0
   loadArtists()
 }
@@ -224,7 +225,7 @@ watch(search, () => {
   }, 300)
 })
 
-const clearFilters = () => {
+const clearFilters = (): void => {
   search.value = ''
   currentPage.value = 0
   loadArtists()
@@ -253,83 +254,6 @@ onUnmounted(() => {
 .search {
   flex: 2;
   margin-bottom: 0;
-}
-
-.search-wrapper {
-  position: relative;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.search-wrapper input {
-  padding-left: 36px;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.toolbar-actions {
-  display: flex;
-  gap: 8px;
-  align-items: stretch;
-}
-
-.toolbar-actions .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, opacity 0.15s;
-}
-
-.btn-primary {
-  background: var(--accent);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-}
-
-.btn-secondary {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-}
-
-.btn-secondary:hover {
-  background: var(--bg-secondary);
-}
-
-.loading {
-  text-align: center;
-  padding: 32px;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 48px 16px;
-  color: var(--text-muted);
-  gap: 12px;
-}
-
-.empty p {
-  font-size: 14px;
 }
 
 .artists-grid {
@@ -446,52 +370,8 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.btn-action:hover {
-  background: var(--accent-alpha);
-  color: var(--accent);
-}
-
-.btn-action-danger:hover {
-  background: rgba(231, 76, 60, 0.15);
-  color: #e74c3c;
-}
-
 .artist-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
   min-width: 160px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 50;
-  overflow: hidden;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 14px;
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.1s;
-  text-align: left;
-}
-
-.dropdown-item:hover {
-  background: var(--bg-tertiary);
-}
-
-.dropdown-item-danger:hover {
-  color: #e74c3c;
-  background: rgba(231, 76, 60, 0.1);
 }
 
 @media (max-width: 768px) {

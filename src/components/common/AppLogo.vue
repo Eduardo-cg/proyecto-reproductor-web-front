@@ -4,13 +4,8 @@
   </router-link>
 </template>
 
-<script setup>
-defineProps({
-  name: {
-    type: String,
-    default: 'MusicApp'
-  }
-})
+<script setup lang="ts">
+withDefaults(defineProps<{ name?: string }>(), { name: 'MusicApp' })
 </script>
 
 <style scoped>
@@ -20,6 +15,7 @@ defineProps({
   user-select: none;
   text-decoration: none;
 }
+
 .app-logo:hover {
   opacity: 0.85;
 }

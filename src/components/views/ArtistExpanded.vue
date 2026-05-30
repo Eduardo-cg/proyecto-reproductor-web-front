@@ -49,8 +49,8 @@
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
-import { formatDuration } from '../../utils/utils.js'
 import { usePlayerStore } from '../../stores/playerStore'
+import { formatDuration } from '../../utils/utils.js'
 import Icon from '../icons/Icon.vue'
 
 const props = defineProps({
@@ -234,31 +234,5 @@ watch(() => props.artistId, async (newId) => {
   color: var(--text-muted);
   min-width: 48px;
   text-align: center;
-}
-
-.empty-sub {
-  padding: 16px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-.loading {
-  text-align: center;
-  padding: 32px;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 </style>

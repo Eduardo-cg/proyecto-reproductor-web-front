@@ -67,7 +67,7 @@
         <section class="settings-section">
           <h2>{{ t('settings.playback') }}</h2>
           <div class="settings-card">
-            <div class="streaming-toggle">
+            <div class="toggle-group">
               <button :class="{ active: mode === MODES.RANGE }" @click="setMode(MODES.RANGE)">
                 {{ t('settings.range') }}
               </button>
@@ -256,32 +256,6 @@ const logout = () => {
 .user-name {
   font-weight: 600;
   font-size: 15px;
-}
-
-.streaming-toggle {
-  display: flex;
-  gap: 4px;
-  width: 100%;
-}
-
-.streaming-toggle button {
-  flex: 1;
-  padding: 8px 12px;
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 500;
-  transition: background var(--transition), color var(--transition);
-}
-
-.streaming-toggle button.active {
-  background: var(--accent);
-  color: var(--bg-primary);
-}
-
-.streaming-toggle button:hover:not(.active) {
-  background: var(--border);
 }
 
 @media (max-width: 480px) {

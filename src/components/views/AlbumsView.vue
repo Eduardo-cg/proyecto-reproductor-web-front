@@ -8,13 +8,8 @@
             aria-label="Buscar álbumes" @keyup.enter="handleSearch" />
         </div>
       </div>
-      <CombinedFilter
-        v-model:artistIds="selectedArtistIds"
-        v-model:sortBy="sortBy"
-        v-model:sortDirection="sortDirection"
-        :showAlbums="false"
-        :sortOptions="albumSortOptions"
-      />
+      <CombinedFilter v-model:artistIds="selectedArtistIds" v-model:sortBy="sortBy"
+        v-model:sortDirection="sortDirection" :showAlbums="false" :sortOptions="albumSortOptions" />
       <div class="toolbar-actions">
         <button class="btn btn-primary" @click="handleSearch">
           <Icon name="search" size="14" />
@@ -160,22 +155,23 @@
       :warning="deleteWarning" :loading="deleteLoading" @confirm="handleDeleteConfirm"
       @cancel="showDeleteConfirm = false" />
 
-    <UploadAlbumModal :showUpload="showEditModal" :editMode="true" :editData="albumToEdit"
+    <UploadAlbumModal :showUpload="showEditModal" :editMode="true" :editData="albumToEdit ?? undefined"
       @update:showUpload="showEditModal = false" @uploaded="onAlbumEditUploaded" />
 
-    <UploadSongsModal :showUpload="showTrackEditModal" :editMode="true" :editData="trackToEdit"
+    <UploadSongsModal :showUpload="showTrackEditModal" :editMode="true" :editData="trackToEdit ?? undefined"
       @update:showUpload="showTrackEditModal = false" @uploaded="onTrackEditUploaded" />
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
 import { usePlayerStore } from '../../stores/playerStore'
-import { formatDuration, formatFileSize } from '../../utils/utils.js'
-import ConfirmDialog from '../common/ConfirmDialog.vue'
+import type { AlbumDTO, AlbumWithTracksDTO, TrackDTO } from '../../types'
+import { formatDuration, formatFileSize } from '../../utils/utils'
 import CombinedFilter from '../common/CombinedFilter.vue'
+import ConfirmDialog from '../common/ConfirmDialog.vue'
 import Pagination from '../common/Pagination.vue'
 import Icon from '../icons/Icon.vue'
 import UploadAlbumModal from '../modals/UploadAlbumModal.vue'
@@ -184,41 +180,41 @@ import UploadSongsModal from '../modals/UploadSongsModal.vue'
 const { t } = useI18n()
 const playerStore = usePlayerStore()
 
-const showDeleteConfirm = ref(false)
-const deleteLoading = ref(false)
-const deleteTarget = ref(null)
-const deleteMode = ref('')
-const deleteMessage = ref('')
-const deleteWarning = ref('')
+const showDeleteConfirm = ref<boolean>(false)
+const deleteLoading = ref<boolean>(false)
+const deleteTarget = ref<AlbumDTO | { album: AlbumDTO; track: TrackDTO } | null>(null)
+const deleteMode = ref<string>('')
+const deleteMessage = ref<string>('')
+const deleteWarning = ref<string>('')
 
-const loading = ref(true)
-const search = ref('')
-let searchTimeout
-const selectedAlbumId = ref(null)
-const openDropdownId = ref(null)
-const openTrackDropdownId = ref(null)
+const loading = ref<boolean>(true)
+const search = ref<string>('')
+let searchTimeout: ReturnType<typeof setTimeout>
+const selectedAlbumId = ref<number | null>(null)
+const openDropdownId = ref<number | null>(null)
+const openTrackDropdownId = ref<number | null>(null)
 
-const albums = ref([])
-const expandedAlbumId = ref(null)
-const albumTracksMap = ref({})
-const albumTracksLoading = ref(new Set())
+const albums = ref<AlbumDTO[]>([])
+const expandedAlbumId = ref<number | null>(null)
+const albumTracksMap = ref<Record<number, TrackDTO[]>>({})
+const albumTracksLoading = ref<Set<number>>(new Set())
 
-const currentPage = ref(0)
-const pageSize = ref(20)
-const totalElements = ref(0)
-const totalPages = ref(0)
+const currentPage = ref<number>(0)
+const pageSize = ref<number>(20)
+const totalElements = ref<number>(0)
+const totalPages = ref<number>(0)
 
-const selectedArtistIds = ref([])
+const selectedArtistIds = ref<number[]>([])
 
-const sortBy = ref('title')
-const sortDirection = ref('asc')
+const sortBy = ref<string>('title')
+const sortDirection = ref<string>('asc')
 const albumSortOptions = [
   { value: 'title', label: 'Título' },
   { value: 'artist', label: 'Artista' },
   { value: 'year', label: 'Año' },
 ]
 
-const loadAlbums = async () => {
+const loadAlbums = async (): Promise<void> => {
   try {
     loading.value = true
     const res = await api.getAlbums(
@@ -242,18 +238,18 @@ const loadAlbums = async () => {
   }
 }
 
-const goToPage = (page) => {
+const goToPage = (page: number): void => {
   currentPage.value = page
   loadAlbums()
 }
 
-const changePageSize = (newSize) => {
+const changePageSize = (newSize: number): void => {
   pageSize.value = newSize
   currentPage.value = 0
   loadAlbums()
 }
 
-const toggleAlbum = async (albumId) => {
+const toggleAlbum = async (albumId: number): Promise<void> => {
   if (expandedAlbumId.value === albumId) {
     expandedAlbumId.value = null
     return
@@ -275,7 +271,7 @@ const toggleAlbum = async (albumId) => {
   }
 }
 
-const playTrack = (album, track) => {
+const playTrack = (album: AlbumDTO, track: TrackDTO): void => {
   const tracks = albumTracksMap.value[album.id]
   if (!tracks || tracks.length === 0) return
 
@@ -287,7 +283,7 @@ const playTrack = (album, track) => {
   tracks.slice(index + 1).forEach(t => playerStore.addToQueue(t))
 }
 
-const playAlbum = async (album) => {
+const playAlbum = async (album: AlbumDTO): Promise<void> => {
   let tracks = albumTracksMap.value[album.id]
   if (!tracks || tracks.length === 0) {
     try {
@@ -306,7 +302,7 @@ const playAlbum = async (album) => {
   tracks.slice(1).forEach(t => playerStore.addToQueue(t))
 }
 
-const queueAlbum = async (album) => {
+const queueAlbum = async (album: AlbumDTO): Promise<void> => {
   let tracks = albumTracksMap.value[album.id]
   if (!tracks || tracks.length === 0) {
     try {
@@ -321,12 +317,12 @@ const queueAlbum = async (album) => {
   tracks.forEach(t => playerStore.addToQueue(t))
 }
 
-const showEditModal = ref(false)
-const albumToEdit = ref(null)
-const showTrackEditModal = ref(false)
-const trackToEdit = ref(null)
+const showEditModal = ref<boolean>(false)
+const albumToEdit = ref<AlbumWithTracksDTO | AlbumDTO | null>(null)
+const showTrackEditModal = ref<boolean>(false)
+const trackToEdit = ref<TrackDTO | null>(null)
 
-const editAlbum = async (album) => {
+const editAlbum = async (album: AlbumDTO): Promise<void> => {
   try {
     albumToEdit.value = await api.getAlbum(album.id)
   } catch (e) {
@@ -336,19 +332,19 @@ const editAlbum = async (album) => {
   openDropdownId.value = null
 }
 
-const onAlbumEditUploaded = () => {
+const onAlbumEditUploaded = (): void => {
   showEditModal.value = false
   albumToEdit.value = null
   loadAlbums()
 }
 
-const editAlbumTrack = (album, track) => {
+const editAlbumTrack = (album: AlbumDTO, track: TrackDTO): void => {
   trackToEdit.value = { ...track, album: album.title }
   showTrackEditModal.value = true
   openTrackDropdownId.value = null
 }
 
-const onTrackEditUploaded = () => {
+const onTrackEditUploaded = (): void => {
   showTrackEditModal.value = false
   trackToEdit.value = null
   if (expandedAlbumId.value) {
@@ -359,7 +355,7 @@ const onTrackEditUploaded = () => {
   }
 }
 
-const confirmDeleteAlbum = (album) => {
+const confirmDeleteAlbum = (album: AlbumDTO): void => {
   deleteMode.value = 'album'
   deleteTarget.value = album
   deleteMessage.value = t('confirm.deleteMessage', { item: album.title })
@@ -367,7 +363,7 @@ const confirmDeleteAlbum = (album) => {
   showDeleteConfirm.value = true
 }
 
-const confirmDeleteAlbumTrack = (album, track) => {
+const confirmDeleteAlbumTrack = (album: AlbumDTO, track: TrackDTO): void => {
   deleteMode.value = 'track'
   deleteTarget.value = { album, track }
   deleteMessage.value = t('confirm.deleteMessage', { item: track.title })
@@ -375,17 +371,17 @@ const confirmDeleteAlbumTrack = (album, track) => {
   showDeleteConfirm.value = true
 }
 
-const handleDeleteConfirm = async () => {
+const handleDeleteConfirm = async (): Promise<void> => {
   if (!deleteTarget.value) return
   deleteLoading.value = true
   try {
-    if (deleteMode.value === 'album') {
+    if (deleteMode.value === 'album' && 'title' in deleteTarget.value) {
       await api.deleteAlbum(deleteTarget.value.id)
       expandedAlbumId.value = null
       albumTracksMap.value = {}
       await loadAlbums()
     } else {
-      const { album, track } = deleteTarget.value
+      const { album, track } = deleteTarget.value as { album: AlbumDTO; track: TrackDTO }
       await api.deleteTrack(track.id)
       const tracks = (albumTracksMap.value[album.id] || []).filter(t => t.id !== track.id)
       albumTracksMap.value = { ...albumTracksMap.value, [album.id]: tracks }
@@ -401,7 +397,7 @@ const handleDeleteConfirm = async () => {
   }
 }
 
-const downloadAlbumZip = async (album) => {
+const downloadAlbumZip = async (album: AlbumDTO): Promise<void> => {
   openDropdownId.value = null
   try {
     await api.downloadAlbumZip(album.id)
@@ -410,7 +406,7 @@ const downloadAlbumZip = async (album) => {
   }
 }
 
-const downloadTrackFile = async (track) => {
+const downloadTrackFile = async (track: TrackDTO): Promise<void> => {
   openTrackDropdownId.value = null
   try {
     await api.downloadTrack(track.id)
@@ -419,28 +415,28 @@ const downloadTrackFile = async (track) => {
   }
 }
 
-const handleDocumentClick = () => {
+const handleDocumentClick = (): void => {
   openDropdownId.value = null
   openTrackDropdownId.value = null
   selectedAlbumId.value = null
 }
 
-const toggleAlbumInfo = (id) => {
+const toggleAlbumInfo = (id: number): void => {
   selectedAlbumId.value = id === selectedAlbumId.value ? null : id
   openDropdownId.value = null
 }
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: string): string => {
   if (!dateStr) return ''
   const [y, m, d] = dateStr.split('-')
   return `${d}/${m}/${y}`
 }
 
-const refresh = () => {
+const refresh = (): void => {
   loadAlbums()
 }
 
-const handleSearch = () => {
+const handleSearch = (): void => {
   currentPage.value = 0
   loadAlbums()
 }
@@ -452,7 +448,7 @@ watch(search, () => {
   }, 300)
 })
 
-const clearFilters = () => {
+const clearFilters = (): void => {
   search.value = ''
   selectedArtistIds.value = []
   sortBy.value = 'title'
@@ -486,114 +482,12 @@ onUnmounted(() => {
   margin-bottom: 0;
 }
 
-.search-wrapper {
-  position: relative;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.search-wrapper input {
-  padding-left: 36px;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-}
-
 .filters-bar {
   flex: 1;
   display: flex;
   gap: 8px;
   margin-bottom: 0;
   min-width: 0;
-}
-
-.toolbar-actions {
-  display: flex;
-  gap: 8px;
-  align-items: stretch;
-}
-
-.toolbar-actions .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, opacity 0.15s;
-}
-
-.btn-primary {
-  background: var(--accent);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-}
-
-.btn-secondary {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-}
-
-.btn-secondary:hover {
-  background: var(--bg-secondary);
-}
-
-.loading {
-  text-align: center;
-  padding: 32px;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 48px 16px;
-  color: var(--text-muted);
-  gap: 12px;
-}
-
-.empty p {
-  font-size: 14px;
-}
-
-.empty-sub {
-  padding: 16px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-.tracks-table {
-  display: flex;
-  flex-direction: column;
-}
-
-.tracks-header {
-  display: grid;
-  grid-template-columns: 50px 2fr 1.5fr 1.5fr 80px 160px;
-  gap: 12px;
-  padding: 10px 12px;
-  font-weight: 500;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
 }
 
 .albums-header,
@@ -639,168 +533,6 @@ onUnmounted(() => {
 
 .album-tracks {
   animation: slideDown 0.15s ease;
-}
-
-.track-cover {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
-  display: block;
-}
-
-.cover-placeholder {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-}
-
-.track-title {
-  font-weight: 500;
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
-}
-
-.track-number {
-  color: var(--text-muted);
-  font-size: 13px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.track-artist {
-  color: var(--text-secondary);
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.track-duration {
-  color: var(--text-muted);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.track-actions {
-  display: flex;
-  gap: 4px;
-  justify-content: flex-end;
-  align-items: center;
-}
-
-.actions-more {
-  position: relative;
-}
-
-.track-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
-  min-width: 150px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 50;
-  overflow: hidden;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 14px;
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.1s;
-  text-align: left;
-}
-
-.dropdown-item:hover {
-  background: var(--bg-tertiary);
-}
-
-.dropdown-item-danger:hover {
-  color: #e74c3c;
-  background: rgba(231, 76, 60, 0.1);
-}
-
-.btn-action {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-secondary);
-  transition: background 0.1s, color 0.1s;
-}
-
-.btn-action:hover {
-  background: var(--accent-alpha);
-  color: var(--accent);
-}
-
-.btn-action-danger:hover {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
-}
-
-.track-wrapper {
-  display: flex;
-  flex-direction: column;
-}
-
-.track-details {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-sm);
-  margin: 0 12px 8px;
-  padding: 10px 16px;
-  border: 1px solid var(--border);
-  animation: slideDown 0.15s ease;
-}
-
-.details-content {
-  display: flex;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.details-label {
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.details-value {
-  color: var(--text-primary);
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @media (max-width: 768px) {

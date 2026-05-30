@@ -17,23 +17,36 @@
   </div>
 </template>
 
-<script setup>
-const emit = defineEmits(['confirm', 'cancel'])
+<script setup lang="ts">
+const emit = defineEmits<{
+  confirm: []
+  cancel: []
+}>()
 
-const props = defineProps({
-  show: { type: Boolean, default: false },
-  title: { type: String, default: 'Confirmar' },
-  message: { type: String, default: '¿Estás seguro?' },
-  warning: { type: String, default: '' },
-  confirmText: { type: String, default: 'Eliminar' },
-  cancelText: { type: String, default: 'Cancelar' },
-  loadingText: { type: String, default: 'Eliminando...' },
-  danger: { type: Boolean, default: true },
-  loading: { type: Boolean, default: false }
+const props = withDefaults(defineProps<{
+  show?: boolean
+  title?: string
+  message?: string
+  warning?: string
+  confirmText?: string
+  cancelText?: string
+  loadingText?: string
+  danger?: boolean
+  loading?: boolean
+}>(), {
+  show: false,
+  title: 'Confirmar',
+  message: '¿Estás seguro?',
+  warning: '',
+  confirmText: 'Eliminar',
+  cancelText: 'Cancelar',
+  loadingText: 'Eliminando...',
+  danger: true,
+  loading: false
 })
 
-const handleConfirm = () => emit('confirm')
-const handleCancel = () => emit('cancel')
+const handleConfirm = (): void => emit('confirm')
+const handleCancel = (): void => emit('cancel')
 </script>
 
 <style scoped>
@@ -52,8 +65,11 @@ const handleCancel = () => emit('cancel')
   background: var(--bg-primary);
   border-radius: var(--radius);
   padding: 24px;
-  max-width: 420px;
-  width: 100%;
+  width: 30vh;
+  min-width: 280px;
+  max-width: 450px;
+  max-height: 85vh;
+  overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   animation: fadeIn 0.15s ease;
 }
@@ -101,6 +117,7 @@ const handleCancel = () => emit('cancel')
   align-items: center;
   gap: 6px;
 }
+
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -110,6 +127,7 @@ const handleCancel = () => emit('cancel')
   background: var(--bg-tertiary);
   color: var(--text-primary);
 }
+
 .btn-secondary:hover:not(:disabled) {
   background: var(--border);
 }
@@ -118,14 +136,16 @@ const handleCancel = () => emit('cancel')
   background: #e74c3c;
   color: #fff;
 }
+
 .btn-danger:hover:not(:disabled) {
   background: #c0392b;
 }
 
 .btn-primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--bg-primary);
 }
+
 .btn-primary:hover:not(:disabled) {
   opacity: 0.9;
 }
@@ -140,12 +160,21 @@ const handleCancel = () => emit('cancel')
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 480px) {

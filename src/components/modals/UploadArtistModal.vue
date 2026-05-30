@@ -10,7 +10,8 @@
         </div>
         <div class="artist-form">
           <div class="artist-global-fields">
-            <div class="artist-image-group" @click="$refs.editImageInput.click()" :title="t('library.changeImage')" role="button" tabindex="0">
+            <div class="artist-image-group" @click="editImageInput?.click()" :title="t('library.changeImage')"
+              role="button" tabindex="0">
               <img v-if="editImage" :src="editImage" alt="" class="artist-image-img" />
               <div v-else class="artist-image-placeholder" aria-hidden="true">
                 <Icon name="artist" size="32" />
@@ -18,10 +19,12 @@
               <div class="artist-image-overlay" aria-hidden="true">
                 <Icon name="upload" size="20" />
               </div>
-              <input ref="editImageInput" type="file" accept="image/*" class="file-input" @change="handleEditImageSelect" />
+              <input ref="editImageInput" type="file" accept="image/*" class="file-input"
+                @change="handleEditImageSelect" />
             </div>
             <div class="artist-meta-fields">
-              <input v-model="editName" :placeholder="t('library.artistName')" class="global-input" @keyup.enter="saveEdit" />
+              <input v-model="editName" :placeholder="t('library.artistName')" class="global-input"
+                @keyup.enter="saveEdit" />
             </div>
           </div>
           <div class="artist-actions">
@@ -38,7 +41,7 @@
   <template v-else-if="embedded">
     <div class="artist-form">
       <div class="artist-global-fields">
-        <div class="artist-image-group" @click="$refs.imageInput.click()" :title="t('library.changeImage')" role="button"
+        <div class="artist-image-group" @click="imageInput?.click()" :title="t('library.changeImage')" role="button"
           tabindex="0" :aria-label="'Seleccionar imagen'">
           <img v-if="artistImage" :src="artistImage" alt="Imagen del artista" class="artist-image-img" />
           <div v-else class="artist-image-placeholder" aria-hidden="true">
@@ -50,7 +53,8 @@
           <input ref="imageInput" type="file" accept="image/*" class="file-input" @change="handleImageSelect" />
         </div>
         <div class="artist-meta-fields">
-          <input v-model="artistName" :placeholder="t('library.artistName')" class="global-input" @keyup.enter="create" />
+          <input v-model="artistName" :placeholder="t('library.artistName')" class="global-input"
+            @keyup.enter="create" />
         </div>
       </div>
 
@@ -64,7 +68,8 @@
     </div>
   </template>
 
-  <div v-else-if="showUpload" class="modal" @click.self="close" role="dialog" aria-modal="true" aria-label="Subir artista">
+  <div v-else-if="showUpload" class="modal" @click.self="close" role="dialog" aria-modal="true"
+    aria-label="Subir artista">
     <div class="modal-content">
       <div class="modal-header">
         <h3>{{ t('library.addArtist') }}</h3>
@@ -74,7 +79,7 @@
       </div>
       <div class="artist-form">
         <div class="artist-global-fields">
-          <div class="artist-image-group" @click="$refs.imageInput.click()" :title="t('library.changeImage')" role="button"
+          <div class="artist-image-group" @click="imageInput?.click()" :title="t('library.changeImage')" role="button"
             tabindex="0" :aria-label="'Seleccionar imagen'">
             <img v-if="artistImage" :src="artistImage" alt="Imagen del artista" class="artist-image-img" />
             <div v-else class="artist-image-placeholder" aria-hidden="true">
@@ -86,7 +91,8 @@
             <input ref="imageInput" type="file" accept="image/*" class="file-input" @change="handleImageSelect" />
           </div>
           <div class="artist-meta-fields">
-            <input v-model="artistName" :placeholder="t('library.artistName')" class="global-input" @keyup.enter="create" />
+            <input v-model="artistName" :placeholder="t('library.artistName')" class="global-input"
+              @keyup.enter="create" />
             <div class="field-hint">{{ t('library.clickToSelectImage') }}</div>
           </div>
         </div>
@@ -103,27 +109,41 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
+import type { ArtistDTO } from '../../types'
 import Icon from '../icons/Icon.vue'
 
 const { t } = useI18n()
 
-const props = defineProps({
-  showUpload: { type: Boolean, required: true },
-  embedded: { type: Boolean, default: false },
-  editMode: { type: Boolean, default: false },
-  editData: { type: Object, default: null }
-})
+interface EditData {
+  id: number
+  name?: string
+  image?: string | null
+}
 
-const emit = defineEmits(['update:showUpload', 'uploaded', 'created'])
+const props = defineProps<{
+  showUpload: boolean
+  embedded?: boolean
+  editMode?: boolean
+  editData?: EditData | null
+}>()
+
+const emit = defineEmits<{
+  'update:showUpload': [value: boolean]
+  'uploaded': []
+  'created': [artist: ArtistDTO]
+  'close': []
+}>()
 
 const editName = ref('')
-const editImage = ref(null)
-const editImageFile = ref(null)
+const editImage = ref<string | null>(null)
+const editImageFile = ref<File | null>(null)
 const editing = ref(false)
+const editImageInput = ref<HTMLInputElement | null>(null)
+const imageInput = ref<HTMLInputElement | null>(null)
 
 watch(() => props.editData, (data) => {
   if (data && props.editMode) {
@@ -133,17 +153,18 @@ watch(() => props.editData, (data) => {
   }
 }, { immediate: true })
 
-const handleEditImageSelect = (e) => {
-  const file = e.target.files?.[0]
+const handleEditImageSelect = (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
   if (file) {
     editImageFile.value = file
     const reader = new FileReader()
     reader.onload = () => {
-      editImage.value = reader.result
+      editImage.value = reader.result as string
     }
     reader.readAsDataURL(file)
   }
-  e.target.value = ''
+  input.value = ''
 }
 
 const closeEdit = () => {
@@ -160,30 +181,31 @@ const saveEdit = async () => {
     await api.updateArtist(props.editData.id, editName.value.trim(), editImageFile.value || undefined)
     closeEdit()
     emit('uploaded')
-  } catch (e) {
-    errorMessage.value = e.message || 'Error al actualizar el artista'
+  } catch (e: unknown) {
+    errorMessage.value = (e instanceof Error ? e.message : null) || 'Error al actualizar el artista'
   } finally {
     editing.value = false
   }
 }
 
 const artistName = ref('')
-const artistImage = ref(null)
-const artistImageFile = ref(null)
+const artistImage = ref<string | null>(null)
+const artistImageFile = ref<File | null>(null)
 const creating = ref(false)
 const errorMessage = ref('')
 
-const handleImageSelect = (e) => {
-  const file = e.target.files?.[0]
+const handleImageSelect = (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
   if (file) {
     artistImageFile.value = file
     const reader = new FileReader()
     reader.onload = () => {
-      artistImage.value = reader.result
+      artistImage.value = reader.result as string
     }
     reader.readAsDataURL(file)
   }
-  e.target.value = ''
+  input.value = ''
 }
 
 const reset = () => {
@@ -211,8 +233,8 @@ const create = async () => {
     emit('uploaded')
     emit('close')
     reset()
-  } catch (e) {
-    errorMessage.value = e.message || 'Error al crear el artista'
+  } catch (e: unknown) {
+    errorMessage.value = (e instanceof Error ? e.message : null) || 'Error al crear el artista'
   } finally {
     creating.value = false
   }
@@ -220,58 +242,6 @@ const create = async () => {
 </script>
 
 <style scoped>
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  padding: 16px;
-}
-
-.modal-content {
-  background: var(--bg-primary);
-  padding: 24px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  width: 100%;
-  max-width: 400px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.btn-close {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-}
-.btn-close:hover {
-  background: var(--accent-alpha);
-  color: var(--text-primary);
-}
-
 .artist-form {
   display: flex;
   flex-direction: column;
@@ -325,6 +295,7 @@ const create = async () => {
   border-radius: var(--radius-sm);
   color: white;
 }
+
 .artist-image-group:hover .artist-image-overlay {
   opacity: 1;
 }
@@ -347,6 +318,7 @@ const create = async () => {
   font-size: 14px;
   font-weight: 500;
 }
+
 .global-input:focus {
   outline: none;
   border-color: var(--accent);
@@ -380,23 +352,6 @@ const create = async () => {
   background: rgba(231, 76, 60, 0.1);
   border-radius: var(--radius-sm);
   text-align: center;
-}
-
-@media (max-width: 768px) {
-  .modal {
-    padding: 0;
-    align-items: flex-start;
-  }
-
-  .modal-content {
-    max-width: 100%;
-    border-radius: 0;
-    height: 100vh;
-    height: 100dvh;
-    max-height: none;
-    border: none;
-    padding: 16px;
-  }
 }
 
 @media (max-width: 480px) {

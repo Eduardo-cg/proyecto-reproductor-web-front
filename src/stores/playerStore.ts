@@ -2,19 +2,30 @@ import { reactive } from 'vue'
 import { initMediaSession, updateMetadata, updatePlaybackState } from '../composables/useMediaSession'
 import { useStreamingMode } from '../composables/useStreamingMode'
 import { api } from '../services/api'
+import type { TrackDTO } from '../types'
 
-let audio = null
-let currentBlobUrl = null
+let audio: HTMLAudioElement | null = null
+let currentBlobUrl: string | null = null
 let eventListenersBound = false
 
-const revokeCurrentBlob = () => {
+interface PlayerState {
+  currentTrack: TrackDTO | null
+  isPlaying: boolean
+  volume: number
+  position: number
+  duration: number
+  queue: TrackDTO[]
+  backQueue: TrackDTO[]
+}
+
+const revokeCurrentBlob = (): void => {
   if (currentBlobUrl) {
     URL.revokeObjectURL(currentBlobUrl)
     currentBlobUrl = null
   }
 }
 
-const state = reactive({
+const state = reactive<PlayerState>({
   currentTrack: null,
   isPlaying: false,
   volume: 1,
@@ -24,15 +35,15 @@ const state = reactive({
   backQueue: []
 })
 
-const bindEventListeners = () => {
+const bindEventListeners = (): void => {
   if (eventListenersBound) return
   eventListenersBound = true
 
   window.addEventListener('beforeunload', () => {
     if (state.currentTrack?.id) {
-      localStorage.setItem('currentTrackId', state.currentTrack.id);
+      localStorage.setItem('currentTrackId', String(state.currentTrack.id))
     } else {
-      localStorage.removeItem('currentTrackId');
+      localStorage.removeItem('currentTrackId')
     }
   })
 
@@ -41,18 +52,18 @@ const bindEventListeners = () => {
   window.addEventListener('media-session-toggle', () => togglePlay())
 }
 
-const initAudio = () => {
+const initAudio = (): void => {
   if (!audio) {
     audio = new Audio()
     audio.volume = state.volume
     initMediaSession(audio)
 
     audio.addEventListener('timeupdate', () => {
-      state.position = audio.currentTime
+      state.position = audio!.currentTime
     })
 
     audio.addEventListener('loadedmetadata', () => {
-      state.duration = audio.duration
+      state.duration = audio!.duration
     })
 
     audio.addEventListener('play', () => {
@@ -78,7 +89,7 @@ const initAudio = () => {
   }
 }
 
-const playTrack = async (track, fromBackQueue = false) => {
+const playTrack = async (track: TrackDTO, fromBackQueue: boolean = false): Promise<void> => {
   if (state.currentTrack && !fromBackQueue) {
     state.backQueue.push(state.currentTrack)
   }
@@ -86,9 +97,9 @@ const playTrack = async (track, fromBackQueue = false) => {
   state.currentTrack = track
   updateMetadata(track)
 
-  if (audio.src) {
-    audio.pause()
-    audio.src = ''
+  if (audio!.src) {
+    audio!.pause()
+    audio!.src = ''
   }
 
   revokeCurrentBlob()
@@ -96,13 +107,13 @@ const playTrack = async (track, fromBackQueue = false) => {
   try {
     const { mode, MODES } = useStreamingMode()
     if (mode.value === MODES.RANGE) {
-      audio.src = api.getStreamUrl(track.id)
+      audio!.src = api.getStreamUrl(track.id)
     } else {
       const blob = await api.getTrackStreamBlob(track.id)
       currentBlobUrl = URL.createObjectURL(blob)
-      audio.src = currentBlobUrl
+      audio!.src = currentBlobUrl
     }
-    await audio.play()
+    await audio!.play()
     state.isPlaying = true
     updatePlaybackState(true)
   } catch (e) {
@@ -112,14 +123,14 @@ const playTrack = async (track, fromBackQueue = false) => {
   }
 }
 
-const storedTrackId = localStorage.getItem('currentTrackId');
+const storedTrackId = localStorage.getItem('currentTrackId')
 
 if (storedTrackId) {
   const token = localStorage.getItem('token')
   const user = localStorage.getItem('user')
   if (token && user) {
     try {
-      const track = await api.getTrack(storedTrackId)
+      const track = await api.getTrack(Number(storedTrackId))
       state.currentTrack = track
     } catch (e) {
       console.error('Error al restaurar canción:', e)
@@ -128,7 +139,7 @@ if (storedTrackId) {
   }
 }
 
-const play = () => {
+const play = (): void => {
   if (audio) {
     audio.play()
     state.isPlaying = true
@@ -137,48 +148,47 @@ const play = () => {
   }
 }
 
-const pause = () => {
+const pause = (): void => {
   if (audio) {
     audio.pause()
     state.isPlaying = false
   }
 }
 
-const togglePlay = () => {
-
+const togglePlay = (): void => {
   state.isPlaying ? pause() : play()
 }
 
-const seek = (time) => {
+const seek = (time: number): void => {
   if (audio) {
     audio.currentTime = time
     state.position = time
   }
 }
 
-const setVolume = (vol) => {
+const setVolume = (vol: number): void => {
   state.volume = vol
   if (audio) {
     audio.volume = vol
   }
 }
 
-const addToQueue = (track) => {
+const addToQueue = (track: TrackDTO): void => {
   state.queue.push(track)
 }
 
-const playNext = () => {
+const playNext = (): void => {
   if (state.queue.length > 0) {
-    const next = state.queue.shift()
+    const next = state.queue.shift()!
     playTrack(next)
   }
 }
 
-const playPrevious = () => {
+const playPrevious = (): void => {
   if (state.position > 3) {
     seek(0)
   } else if (state.backQueue.length > 0) {
-    const prev = state.backQueue.pop()
+    const prev = state.backQueue.pop()!
     if (state.currentTrack) {
       state.queue.unshift(state.currentTrack)
     }
@@ -188,26 +198,26 @@ const playPrevious = () => {
   }
 }
 
-const clearQueue = () => {
+const clearQueue = (): void => {
   state.queue.length = 0
 }
 
-const playFromQueue = (index) => {
+const playFromQueue = (index: number): void => {
   if (index < 0 || index >= state.queue.length) return
   const removed = state.queue.splice(0, index + 1)
   const track = removed[index]
   playTrack(track)
 }
 
-const removeFromQueue = (index) => {
+const removeFromQueue = (index: number): void => {
   state.queue.splice(index, 1)
 }
 
-const reorderQueue = (newQueue) => {
+const reorderQueue = (newQueue: TrackDTO[]): void => {
   state.queue.splice(0, state.queue.length, ...newQueue)
 }
 
-const mute = () => {
+const mute = (): void => {
   if (state.volume === 0) {
     state.volume = 1
   } else {

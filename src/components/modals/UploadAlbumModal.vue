@@ -9,7 +9,7 @@
           </button>
         </div>
         <div class="album-global-fields">
-          <div class="album-cover-group" @click="$refs.editCoverInput.click()" :title="t('library.changeCover')"
+          <div class="album-cover-group" @click="editCoverInput?.click()" :title="t('library.changeCover')"
             role="button" tabindex="0">
             <img v-if="editCover" :src="editCover" alt="" class="album-cover-img" />
             <div v-else class="album-cover-placeholder" aria-hidden="true">
@@ -43,7 +43,7 @@
                 <div class="preview-meta">
                   <span class="meta-duration">{{ track.duration ? formatDuration(track.duration) : '--:--' }}</span>
                   <span v-if="track._isNew && track.file" class="meta-size">{{ formatFileSize(track.file?.size)
-                    }}</span>
+                  }}</span>
                   <span v-if="track._isNew" class="meta-file">({{ t('library.new') }})</span>
                 </div>
               </div>
@@ -55,8 +55,8 @@
           </div>
         </div>
         <div class="add-tracks-area">
-          <div class="drop-zone add-zone" @click="$refs.editFileInput.click()" role="button" tabindex="0"
-            @keydown.enter.prevent="$refs.editFileInput.click()" @keydown.space.prevent="$refs.editFileInput.click()">
+          <div class="drop-zone add-zone" @click="editFileInput?.click()" role="button" tabindex="0"
+            @keydown.enter.prevent="editFileInput?.click()" @keydown.space.prevent="editFileInput?.click()">
             <Icon name="plus" size="24" class="add-zone-icon" />
             <span class="add-zone-text">{{ t('library.addTracks') }}</span>
             <input ref="editFileInput" type="file"
@@ -76,7 +76,7 @@
 
   <template v-else-if="embedded">
     <div class="album-global-fields">
-      <div class="album-cover-group" @click="$refs.coverInput.click()" :title="t('library.changeCover')" role="button"
+      <div class="album-cover-group" @click="coverInput?.click()" :title="t('library.changeCover')" role="button"
         tabindex="0" :aria-label="'Seleccionar portada'">
         <img v-if="albumCover" :src="albumCover" alt="Portada del álbum" class="album-cover-img" />
         <div v-else class="album-cover-placeholder" aria-hidden="true">
@@ -97,9 +97,9 @@
 
     <div v-if="!pendingFiles.length" class="upload-step">
       <div class="drop-zone" :class="{ 'drop-zone-dragover': isDragOver }" @dragover.prevent="isDragOver = true"
-        @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="$refs.fileInput.click()"
-        role="button" :aria-label="t('library.dragDropZone')" tabindex="0"
-        @keydown.enter.prevent="$refs.fileInput.click()" @keydown.space.prevent="$refs.fileInput.click()">
+        @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="fileInput?.click()" role="button"
+        :aria-label="t('library.dragDropZone')" tabindex="0" @keydown.enter.prevent="fileInput?.click()"
+        @keydown.space.prevent="fileInput?.click()">
         <input ref="fileInput" type="file"
           accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a" multiple
           class="file-input" @change="handleFileSelect" aria-hidden="true" />
@@ -140,7 +140,8 @@
       <div class="preview-actions">
         <button class="btn btn-secondary" @click="close">{{ t('library.cancel') }}</button>
         <button class="btn btn-primary" @click="upload" :disabled="uploading || !albumName.trim()">
-          {{ uploading ? t('library.uploading') : t('library.uploadAlbumCount').replace('{count}', pendingFiles.length)
+          {{ uploading ? t('library.uploading') : t('library.uploadAlbumCount').replace('{count}',
+            String(pendingFiles.length))
           }}
         </button>
       </div>
@@ -158,7 +159,7 @@
       </div>
 
       <div class="album-global-fields">
-        <div class="album-cover-group" @click="$refs.coverInput.click()" :title="t('library.changeCover')" role="button"
+        <div class="album-cover-group" @click="coverInput?.click()" :title="t('library.changeCover')" role="button"
           tabindex="0" :aria-label="'Seleccionar portada'">
           <img v-if="albumCover" :src="albumCover" alt="Portada del álbum" class="album-cover-img" />
           <div v-else class="album-cover-placeholder" aria-hidden="true">
@@ -179,9 +180,9 @@
 
       <div v-if="!pendingFiles.length" class="upload-step">
         <div class="drop-zone" :class="{ 'drop-zone-dragover': isDragOver }" @dragover.prevent="isDragOver = true"
-          @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="$refs.fileInput.click()"
-          role="button" :aria-label="t('library.dragDropZone')" tabindex="0"
-          @keydown.enter.prevent="$refs.fileInput.click()" @keydown.space.prevent="$refs.fileInput.click()">
+          @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="fileInput?.click()" role="button"
+          :aria-label="t('library.dragDropZone')" tabindex="0" @keydown.enter.prevent="fileInput?.click()"
+          @keydown.space.prevent="fileInput?.click()">
           <input ref="fileInput" type="file"
             accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a" multiple
             class="file-input" @change="handleFileSelect" aria-hidden="true" />
@@ -223,7 +224,7 @@
           <button class="btn btn-secondary" @click="close">{{ t('library.cancel') }}</button>
           <button class="btn btn-primary" @click="upload" :disabled="uploading || !albumName.trim()">
             {{ uploading ? t('library.uploading') : t('library.uploadAlbumCount').replace('{count}',
-              pendingFiles.length)
+              String(pendingFiles.length))
             }}
           </button>
         </div>
@@ -232,15 +233,30 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { parseBlob } from 'music-metadata-browser'
 import Sortable from 'sortablejs'
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
-import { formatDuration, formatFileSize } from '../../utils/utils.js'
-import ArtistSelector from './ArtistSelector.vue'
+import { formatDuration, formatFileSize } from '../../utils/utils'
 import Icon from '../icons/Icon.vue'
+import ArtistSelector from './ArtistSelector.vue'
+
+interface PendingFile {
+  _key: number
+  file?: File
+  fileName?: string
+  title: string
+  duration: number
+  artistIds: number[]
+  cover?: string | null
+  coverFile?: File | null
+  releaseDate?: string
+  position?: number
+  _isNew: boolean
+  _trackId: number | null
+}
 
 const { t } = useI18n()
 
@@ -253,32 +269,37 @@ const props = defineProps({
 
 const emit = defineEmits(['update:showUpload', 'uploaded'])
 
-const editAlbumName = ref('')
-const editArtistIds = ref([])
-const editReleaseDate = ref('')
-const editCover = ref(null)
-const editCoverFile = ref(null)
-const editing = ref(false)
-const editTracks = ref([])
-const editRemovedTrackIds = ref([])
-const editSortableContainer = ref(null)
-let editSortableInstance = null
+const editCoverInput = ref<HTMLInputElement | null>(null)
+const editFileInput = ref<HTMLInputElement | null>(null)
+const coverInput = ref<HTMLInputElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
-watch(() => props.editData, (data) => {
+const editAlbumName = ref('')
+const editArtistIds = ref<number[]>([])
+const editReleaseDate = ref('')
+const editCover = ref<string | null>(null)
+const editCoverFile = ref<File | null>(null)
+const editing = ref(false)
+const editTracks = ref<PendingFile[]>([])
+const editRemovedTrackIds = ref<number[]>([])
+const editSortableContainer = ref<HTMLElement | null>(null)
+let editSortableInstance: Sortable | null = null
+
+watch(() => props.editData, (data: any) => {
   if (data && props.editMode) {
     editAlbumName.value = data.title || ''
-    editArtistIds.value = data.artists ? data.artists.map(a => a.id) : []
+    editArtistIds.value = data.artists ? data.artists.map((a: any) => a.id) : []
     editReleaseDate.value = data.releaseDate || ''
     editCover.value = data.cover || null
     editCoverFile.value = null
     editRemovedTrackIds.value = []
     if (data.tracks) {
-      editTracks.value = data.tracks.map((t) => ({
+      editTracks.value = data.tracks.map((t: any) => ({
         _key: ++keyCounter,
         _trackId: t.id,
         _isNew: false,
         title: t.title,
-        artistIds: t.artists ? t.artists.map(a => a.id) : [],
+        artistIds: t.artists ? t.artists.map((a: any) => a.id) : [],
         duration: t.duration
       }))
     } else {
@@ -288,17 +309,18 @@ watch(() => props.editData, (data) => {
   }
 }, { immediate: true })
 
-const handleEditCoverSelect = (e) => {
-  const file = e.target.files?.[0]
+const handleEditCoverSelect = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
   if (file) {
     editCoverFile.value = file
     const reader = new FileReader()
     reader.onload = () => {
-      editCover.value = reader.result
+      editCover.value = reader.result as string
     }
     reader.readAsDataURL(file)
   }
-  e.target.value = ''
+  target.value = ''
 }
 
 const closeEdit = () => {
@@ -316,7 +338,7 @@ const saveEdit = async () => {
       albumId,
       editAlbumName.value.trim(),
       editArtistIds.value,
-      editReleaseDate.value || null,
+      editReleaseDate.value || undefined,
       editCoverFile.value || undefined
     )
 
@@ -330,12 +352,12 @@ const saveEdit = async () => {
 
     for (const track of editTracks.value) {
       if (!track._isNew) {
-        const orig = props.editData.tracks ? props.editData.tracks.find(t => t.id === track._trackId) : null
-        const origArtistIds = orig && orig.artists ? orig.artists.map(a => a.id) : []
+        const orig = props.editData.tracks ? props.editData.tracks.find((t: any) => t.id === track._trackId) : null
+        const origArtistIds = orig && orig.artists ? orig.artists.map((a: any) => a.id) : []
         const changed = orig && (orig.title !== track.title ||
           JSON.stringify(origArtistIds) !== JSON.stringify(track.artistIds))
         if (changed) {
-          await api.updateTrack(track._trackId, track.title, track.artistIds, editAlbumName.value.trim(), null)
+          await api.updateTrack(track._trackId!, track.title, track.artistIds, editAlbumName.value.trim(), undefined)
         }
       }
     }
@@ -350,14 +372,14 @@ const saveEdit = async () => {
         track.title,
         trackArtistIds,
         track.duration,
-        track.file,
+        track.file!,
         editTracks.value.indexOf(track) + 1,
-        editReleaseDate.value || null
+        editReleaseDate.value || undefined
       )
       track._trackId = created.id
     }
 
-    const orderedIds = editTracks.value.map(t => t._trackId).filter(Boolean)
+    const orderedIds = editTracks.value.map(t => t._trackId).filter((x): x is number => x !== null)
     if (orderedIds.length > 0) {
       await api.reorderAlbumTracks(albumId, orderedIds)
     }
@@ -372,19 +394,18 @@ const saveEdit = async () => {
 }
 
 const isDragOver = ref(false)
-const pendingFiles = ref([])
+const pendingFiles = ref<PendingFile[]>([])
 const uploading = ref(false)
 const storageError = ref('')
-const fileInput = ref(null)
-const sortableContainer = ref(null)
+const sortableContainer = ref<HTMLElement | null>(null)
 
 const albumName = ref('')
-const selectedArtistIds = ref([])
-const albumCover = ref(null)
-const albumCoverFile = ref(null)
+const selectedArtistIds = ref<number[]>([])
+const albumCover = ref<string | null>(null)
+const albumCoverFile = ref<File | null>(null)
 const albumReleaseDate = ref('')
 
-let sortableInstance = null
+let sortableInstance: Sortable | null = null
 let keyCounter = 0
 
 const ACCEPTED_TYPES = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/flac', 'audio/mp4', 'audio/x-m4a', 'audio/aac']
@@ -392,10 +413,10 @@ const ACCEPTED_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.flac', '.m4a']
 
 const ARTIST_DELIMITERS = /\s+(?:feat\.|ft\.|featuring|&)\s+|,\s*|\s+y\s+|\s+x\s+/i
 
-const parseAndLookupArtists = async (artistString) => {
+const parseAndLookupArtists = async (artistString: string) => {
   if (!artistString || !artistString.trim()) return []
 
-  const names = artistString.split(ARTIST_DELIMITERS).map(n => n.trim()).filter(Boolean)
+  const names = artistString.split(ARTIST_DELIMITERS).map((n: string) => n.trim()).filter(Boolean)
   if (names.length === 0) return []
 
   const ids = []
@@ -405,7 +426,7 @@ const parseAndLookupArtists = async (artistString) => {
     try {
       const data = await api.getArtists(0, 20, name)
       const match = data.artists[0]
-      
+
       if (match && !seenIds.has(match.id)) {
         ids.push(match.id)
         seenIds.add(match.id)
@@ -418,7 +439,7 @@ const parseAndLookupArtists = async (artistString) => {
   return ids
 }
 
-const arrayBufferToBase64 = (buffer) => {
+const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
   const bytes = new Uint8Array(buffer)
   const CHUNK = 8192
   let result = ''
@@ -430,14 +451,15 @@ const arrayBufferToBase64 = (buffer) => {
 }
 
 const updatePositions = () => {
-  pendingFiles.value.forEach((f, i) => {
+  pendingFiles.value.forEach((f: PendingFile, i: number) => {
     f.position = i + 1
   })
 }
 
-const processFiles = async (files) => {
-  const validFiles = Array.from(files).filter(f => {
-    const ext = '.' + f.name.split('.').pop().toLowerCase()
+const processFiles = async (files: FileList | null) => {
+  if (!files) return
+  const validFiles = Array.from(files).filter((f: File) => {
+    const ext = '.' + (f.name.split('.').pop() ?? '').toLowerCase()
     return ACCEPTED_EXTENSIONS.includes(ext) || ACCEPTED_TYPES.includes(f.type)
   })
 
@@ -454,7 +476,7 @@ const processFiles = async (files) => {
 
     const wasEmpty = pendingFiles.value.length === 0
 
-    const artistIds = await parseAndLookupArtists(metadata.common.artist)
+    const artistIds = await parseAndLookupArtists(metadata.common.artist ?? '')
 
     const fileArtistIds = artistIds.length > 0
       ? artistIds
@@ -462,10 +484,12 @@ const processFiles = async (files) => {
 
     pendingFiles.value.push({
       _key: ++keyCounter,
+      _trackId: null,
+      _isNew: true,
       file,
       fileName: file.name,
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ''),
-      duration: Math.round(metadata.format.duration),
+      duration: Math.round(metadata.format.duration ?? 0),
       position: pendingFiles.value.length + 1,
       artistIds: fileArtistIds
     })
@@ -483,33 +507,37 @@ const processFiles = async (files) => {
   initSortable()
 }
 
-const handleCoverSelect = (e) => {
-  const file = e.target.files?.[0]
+const handleCoverSelect = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
   if (file) {
     albumCoverFile.value = file
     const reader = new FileReader()
     reader.onload = () => {
-      albumCover.value = reader.result
+      albumCover.value = reader.result as string
     }
     reader.readAsDataURL(file)
   }
-  e.target.value = ''
+  target.value = ''
 }
 
-const handleDrop = async (e) => {
+const handleDrop = async (e: DragEvent) => {
   isDragOver.value = false
-  await processFiles(e.dataTransfer.files)
-}
-
-const handleFileSelect = async (e) => {
-  if (e.target.files) {
-    await processFiles(e.target.files)
-    e.target.value = ''
+  if (e.dataTransfer) {
+    await processFiles(e.dataTransfer.files)
   }
 }
 
-const removeFile = (key) => {
-  const idx = pendingFiles.value.findIndex(f => f._key === key)
+const handleFileSelect = async (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (target.files) {
+    await processFiles(target.files)
+    target.value = ''
+  }
+}
+
+const removeFile = (key: number) => {
+  const idx = pendingFiles.value.findIndex((f: PendingFile) => f._key === key)
   if (idx !== -1) {
     pendingFiles.value.splice(idx, 1)
     updatePositions()
@@ -534,13 +562,17 @@ const initSortable = () => {
   sortableInstance = Sortable.create(sortableContainer.value, {
     handle: '.drag-handle',
     animation: 150,
+    scroll: true,
+    scrollSensitivity: 50,
+    scrollSpeed: 10,
+    bubbleScroll: true,
     onEnd: () => {
-      const rows = sortableContainer.value.querySelectorAll('.preview-row')
-      const reordered = []
-      const idMap = {}
-      rows.forEach(row => {
-        const id = parseInt(row.dataset.id)
-        const item = pendingFiles.value.find(f => f._key === id)
+      const rows = sortableContainer.value!.querySelectorAll('.preview-row')
+      const reordered: PendingFile[] = []
+      const idMap: Record<string, number> = {}
+      rows.forEach((row: Element) => {
+        const id = parseInt((row as HTMLElement).dataset.id!)
+        const item = pendingFiles.value.find((f: PendingFile) => f._key === id)
         if (item) reordered.push(item)
       })
       pendingFiles.value = reordered
@@ -556,16 +588,17 @@ const destroySortable = () => {
   }
 }
 
-const handleEditAddFiles = async (e) => {
-  const files = e.target.files
+const handleEditAddFiles = async (e: Event) => {
+  const target = e.target as HTMLInputElement
+  const files = target.files
   if (!files) return
-  const validFiles = Array.from(files).filter(f => {
-    const ext = '.' + f.name.split('.').pop().toLowerCase()
+  const validFiles = Array.from(files).filter((f: File) => {
+    const ext = '.' + (f.name.split('.').pop() ?? '').toLowerCase()
     return ACCEPTED_EXTENSIONS.includes(ext) || ACCEPTED_TYPES.includes(f.type)
   })
   for (const file of validFiles) {
     const metadata = await parseBlob(file)
-    const artistIds = await parseAndLookupArtists(metadata.common.artist)
+    const artistIds = await parseAndLookupArtists(metadata.common.artist ?? '')
     editTracks.value.push({
       _key: ++keyCounter,
       _trackId: null,
@@ -573,16 +606,16 @@ const handleEditAddFiles = async (e) => {
       file,
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ''),
       artistIds: artistIds.length > 0 ? artistIds : (editArtistIds.value.length > 0 ? [...editArtistIds.value] : []),
-      duration: Math.round(metadata.format.duration) || 0
+      duration: Math.round(metadata.format.duration ?? 0) || 0
     })
   }
-  e.target.value = ''
+  target.value = ''
   await nextTick()
   initEditSortable()
 }
 
-const removeEditTrack = (key) => {
-  const idx = editTracks.value.findIndex(t => t._key === key)
+const removeEditTrack = (key: number) => {
+  const idx = editTracks.value.findIndex((t: PendingFile) => t._key === key)
   if (idx === -1) return
   const track = editTracks.value[idx]
   if (!track._isNew && track._trackId) {
@@ -600,12 +633,16 @@ const initEditSortable = () => {
   editSortableInstance = Sortable.create(editSortableContainer.value, {
     handle: '.drag-handle',
     animation: 150,
+    scroll: true,
+    scrollSensitivity: 50,
+    scrollSpeed: 10,
+    bubbleScroll: true,
     onEnd: () => {
-      const rows = editSortableContainer.value.querySelectorAll('.preview-row')
-      const reordered = []
-      rows.forEach(row => {
-        const id = parseInt(row.dataset.id)
-        const item = editTracks.value.find(t => t._key === id)
+      const rows = editSortableContainer.value!.querySelectorAll('.preview-row')
+      const reordered: PendingFile[] = []
+      rows.forEach((row: Element) => {
+        const id = parseInt((row as HTMLElement).dataset.id!)
+        const item = editTracks.value.find((t: PendingFile) => t._key === id)
         if (item) reordered.push(item)
       })
       editTracks.value = reordered
@@ -626,7 +663,7 @@ const upload = async () => {
   uploading.value = true
   storageError.value = ''
   try {
-    const totalNewSize = pendingFiles.value.reduce((sum, pf) => sum + (pf.file?.size || 0), 0)
+    const totalNewSize = pendingFiles.value.reduce((sum: number, pf: PendingFile) => sum + (pf.file?.size || 0), 0)
     try {
       const storage = await api.getStorageUsage()
       if (storage.roleName !== 'ADMIN' && totalNewSize > storage.availableBytes) {
@@ -643,8 +680,8 @@ const upload = async () => {
     const album = await api.createAlbum(
       albumName.value,
       selectedArtistIds.value,
-      albumCoverFile.value,
-      albumReleaseDate.value || null
+      albumCoverFile.value ?? undefined,
+      albumReleaseDate.value || undefined
     )
 
     for (const pf of pendingFiles.value) {
@@ -656,9 +693,9 @@ const upload = async () => {
         pf.title,
         trackArtistIds,
         pf.duration,
-        pf.file,
+        pf.file!,
         pf.position,
-        albumReleaseDate.value || null
+        albumReleaseDate.value || undefined
       )
     }
     close()
@@ -670,9 +707,9 @@ const upload = async () => {
   }
 }
 
-watch(selectedArtistIds, (newIds) => {
+watch(selectedArtistIds, (newIds: number[]) => {
   if (newIds.length > 0 && pendingFiles.value.length > 0) {
-    pendingFiles.value.forEach(f => {
+    pendingFiles.value.forEach((f: PendingFile) => {
       if (!f.artistIds || f.artistIds.length === 0) {
         f.artistIds = [...newIds]
       }
@@ -680,7 +717,7 @@ watch(selectedArtistIds, (newIds) => {
   }
 })
 
-watch(() => pendingFiles.value.length, (len) => {
+watch(() => pendingFiles.value.length, (len: number) => {
   if (len > 1) {
     nextTick(initSortable)
   } else {
@@ -695,63 +732,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  padding: 16px;
-}
-
-.modal-content {
-  background: var(--bg-primary);
-  padding: 24px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  width: 100%;
-  max-width: 400px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-large {
-  max-width: 680px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.btn-close {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-}
-
-.btn-close:hover {
-  background: var(--accent-alpha);
-  color: var(--text-primary);
-}
-
 .album-global-fields {
   display: flex;
   gap: 12px;
@@ -828,180 +808,9 @@ onBeforeUnmount(() => {
   border-color: var(--accent);
 }
 
-.drop-zone {
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-md);
-  padding: 40px 24px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color var(--transition), background var(--transition);
-}
-
-.drop-zone:hover,
-.drop-zone-dragover {
-  border-color: var(--accent);
-  background: var(--accent-alpha);
-}
-
-.drop-zone-icon {
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-
-.drop-zone-text {
-  font-size: 15px;
-  font-weight: 500;
-  margin-bottom: 6px;
-}
-
-.drop-zone-formats {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.file-input {
-  display: none;
-}
-
-.preview-title {
-  margin-bottom: 12px;
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-.preview-list {
-  max-height: 420px;
-  overflow-y: auto;
-  margin-bottom: 16px;
-}
-
 .preview-row {
-  display: flex;
   gap: 10px;
-  padding: 10px;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
   align-items: center;
-}
-
-.drag-handle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: grab;
-  color: var(--text-muted);
-  padding: 4px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-
-.drag-handle:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-}
-
-.preview-position {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-sm);
-}
-
-.preview-fields {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.preview-input {
-  width: 100%;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 13px;
-}
-
-.preview-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.preview-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.meta-duration {
-  font-variant-numeric: tabular-nums;
-}
-
-.meta-file {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.btn-remove-file {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-}
-
-.btn-remove-file:hover {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
-}
-
-.preview-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.preview-actions .btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.storage-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: rgba(231, 76, 60, 0.1);
-  border: 1px solid rgba(231, 76, 60, 0.3);
-  border-radius: var(--radius-sm);
-  color: #e74c3c;
-  font-size: 13px;
-  margin-bottom: 12px;
-}
-
-.meta-size {
-  font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
 }
 
 .add-tracks-area {
@@ -1036,21 +845,6 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .modal {
-    padding: 0;
-    align-items: flex-start;
-  }
-
-  .modal-content {
-    max-width: 100%;
-    border-radius: 0;
-    height: 100vh;
-    height: 100dvh;
-    max-height: none;
-    border: none;
-    padding: 16px;
-  }
-
   .album-global-fields {
     flex-direction: column;
     align-items: center;
@@ -1060,30 +854,8 @@ onBeforeUnmount(() => {
     width: 100%;
   }
 
-  .preview-row {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .preview-fields {
-    width: 100%;
-  }
-
-  .preview-list {
-    max-height: none;
-  }
-
   .drop-zone {
     padding: 24px 16px;
-  }
-
-  .preview-actions {
-    flex-direction: column;
-  }
-
-  .preview-actions .btn {
-    width: 100%;
-    text-align: center;
   }
 }
 </style>

@@ -5,7 +5,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import PlayerBar from './components/player/PlayerBar.vue';
 import { useTheme } from './composables/useTheme';
 
