@@ -1,39 +1,113 @@
 <template>
-  <div class="queue-panel" :style="panelStyle" role="dialog" aria-label="Cola de reproducción">
-    <div class="queue-header" @mousedown="startResize">
+  <div
+    class="queue-panel"
+    :style="panelStyle"
+    role="dialog"
+    aria-label="Cola de reproducción"
+  >
+    <div
+      class="queue-header"
+      @mousedown="startResize"
+    >
       <h3>Cola de reproducción</h3>
-      <button class="close-btn" @click="$emit('close')" aria-label="Cerrar cola">
-        <Icon name="close" size="18" />
+      <button
+        class="close-btn"
+        aria-label="Cerrar cola"
+        @click="$emit('close')"
+      >
+        <Icon
+          name="close"
+          size="18"
+        />
       </button>
     </div>
-    <div class="queue-list" ref="queueListRef">
-      <div v-if="queue.length === 0" class="empty-queue">
-        <Icon name="queue" size="32" />
+    <div
+      ref="queueListRef"
+      class="queue-list"
+    >
+      <div
+        v-if="queue.length === 0"
+        class="empty-queue"
+      >
+        <Icon
+          name="queue"
+          size="32"
+        />
         <p>No hay canciones en la cola</p>
       </div>
-      <div v-for="(track, index) in queue" :key="track.id ?? index" class="queue-item" :data-index="index">
-        <button class="drag-handle" aria-label="Reordenar" tabindex="0">
-          <Icon name="drag" size="14" />
+      <div
+        v-for="(track, index) in queue"
+        :key="track.id ?? index"
+        class="queue-item"
+        :data-index="index"
+      >
+        <button
+          class="drag-handle"
+          aria-label="Reordenar"
+          tabindex="0"
+        >
+          <Icon
+            name="drag"
+            size="14"
+          />
         </button>
-        <button class="play-btn" @click.stop="$emit('play', index)" :aria-label="'Reproducir ' + track.title"
-          tabindex="0">
-          <Icon name="play" size="14" />
+        <button
+          class="play-btn"
+          :aria-label="'Reproducir ' + track.title"
+          tabindex="0"
+          @click.stop="$emit('play', index)"
+        >
+          <Icon
+            name="play"
+            size="14"
+          />
         </button>
-        <img v-if="track.cover" :src="track.cover" alt="" class="item-cover" />
-        <div v-else class="item-cover-placeholder" aria-hidden="true">
-          <Icon name="music" size="18" />
+        <img
+          v-if="track.cover"
+          :src="track.cover"
+          alt=""
+          class="item-cover"
+        >
+        <div
+          v-else
+          class="item-cover-placeholder"
+          aria-hidden="true"
+        >
+          <Icon
+            name="music"
+            size="18"
+          />
         </div>
         <div class="item-info">
-          <div class="item-title">{{ track.title }}</div>
-          <div class="item-artist">{{ track.artist }}</div>
+          <div class="item-title">
+            {{ track.title }}
+          </div>
+          <div class="item-artist">
+            {{ track.artist }}
+          </div>
         </div>
-        <button class="remove-btn" @click="$emit('remove', index)" :aria-label="'Eliminar ' + track.title">
-          <Icon name="close" size="14" />
+        <button
+          class="remove-btn"
+          :aria-label="'Eliminar ' + track.title"
+          @click="$emit('remove', index)"
+        >
+          <Icon
+            name="close"
+            size="14"
+          />
         </button>
       </div>
     </div>
-    <div v-if="queue.length > 0" class="queue-footer">
-      <button class="clear-btn" @click="$emit('clear')">Vaciar cola</button>
+    <div
+      v-if="queue.length > 0"
+      class="queue-footer"
+    >
+      <button
+        class="clear-btn"
+        @click="$emit('clear')"
+      >
+        Vaciar cola
+      </button>
     </div>
   </div>
 </template>

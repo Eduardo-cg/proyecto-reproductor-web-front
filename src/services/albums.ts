@@ -11,7 +11,7 @@ interface AlbumsResult {
 
 export const getAlbums = async (
   page: number = 0,
-  size: number = 20,
+  size: number = 10,
   search: string = '',
   artistIds: number[] = [],
   sortBy: string = 'title',
@@ -36,7 +36,7 @@ export const createAlbum = async (title: string, artistIds: number[], cover?: Fi
   if (artistIds && artistIds.length > 0) formData.append('artistIds', JSON.stringify(artistIds))
   if (cover) formData.append('cover', cover)
   if (releaseDate) formData.append('releaseDate', releaseDate)
-  const res = await fetch(`${API_URL}/albums`, { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }, body: formData })
+  const res = await fetch(`${API_URL}/albums`, { method: 'POST', headers: authHeaders(), body: formData })
   return handleResponse<AlbumDTO>(res, 'Error al crear el álbum')
 }
 
@@ -46,7 +46,7 @@ export const updateAlbum = async (id: number, title: string, artistIds: number[]
   if (artistIds && artistIds.length > 0) formData.append('artistIds', JSON.stringify(artistIds))
   if (cover) formData.append('cover', cover)
   if (releaseDate) formData.append('releaseDate', releaseDate)
-  const res = await fetch(`${API_URL}/albums/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }, body: formData })
+  const res = await fetch(`${API_URL}/albums/${id}`, { method: 'PUT', headers: authHeaders(), body: formData })
   return handleResponse<AlbumDTO>(res, 'Error al actualizar el álbum')
 }
 
@@ -88,6 +88,6 @@ export const uploadAlbumTrack = async (
   formData.append('file', file)
   if (position != null) formData.append('position', String(position))
   if (releaseDate) formData.append('releaseDate', releaseDate)
-  const res = await fetch(`${API_URL}/albums/${albumId}/tracks`, { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }, body: formData })
+  const res = await fetch(`${API_URL}/albums/${albumId}/tracks`, { method: 'POST', headers: authHeaders(), body: formData })
   return handleResponse<AlbumDTO>(res, 'Error al subir canción al álbum')
 }

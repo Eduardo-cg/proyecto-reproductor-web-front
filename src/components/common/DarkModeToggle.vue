@@ -1,10 +1,30 @@
 <template>
-  <div class="toggle-group" role="radiogroup" :aria-label="t('settings.appearance')">
-    <button :class="{ active: !isDark }" @click="toggleDark()" role="radio" :aria-checked="!isDark">
-      <Icon name="sun" size="16" /> {{ t('settings.lightMode') }}
+  <div
+    class="toggle-group"
+    role="radiogroup"
+    :aria-label="t('settings.appearance')"
+  >
+    <button
+      :class="{ active: !isDark }"
+      role="radio"
+      :aria-checked="!isDark"
+      @click="toggleDark()"
+    >
+      <Icon
+        name="sun"
+        size="16"
+      /> {{ t('settings.lightMode') }}
     </button>
-    <button :class="{ active: isDark }" @click="toggleDark()" role="radio" :aria-checked="isDark">
-      <Icon name="moon" size="16" /> {{ t('settings.darkMode') }}
+    <button
+      :class="{ active: isDark }"
+      role="radio"
+      :aria-checked="isDark"
+      @click="toggleDark()"
+    >
+      <Icon
+        name="moon"
+        size="16"
+      /> {{ t('settings.darkMode') }}
     </button>
   </div>
 </template>

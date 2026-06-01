@@ -4,9 +4,23 @@
     "logout": "Logout"
   },
   "home": {
-    "title": "Welcome to MusicApp",
+    "title": "Welcome to {appName}",
     "subtitle": "Your favorite music platform",
-    "feature2Desc": "Manage your songs"
+    "aboutTitle": "About FonoPort",
+    "aboutDescription": "FonoPort is a web music streaming application inspired by platforms like Spotify. It lets you register your own songs, organize them into albums and associate them with artists, enjoying a complete playback experience with queue, media controls and a responsive interface.",
+    "featuresTitle": "Features",
+    "featureStreamingTitle": "Advanced playback",
+    "featureStreamingDesc": "Partial streaming with HTTP Range Requests or full download. Play/pause, volume, draggable progress bar and keyboard shortcuts.",
+    "featureQueueTitle": "Playback queue",
+    "featureQueueDesc": "Sliding panel with drag & drop to reorder songs, navigation history and quick clear.",
+    "featureLibraryTitle": "Full library",
+    "featureLibraryDesc": "Manage tracks, albums and artists with search, filters, sorting and pagination.",
+    "featureUploadTitle": "Upload with metadata",
+    "featureUploadDesc": "Drag audio files and extract title, artist, album, duration and cover automatically.",
+    "featureThemesTitle": "5 visual themes",
+    "featureThemesDesc": "Customize the interface with Warm, Midnight, Forest, Ocean and Retro themes, with light and dark modes.",
+    "featureI18nTitle": "Multilanguage",
+    "featureI18nDesc": "Interface available in Spanish and English, with your preference saved for future sessions."
   },
   "auth": {
     "loginTitle": "Sign In",

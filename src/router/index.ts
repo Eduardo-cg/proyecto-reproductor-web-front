@@ -66,6 +66,8 @@ router.beforeEach((to) => {
   if (to.meta.guest && isAuthenticated) {
     return { name: 'library' }
   }
+
+  return true
 })
 
 export default router

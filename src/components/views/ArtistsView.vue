@@ -1,98 +1,212 @@
 <template>
   <div>
     <div class="toolbar">
-      <div class="search" role="search">
+      <div
+        class="search"
+        role="search"
+      >
         <div class="search-wrapper">
-          <Icon name="search" size="16" class="search-icon" />
-          <input v-model="search" type="text" :placeholder="t('library.artistSearchPlaceholder')"
-            aria-label="Buscar artistas" @keyup.enter="handleSearch" />
+          <Icon
+            name="search"
+            size="16"
+            class="search-icon"
+          />
+          <input
+            v-model="search"
+            type="text"
+            :placeholder="t('library.artistSearchPlaceholder')"
+            aria-label="Buscar artistas"
+            @keyup.enter="handleSearch"
+          >
         </div>
       </div>
       <div class="toolbar-actions">
-        <button class="btn btn-primary" @click="handleSearch">
-          <Icon name="search" size="14" />
+        <button
+          class="btn btn-primary"
+          @click="handleSearch"
+        >
+          <Icon
+            name="search"
+            size="14"
+          />
           {{ t('library.search') }}
         </button>
-        <button class="btn btn-secondary" @click="clearFilters">
+        <button
+          class="btn btn-secondary"
+          @click="clearFilters"
+        >
           {{ t('library.clearFilters') }}
         </button>
       </div>
     </div>
 
-    <div v-if="loading" class="loading" role="status">{{ t('auth.loading') }}</div>
+    <div
+      v-if="loading"
+      class="loading"
+      role="status"
+    >
+      {{ t('auth.loading') }}
+    </div>
 
     <template v-else>
-      <div v-if="artists.length === 0" class="empty">
-        <Icon name="empty" size="48" />
+      <div
+        v-if="artists.length === 0"
+        class="empty"
+      >
+        <Icon
+          name="empty"
+          size="48"
+        />
         <p>{{ t('library.noArtists') }}</p>
       </div>
 
-      <div v-else class="artists-grid" role="list" aria-label="Lista de artistas">
-        <div v-for="artist in artists" :key="artist.id" class="artist-card-wrapper">
-          <div class="artist-card" @click="toggleExpand(artist.id)" role="listitem"
-            :aria-expanded="expandedArtistId === artist.id">
+      <div
+        v-else
+        class="artists-grid"
+        role="list"
+        aria-label="Lista de artistas"
+      >
+        <div
+          v-for="artist in artists"
+          :key="artist.id"
+          v-memo="[artist, expandedArtistId === artist.id, openDropdownId === artist.id]"
+          class="artist-card-wrapper"
+        >
+          <div
+            class="artist-card"
+            role="listitem"
+            :aria-expanded="expandedArtistId === artist.id"
+            @click="toggleExpand(artist.id)"
+          >
             <div class="artist-image">
-              <img v-if="artist.image" :src="artist.image" alt="" class="artist-img" />
-              <div v-else class="artist-placeholder">
-                <Icon name="artist" size="24" />
+              <img
+                v-if="artist.image"
+                :src="artist.image"
+                alt=""
+                class="artist-img"
+              >
+              <div
+                v-else
+                class="artist-placeholder"
+              >
+                <Icon
+                  name="artist"
+                  size="24"
+                />
               </div>
             </div>
             <div class="artist-info">
               <span class="artist-name">{{ artist.name }}</span>
               <div class="artist-counts">
                 <span class="count-badge">
-                  <Icon name="music" size="10" />
+                  <Icon
+                    name="music"
+                    size="10"
+                  />
                   {{ artist.trackCount }}
                 </span>
                 <span class="count-badge">
-                  <Icon name="album" size="10" />
+                  <Icon
+                    name="album"
+                    size="10"
+                  />
                   {{ artist.albumCount }}
                 </span>
               </div>
             </div>
-            <div class="artist-actions" @click.stop>
-              <button class="btn-action" @click="openDropdownId = openDropdownId === artist.id ? null : artist.id"
-                :aria-label="'Más opciones'">
-                <Icon name="more-vertical" size="16" />
+            <div
+              class="artist-actions"
+              @click.stop
+            >
+              <button
+                class="btn-action"
+                :aria-label="'Más opciones'"
+                @click="openDropdownId = openDropdownId === artist.id ? null : artist.id"
+              >
+                <Icon
+                  name="more-vertical"
+                  size="16"
+                />
               </button>
-              <div v-if="openDropdownId === artist.id" class="artist-dropdown">
-                <button class="dropdown-item" @click="downloadArtist(artist)">
-                  <Icon name="download" size="14" />
+              <div
+                v-if="openDropdownId === artist.id"
+                class="artist-dropdown"
+              >
+                <button
+                  class="dropdown-item"
+                  @click="downloadArtist(artist)"
+                >
+                  <Icon
+                    name="download"
+                    size="14"
+                  />
                   <span>{{ t('common.download') }}</span>
                 </button>
-                <button class="dropdown-item" @click="editArtist(artist)">
-                  <Icon name="edit" size="14" />
+                <button
+                  class="dropdown-item"
+                  @click="editArtist(artist)"
+                >
+                  <Icon
+                    name="edit"
+                    size="14"
+                  />
                   <span>{{ t('common.edit') }}</span>
                 </button>
-                <button class="dropdown-item dropdown-item-danger" @click="confirmDeleteArtist(artist)">
-                  <Icon name="trash" size="14" />
+                <button
+                  class="dropdown-item dropdown-item-danger"
+                  @click="confirmDeleteArtist(artist)"
+                >
+                  <Icon
+                    name="trash"
+                    size="14"
+                  />
                   <span>{{ t('common.delete') }}</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <ArtistExpanded v-if="expandedArtistId === artist.id" :artist-id="artist.id" />
+          <ArtistExpanded
+            v-if="expandedArtistId === artist.id"
+            :artist-id="artist.id"
+          />
         </div>
       </div>
     </template>
 
-    <ConfirmDialog :show="showDeleteConfirm" :title="t('confirm.deleteTitle')" :message="deleteDialogMessage"
-      :warning="deleteDialogWarning" :loading="deleteLoading" @confirm="handleDeleteConfirm"
-      @cancel="showDeleteConfirm = false" />
+    <ConfirmDialog
+      :show="showDeleteConfirm"
+      :title="t('confirm.deleteTitle')"
+      :message="deleteDialogMessage"
+      :warning="deleteDialogWarning"
+      :loading="deleteLoading"
+      @confirm="handleDeleteConfirm"
+      @cancel="showDeleteConfirm = false"
+    />
 
-    <UploadArtistModal :showUpload="showEditModal" :editMode="true" :editData="artistToEdit"
-      @update:showUpload="showEditModal = false" @uploaded="onEditUploaded" />
+    <UploadArtistModal
+      v-model:show-upload="showEditModal"
+      :edit-mode="true"
+      :edit-data="artistToEdit"
+      @uploaded="onEditUploaded"
+    />
 
-    <Pagination :current-page="currentPage" :total-pages="totalPages" :total-elements="totalElements"
-      :page-size="pageSize" @page-change="goToPage" @page-size-change="changePageSize" />
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :total-elements="totalElements"
+      :page-size="pageSize"
+      @page-change="goToPage"
+      @page-size-change="changePageSize"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
+import { useArtistsList } from '../../composables/useArtistsList'
 import type { ArtistDTO } from '../../types'
 import ConfirmDialog from '../common/ConfirmDialog.vue'
 import Pagination from '../common/Pagination.vue'
@@ -102,16 +216,24 @@ import ArtistExpanded from './ArtistExpanded.vue'
 
 const { t } = useI18n()
 
-const loading = ref<boolean>(true)
-const search = ref<string>('')
-let searchTimeout: ReturnType<typeof setTimeout>
-const expandedArtistId = ref<number | null>(null)
+const {
+  artists,
+  loading,
+  currentPage,
+  pageSize,
+  totalElements,
+  totalPages,
+  search,
+  expandedArtistId,
+  loadArtists,
+  goToPage,
+  changePageSize,
+  handleSearch,
+  debouncedSearch,
+  clearFilters,
+  toggleExpand
+} = useArtistsList()
 
-const artists = ref<ArtistDTO[]>([])
-const currentPage = ref<number>(0)
-const pageSize = ref<number>(20)
-const totalElements = ref<number>(0)
-const totalPages = ref<number>(0)
 const openDropdownId = ref<number | null>(null)
 
 const showDeleteConfirm = ref<boolean>(false)
@@ -119,37 +241,6 @@ const deleteLoading = ref<boolean>(false)
 const artistToDelete = ref<ArtistDTO | null>(null)
 const deleteDialogMessage = ref<string>('')
 const deleteDialogWarning = ref<string>('')
-
-const loadArtists = async (): Promise<void> => {
-  try {
-    loading.value = true
-    const data = await api.getArtists(currentPage.value, pageSize.value, search.value)
-    artists.value = data.artists
-    totalElements.value = data.totalElements
-    totalPages.value = data.totalPages
-    currentPage.value = data.currentPage
-    expandedArtistId.value = null
-  } catch (e) {
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
-}
-
-const goToPage = (page: number): void => {
-  currentPage.value = page
-  loadArtists()
-}
-
-const changePageSize = (newSize: number): void => {
-  pageSize.value = newSize
-  currentPage.value = 0
-  loadArtists()
-}
-
-const toggleExpand = (artistId: number): void => {
-  expandedArtistId.value = expandedArtistId.value === artistId ? null : artistId
-}
 
 const downloadArtist = async (artist: ArtistDTO): Promise<void> => {
   openDropdownId.value = null
@@ -209,36 +300,16 @@ const handleDeleteConfirm = async (): Promise<void> => {
   }
 }
 
-const refresh = (): void => {
-  loadArtists()
-}
-
-const handleSearch = (): void => {
-  currentPage.value = 0
-  loadArtists()
-}
-
 watch(search, () => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    handleSearch()
-  }, 300)
+  debouncedSearch()
 })
-
-const clearFilters = (): void => {
-  search.value = ''
-  currentPage.value = 0
-  loadArtists()
-}
-
-defineExpose({ refresh })
 
 onMounted(() => {
   loadArtists()
   document.addEventListener('click', handleDocumentClick)
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   document.removeEventListener('click', handleDocumentClick)
 })
 </script>

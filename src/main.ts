@@ -3,6 +3,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import './assets/styles/components/auth.css'
 import './assets/styles/components/modal.css'
+import './assets/styles/components/pagination.css'
 import './assets/styles/components/selector.css'
 import './assets/styles/components/states.css'
 import './assets/styles/components/toolbar.css'
@@ -19,7 +20,14 @@ import { i18n } from './i18n'
 import router from './router'
 window.Buffer = Buffer
 
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason)
+})
+
 const app = createApp(App)
+app.config.errorHandler = (err, _instance, info) => {
+  console.error('Unhandled error:', err, info)
+}
 app.use(router)
 app.use(i18n)
 app.mount('#app')

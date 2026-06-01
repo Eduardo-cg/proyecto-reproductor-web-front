@@ -1,38 +1,104 @@
 <template>
   <template v-if="showUpload && editMode && editData">
-    <div class="modal" @click.self="closeEdit" role="dialog" aria-modal="true" aria-label="Editar canción">
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Editar canción"
+      @click.self="closeEdit"
+    >
       <div class="modal-content modal-large">
         <div class="modal-header">
           <h3>{{ t('common.edit') + ': ' + editData.title }}</h3>
-          <button class="btn-close" @click="closeEdit" aria-label="Cerrar">
-            <Icon name="close" size="20" />
+          <button
+            class="btn-close"
+            aria-label="Cerrar"
+            @click="closeEdit"
+          >
+            <Icon
+              name="close"
+              size="20"
+            />
           </button>
         </div>
         <div class="edit-form">
-          <div class="edit-cover" @click="editCoverInput?.click()" :title="t('library.changeCover')" role="button"
-            tabindex="0">
-            <img v-if="editCover" :src="editCover" alt="" class="edit-cover-img" />
-            <div v-else class="edit-cover-placeholder" aria-hidden="true">
-              <Icon name="music" size="24" />
+          <div
+            class="edit-cover"
+            :title="t('library.changeCover')"
+            role="button"
+            tabindex="0"
+            @click="editCoverInput?.click()"
+          >
+            <img
+              v-if="editCover"
+              :src="editCover"
+              alt=""
+              class="edit-cover-img"
+            >
+            <div
+              v-else
+              class="edit-cover-placeholder"
+              aria-hidden="true"
+            >
+              <Icon
+                name="music"
+                size="24"
+              />
             </div>
-            <div class="edit-cover-overlay" aria-hidden="true">
-              <Icon name="upload" size="20" />
+            <div
+              class="edit-cover-overlay"
+              aria-hidden="true"
+            >
+              <Icon
+                name="upload"
+                size="20"
+              />
             </div>
-            <input ref="editCoverInput" type="file" accept="image/*" class="file-input"
-              @change="handleEditCoverSelect" />
+            <input
+              ref="editCoverInput"
+              type="file"
+              accept="image/*"
+              class="file-input"
+              @change="handleEditCoverSelect"
+            >
           </div>
           <div class="edit-fields">
-            <input v-model="editTitle" :placeholder="t('library.trackTitle')" class="preview-input" />
-            <ArtistSelector v-model="editArtistIds" :compact="false"
-              :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
-            <input v-model="editAlbum" :placeholder="t('library.album')" class="preview-input" />
-            <input v-model="editReleaseDate" type="date" :placeholder="t('library.releaseDate')"
-              :title="t('library.releaseDate')" class="preview-input" />
+            <input
+              v-model="editTitle"
+              :placeholder="t('library.trackTitle')"
+              class="preview-input"
+            >
+            <ArtistSelector
+              v-model="editArtistIds"
+              :compact="false"
+              :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'"
+            />
+            <input
+              v-model="editAlbum"
+              :placeholder="t('library.album')"
+              class="preview-input"
+            >
+            <input
+              v-model="editReleaseDate"
+              type="date"
+              :placeholder="t('library.releaseDate')"
+              :title="t('library.releaseDate')"
+              class="preview-input"
+            >
           </div>
         </div>
         <div class="preview-actions">
-          <button class="btn btn-secondary" @click="closeEdit">{{ t('library.cancel') }}</button>
-          <button class="btn btn-primary" @click="saveEdit" :disabled="editing || !editTitle.trim()">
+          <button
+            class="btn btn-secondary"
+            @click="closeEdit"
+          >
+            {{ t('library.cancel') }}
+          </button>
+          <button
+            class="btn btn-primary"
+            :disabled="editing || !editTitle.trim()"
+            @click="saveEdit"
+          >
             {{ editing ? t('common.saving') : t('common.save') }}
           </button>
         </div>
@@ -41,143 +107,336 @@
   </template>
 
   <template v-else-if="embedded">
-    <div v-if="!pendingFiles.length" class="upload-step">
-      <div class="drop-zone" :class="{ 'drop-zone-dragover': isDragOver }" @dragover.prevent="isDragOver = true"
-        @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="fileInput?.click()" role="button"
-        :aria-label="t('library.dragDropZone')" tabindex="0" @keydown.enter.prevent="fileInput?.click()"
-        @keydown.space.prevent="fileInput?.click()">
-        <input ref="fileInput" type="file"
-          accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a" multiple
-          class="file-input" @change="handleFileSelect" aria-hidden="true" />
-        <Icon name="upload" size="48" class="drop-zone-icon" />
-        <div class="drop-zone-text">{{ t('library.dragDropZone') }}</div>
-        <div class="drop-zone-formats">{{ t('library.acceptedFormats') }}</div>
+    <div
+      v-if="!pendingFiles.length"
+      class="upload-step"
+    >
+      <div
+        class="drop-zone"
+        :class="{ 'drop-zone-dragover': isDragOver }"
+        role="button"
+        :aria-label="t('library.dragDropZone')"
+        tabindex="0"
+        @dragover.prevent="isDragOver = true"
+        @dragleave.prevent="isDragOver = false"
+        @drop.prevent="handleDrop"
+        @click="fileInput?.click()"
+        @keydown.enter.prevent="fileInput?.click()"
+        @keydown.space.prevent="fileInput?.click()"
+      >
+        <input
+          ref="fileInput"
+          type="file"
+          accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a"
+          multiple
+          class="file-input"
+          aria-hidden="true"
+          @change="handleFileSelect"
+        >
+        <Icon
+          name="upload"
+          size="48"
+          class="drop-zone-icon"
+        />
+        <div class="drop-zone-text">
+          {{ t('library.dragDropZone') }}
+        </div>
+        <div class="drop-zone-formats">
+          {{ t('library.acceptedFormats') }}
+        </div>
       </div>
     </div>
 
-    <div v-else class="preview-step">
+    <div
+      v-else
+      class="preview-step"
+    >
       <div class="global-artist-section">
-        <ArtistSelector v-model="globalArtistIds" :compact="true"
-          :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
-        <button type="button" class="btn-apply-to-all" @click="applyArtistsToAll" :disabled="!globalArtistIds.length">
-          <Icon name="check" size="14" />
+        <ArtistSelector
+          v-model="globalArtistIds"
+          :compact="true"
+          :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'"
+        />
+        <button
+          type="button"
+          class="btn-apply-to-all"
+          :disabled="!globalArtistIds.length"
+          @click="applyArtistsToAll"
+        >
+          <Icon
+            name="check"
+            size="14"
+          />
           {{ t('library.applyToAll') || 'Aplicar a todas' }}
         </button>
       </div>
 
-      <h4 class="preview-title">{{ t('library.previewTitle') }} ({{ pendingFiles.length }})</h4>
+      <h4 class="preview-title">
+        {{ t('library.previewTitle') }} ({{ pendingFiles.length }})
+      </h4>
       <div class="preview-list">
-        <div v-for="(file, index) in pendingFiles" :key="index" class="preview-row">
+        <div
+          v-for="(file, index) in pendingFiles"
+          :key="index"
+          class="preview-row"
+        >
           <div class="preview-cover">
-            <img v-if="file.cover" :src="file.cover" alt="" class="preview-cover-img" />
-            <div v-else class="preview-cover-placeholder" aria-hidden="true">
-              <Icon name="music" size="20" />
+            <img
+              v-if="file.cover"
+              :src="file.cover"
+              alt=""
+              class="preview-cover-img"
+            >
+            <div
+              v-else
+              class="preview-cover-placeholder"
+              aria-hidden="true"
+            >
+              <Icon
+                name="music"
+                size="20"
+              />
             </div>
           </div>
           <div class="preview-fields">
-            <input v-model="file.title" :placeholder="t('library.trackTitle')" class="preview-input" />
-            <ArtistSelector v-model="file.artistIds" :compact="true"
-              :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
-            <input v-model="file.album" :placeholder="t('library.album')" class="preview-input" />
-            <input v-model="file.releaseDate" type="date" :placeholder="t('library.releaseDate')"
-              :title="t('library.releaseDate')" class="preview-input" />
+            <input
+              v-model="file.title"
+              :placeholder="t('library.trackTitle')"
+              class="preview-input"
+            >
+            <ArtistSelector
+              v-model="file.artistIds"
+              :compact="true"
+              :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'"
+            />
+            <input
+              v-model="file.album"
+              :placeholder="t('library.album')"
+              class="preview-input"
+            >
+            <input
+              v-model="file.releaseDate"
+              type="date"
+              :placeholder="t('library.releaseDate')"
+              :title="t('library.releaseDate')"
+              class="preview-input"
+            >
             <div class="preview-meta">
               <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
               <span class="meta-size">{{ formatFileSize(file.file?.size) }}</span>
               <span class="meta-file">{{ file.fileName }}</span>
             </div>
           </div>
-          <button class="btn-remove-file" @click="removeFile(index)"
-            :aria-label="'Eliminar ' + (file.title || file.fileName)">
-            <Icon name="close" size="16" />
+          <button
+            class="btn-remove-file"
+            :aria-label="'Eliminar ' + (file.title || file.fileName)"
+            @click="removeFile(index)"
+          >
+            <Icon
+              name="close"
+              size="16"
+            />
           </button>
         </div>
       </div>
-      <div v-if="storageError" class="storage-error">
-        <Icon name="close" size="16" />
+      <div
+        v-if="storageError"
+        class="storage-error"
+      >
+        <Icon
+          name="close"
+          size="16"
+        />
         {{ storageError }}
       </div>
       <div class="preview-actions">
-        <button class="btn btn-secondary" @click="close">
+        <button
+          class="btn btn-secondary"
+          @click="close"
+        >
           {{ t('library.cancel') }}
         </button>
-        <button class="btn btn-primary" @click="upload" :disabled="uploading">
+        <button
+          class="btn btn-primary"
+          :disabled="uploading"
+          @click="upload"
+        >
           {{ uploading ? t('library.uploading') : t('library.uploadCount').replace('{count}',
-            String(pendingFiles.length)) }}
+                                                                                   String(pendingFiles.length)) }}
         </button>
       </div>
     </div>
   </template>
 
-  <div v-else-if="showUpload" class="modal" @click.self="close" role="dialog" aria-modal="true"
-    aria-label="Subir canciones">
+  <div
+    v-else-if="showUpload"
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Subir canciones"
+    @click.self="close"
+  >
     <div class="modal-content modal-large">
       <div class="modal-header">
         <h3>{{ t('library.addTrack') }}</h3>
-        <button class="btn-close" @click="close" aria-label="Cerrar">
-          <Icon name="close" size="20" />
+        <button
+          class="btn-close"
+          aria-label="Cerrar"
+          @click="close"
+        >
+          <Icon
+            name="close"
+            size="20"
+          />
         </button>
       </div>
 
-      <div v-if="!pendingFiles.length" class="upload-step">
-        <div class="drop-zone" :class="{ 'drop-zone-dragover': isDragOver }" @dragover.prevent="isDragOver = true"
-          @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="fileInput?.click()" role="button"
-          :aria-label="t('library.dragDropZone')" tabindex="0" @keydown.enter.prevent="fileInput?.click()"
-          @keydown.space.prevent="fileInput?.click()">
-          <input ref="fileInput" type="file"
-            accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a" multiple
-            class="file-input" @change="handleFileSelect" aria-hidden="true" />
-          <Icon name="upload" size="48" class="drop-zone-icon" />
-          <div class="drop-zone-text">{{ t('library.dragDropZone') }}</div>
-          <div class="drop-zone-formats">{{ t('library.acceptedFormats') }}</div>
+      <div
+        v-if="!pendingFiles.length"
+        class="upload-step"
+      >
+        <div
+          class="drop-zone"
+          :class="{ 'drop-zone-dragover': isDragOver }"
+          role="button"
+          :aria-label="t('library.dragDropZone')"
+          tabindex="0"
+          @dragover.prevent="isDragOver = true"
+          @dragleave.prevent="isDragOver = false"
+          @drop.prevent="handleDrop"
+          @click="fileInput?.click()"
+          @keydown.enter.prevent="fileInput?.click()"
+          @keydown.space.prevent="fileInput?.click()"
+        >
+          <input
+            ref="fileInput"
+            type="file"
+            accept=".mp3,.wav,.ogg,.flac,.m4a,audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4,audio/x-m4a"
+            multiple
+            class="file-input"
+            aria-hidden="true"
+            @change="handleFileSelect"
+          >
+          <Icon
+            name="upload"
+            size="48"
+            class="drop-zone-icon"
+          />
+          <div class="drop-zone-text">
+            {{ t('library.dragDropZone') }}
+          </div>
+          <div class="drop-zone-formats">
+            {{ t('library.acceptedFormats') }}
+          </div>
         </div>
       </div>
 
-      <div v-else class="preview-step">
+      <div
+        v-else
+        class="preview-step"
+      >
         <div class="global-artist-section">
-          <ArtistSelector v-model="globalArtistIds" :compact="true"
-            :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
-          <button type="button" class="btn-apply-to-all" @click="applyArtistsToAll" :disabled="!globalArtistIds.length">
-            <Icon name="check" size="14" />
+          <ArtistSelector
+            v-model="globalArtistIds"
+            :compact="true"
+            :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'"
+          />
+          <button
+            type="button"
+            class="btn-apply-to-all"
+            :disabled="!globalArtistIds.length"
+            @click="applyArtistsToAll"
+          >
+            <Icon
+              name="check"
+              size="14"
+            />
             {{ t('library.applyToAll') || 'Aplicar a todas' }}
           </button>
         </div>
 
-        <h4 class="preview-title">{{ t('library.previewTitle') }} ({{ pendingFiles.length }})</h4>
+        <h4 class="preview-title">
+          {{ t('library.previewTitle') }} ({{ pendingFiles.length }})
+        </h4>
         <div class="preview-list">
-          <div v-for="(file, index) in pendingFiles" :key="index" class="preview-row">
+          <div
+            v-for="(file, index) in pendingFiles"
+            :key="index"
+            class="preview-row"
+          >
             <div class="preview-cover">
-              <img v-if="file.cover" :src="file.cover" alt="" class="preview-cover-img" />
-              <div v-else class="preview-cover-placeholder" aria-hidden="true">
-                <Icon name="music" size="20" />
+              <img
+                v-if="file.cover"
+                :src="file.cover"
+                alt=""
+                class="preview-cover-img"
+              >
+              <div
+                v-else
+                class="preview-cover-placeholder"
+                aria-hidden="true"
+              >
+                <Icon
+                  name="music"
+                  size="20"
+                />
               </div>
             </div>
             <div class="preview-fields">
-              <input v-model="file.title" :placeholder="t('library.trackTitle')" class="preview-input" />
-              <ArtistSelector v-model="file.artistIds" :compact="true"
-                :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'" />
-              <input v-model="file.album" :placeholder="t('library.album')" class="preview-input" />
-              <input v-model="file.releaseDate" type="date" :placeholder="t('library.releaseDate')"
-                :title="t('library.releaseDate')" class="preview-input" />
+              <input
+                v-model="file.title"
+                :placeholder="t('library.trackTitle')"
+                class="preview-input"
+              >
+              <ArtistSelector
+                v-model="file.artistIds"
+                :compact="true"
+                :placeholder="t('library.selectArtist') + ' (' + t('library.trackArtists') + ')'"
+              />
+              <input
+                v-model="file.album"
+                :placeholder="t('library.album')"
+                class="preview-input"
+              >
+              <input
+                v-model="file.releaseDate"
+                type="date"
+                :placeholder="t('library.releaseDate')"
+                :title="t('library.releaseDate')"
+                class="preview-input"
+              >
               <div class="preview-meta">
                 <span class="meta-duration">{{ file.duration ? formatDuration(file.duration) : '--:--' }}</span>
                 <span class="meta-size">{{ formatFileSize(file.file?.size) }}</span>
                 <span class="meta-file">{{ file.fileName }}</span>
               </div>
             </div>
-            <button class="btn-remove-file" @click="removeFile(index)"
-              :aria-label="'Eliminar ' + (file.title || file.fileName)">
-              <Icon name="close" size="16" />
+            <button
+              class="btn-remove-file"
+              :aria-label="'Eliminar ' + (file.title || file.fileName)"
+              @click="removeFile(index)"
+            >
+              <Icon
+                name="close"
+                size="16"
+              />
             </button>
           </div>
         </div>
         <div class="preview-actions">
-          <button class="btn btn-secondary" @click="close">
+          <button
+            class="btn btn-secondary"
+            @click="close"
+          >
             {{ t('library.cancel') }}
           </button>
-          <button class="btn btn-primary" @click="upload" :disabled="uploading">
+          <button
+            class="btn btn-primary"
+            :disabled="uploading"
+            @click="upload"
+          >
             {{ uploading ? t('library.uploading') : t('library.uploadCount').replace('{count}',
-              String(pendingFiles.length)) }}
+                                                                                     String(pendingFiles.length)) }}
           </button>
         </div>
       </div>
@@ -190,6 +449,7 @@ import { parseBlob } from 'music-metadata-browser'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
+import type { ArtistDTO, TrackDTO } from '../../types'
 import { formatDuration, formatFileSize } from '../../utils/utils'
 import Icon from '../icons/Icon.vue'
 import ArtistSelector from './ArtistSelector.vue'
@@ -208,14 +468,22 @@ interface PendingFile {
 
 const { t } = useI18n()
 
-const props = defineProps({
-  showUpload: { type: Boolean, required: true },
-  embedded: { type: Boolean, default: false },
-  editMode: { type: Boolean, default: false },
-  editData: { type: Object, default: null }
-})
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean
+    editMode?: boolean
+    editData?: TrackDTO | null
+  }>(),
+  {
+    embedded: false,
+    editMode: false,
+    editData: null
+  }
+)
 
-const emit = defineEmits(['update:showUpload', 'uploaded'])
+const showUpload = defineModel<boolean>('showUpload', { required: true })
+
+const emit = defineEmits(['uploaded'])
 
 const editTitle = ref('')
 const editArtistIds = ref<number[]>([])
@@ -226,10 +494,10 @@ const editCoverFile = ref<File | null>(null)
 const editing = ref(false)
 const editCoverInput = ref<HTMLInputElement | null>(null)
 
-watch(() => props.editData, (data: any) => {
+watch(() => props.editData, (data: TrackDTO | null) => {
   if (data && props.editMode) {
     editTitle.value = data.title || ''
-    editArtistIds.value = data.artists ? data.artists.map((a: any) => a.id) : []
+    editArtistIds.value = data.artists ? data.artists.map((a: ArtistDTO) => a.id) : []
     editAlbum.value = data.album || ''
     editReleaseDate.value = data.releaseDate || ''
     editCover.value = data.cover || null
@@ -252,7 +520,7 @@ const handleEditCoverSelect = (e: Event) => {
 }
 
 const closeEdit = () => {
-  emit('update:showUpload', false)
+  showUpload.value = false
   editing.value = false
 }
 
@@ -339,9 +607,9 @@ const processFiles = async (files: FileList) => {
     let coverFileObj = null
     if (metadata.common.picture?.[0]) {
       const pic = metadata.common.picture[0]
-      const base64 = arrayBufferToBase64(pic.data.buffer)
+      const base64 = arrayBufferToBase64(pic.data.buffer as ArrayBuffer)
       coverDataUrl = `data:${pic.format};base64,${base64}`
-      coverFileObj = new File([pic.data], 'cover.jpg', { type: pic.format })
+      coverFileObj = new File([pic.data.buffer as ArrayBuffer], 'cover.jpg', { type: pic.format })
     }
 
     const artistIds = await parseAndLookupArtists(metadata.common.artist ?? '')
@@ -385,7 +653,7 @@ const removeFile = (index: number) => {
 }
 
 const close = () => {
-  emit('update:showUpload', false)
+  showUpload.value = false
   pendingFiles.value = []
   isDragOver.value = false
   globalArtistIds.value = []

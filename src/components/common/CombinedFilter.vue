@@ -1,8 +1,7 @@
 <template>
   <div class="combined-filter" :class="[isOpen ? 'open' : '', tabSizeClass]">
-    <div class="filter-trigger" @click="toggleDropdown" role="combobox" :aria-expanded="isOpen"
-      :aria-label="t('library.filters')" tabindex="0" @keydown.enter.prevent="toggleDropdown"
-      @keydown.space.prevent="toggleDropdown">
+    <div class="filter-trigger" role="combobox" :aria-expanded="isOpen" :aria-label="t('library.filters')" tabindex="0"
+      @click="toggleDropdown" @keydown.enter.prevent="toggleDropdown" @keydown.space.prevent="toggleDropdown">
       <div class="trigger-display">
         <template v-if="totalSelected === 0 && !sortBy">
           <span class="placeholder">{{ t('library.filters') }}</span>
@@ -41,14 +40,20 @@
           <div class="sort-field">
             <label class="sort-label">{{ t('library.sortBy') }}</label>
             <select v-model="localSortBy" class="sort-select" @change="emitSort">
-              <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
             </select>
           </div>
           <div class="sort-field">
             <label class="sort-label">{{ t('library.sortDirection') }}</label>
             <select v-model="localSortDirection" class="sort-select" @change="emitSort">
-              <option value="asc">{{ t('library.ascending') }}</option>
-              <option value="desc">{{ t('library.descending') }}</option>
+              <option value="asc">
+                {{ t('library.ascending') }}
+              </option>
+              <option value="desc">
+                {{ t('library.descending') }}
+              </option>
             </select>
           </div>
         </div>
@@ -58,76 +63,91 @@
         <div class="dropdown-search">
           <div class="search-wrapper">
             <Icon name="search" size="14" class="search-icon-inline" />
-            <input v-model="currentSearchQuery" type="text" :placeholder="t('library.search')" class="search-input"
-              ref="searchInput" :aria-label="t('library.search')" />
+            <input ref="searchInput" v-model="currentSearchQuery" type="text" :placeholder="t('library.search')"
+              class="search-input" :aria-label="t('library.search')">
           </div>
         </div>
 
         <div class="options-list">
-          <div v-if="currentLoading" class="loading-state">{{ t('auth.loading') }}</div>
+          <div v-if="currentLoading" class="loading-state">
+            {{ t('auth.loading') }}
+          </div>
           <div v-else-if="currentContent.length === 0" class="empty-state">
             {{ t('library.noResults') }}
           </div>
-          <div v-else v-for="option in currentContent" :key="option.id" class="option-item"
-            :class="{ selected: isSelected(option.id) }" @click="toggleOption(option)" role="option"
-            :aria-selected="isSelected(option.id)">
+          <div v-for="option in currentContent" v-else :key="option.id" class="option-item"
+            :class="{ selected: isSelected(option.id) }" role="option" :aria-selected="isSelected(option.id)"
+            @click="toggleOption(option)">
             <div class="option-checkbox" :class="{ checked: isSelected(option.id) }">
               <Icon v-if="isSelected(option.id)" name="check" size="12" />
             </div>
-            <span class="option-label">{{ option.title || option.name }}</span>
+            <span class="option-label">{{ option.label }}</span>
           </div>
         </div>
 
-        <div v-if="currentTotalPages > 1" class="pagination-controls">
-          <button class="page-btn" :disabled="currentCurrentPage <= 1" @click="prevPage">◀</button>
-          <span class="page-info">{{ currentCurrentPage }} / {{ currentTotalPages }}</span>
-          <button class="page-btn" :disabled="currentCurrentPage >= currentTotalPages" @click="nextPage">▶</button>
+        <div v-if="currentContent.length >= 10" class="pagination-controls">
+          <button class="page-btn" :disabled="(activeTab === 'artist' ? artistPage : albumPage) === 0"
+            @click="prevPage">
+            <Icon name="chevron-left" size="14" />
+          </button>
+          <span class="page-info">{{ (activeTab === 'artist' ? artistPage : albumPage) + 1 }}</span>
+          <button class="page-btn" @click="nextPage">
+            <Icon name="chevron-right" size="14" />
+          </button>
         </div>
+
       </template>
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { api } from '../../services/api.js'
+import { api } from '../../services/api'
 import Icon from '../icons/Icon.vue'
 
 const { t } = useI18n()
 
-const props = defineProps({
-  artistIds: { type: Array, default: () => [] },
-  albumIds: { type: Array, default: () => [] },
-  showArtists: { type: Boolean, default: true },
-  showAlbums: { type: Boolean, default: true },
-  showSort: { type: Boolean, default: true },
-  sortBy: { type: String, default: '' },
-  sortDirection: { type: String, default: 'asc' },
-  sortOptions: { type: Array, default: () => [] },
-})
+const props = withDefaults(
+  defineProps<{
+    showArtists?: boolean
+    showAlbums?: boolean
+    showSort?: boolean
+    sortOptions?: { value: string; label: string }[]
+  }>(),
+  {
+    showArtists: true,
+    showAlbums: true,
+    showSort: true,
+    sortOptions: () => []
+  }
+)
 
-const emit = defineEmits(['update:artistIds', 'update:albumIds', 'update:sortBy', 'update:sortDirection'])
+const artistIds = defineModel<number[]>('artistIds', { default: () => [] })
+const albumIds = defineModel<number[]>('albumIds', { default: () => [] })
+const sortBy = defineModel<string>('sortBy', { default: '' })
+const sortDirection = defineModel<string>('sortDirection', { default: 'asc' })
 
 const isOpen = ref(false)
 const activeTab = ref('artist')
-const searchInput = ref(null)
-const localSortBy = ref(props.sortBy)
-const localSortDirection = ref(props.sortDirection)
+const searchInput = ref<HTMLInputElement | null>(null)
+const localSortBy = ref(sortBy.value)
+const localSortDirection = ref(sortDirection.value)
 
 const artistSearchQuery = ref('')
 const albumSearchQuery = ref('')
 const artistPage = ref(0)
 const albumPage = ref(0)
-const artistData = ref({ content: [], totalElements: 0, totalPages: 0, currentPage: 0 })
-const albumData = ref({ content: [], totalElements: 0, totalPages: 0, currentPage: 0 })
+const artistData = ref<{ id: number; name?: string }[]>([])
+const albumData = ref<{ id: number; title?: string }[]>([])
 const artistLoading = ref(false)
 const albumLoading = ref(false)
 
-let searchDebounce = null
+let searchDebounce: ReturnType<typeof setTimeout> | undefined
 
 const totalSelected = computed(() => {
-  return (props.artistIds?.length || 0) + (props.albumIds?.length || 0)
+  return (artistIds.value?.length || 0) + (albumIds.value?.length || 0)
 })
 
 const currentSortLabel = computed(() => {
@@ -146,12 +166,16 @@ const tabCount = computed(() => {
 const tabSizeClass = computed(() => `tabs-${tabCount.value}`)
 
 const hasAlbums = computed(() => {
-  return albumData.value.totalElements > 0 || albumLoading.value || albumSearchQuery.value.length > 0
+  return albumData.value.length > 0 || albumLoading.value || albumSearchQuery.value.length > 0
 })
 
-const currentPaginatedData = computed(() =>
-  activeTab.value === 'artist' ? artistData.value : albumData.value
-)
+const currentContent = computed(() => {
+  if (activeTab.value === 'artist') {
+    return artistData.value.map(a => ({ id: a.id, label: a.name || '' }))
+  } else {
+    return albumData.value.map(a => ({ id: a.id, label: a.title || '' }))
+  }
+})
 
 const currentLoading = computed(() =>
   activeTab.value === 'artist' ? artistLoading.value : albumLoading.value
@@ -165,19 +189,15 @@ const currentSearchQuery = computed({
   }
 })
 
-const currentContent = computed(() => currentPaginatedData.value.content || [])
-const currentTotalPages = computed(() => currentPaginatedData.value.totalPages || 0)
-const currentCurrentPage = computed(() => (currentPaginatedData.value.currentPage || 0) + 1)
-
-const isSelected = (id) => {
-  const ids = activeTab.value === 'artist' ? (props.artistIds || []) : (props.albumIds || [])
+const isSelected = (id: number) => {
+  const ids = activeTab.value === 'artist' ? (artistIds.value || []) : (albumIds.value || [])
   return ids.includes(id)
 }
 
-const toggleOption = (option) => {
+const toggleOption = (option: { id: number; title?: string; name?: string }) => {
   const current = activeTab.value === 'artist'
-    ? [...(props.artistIds || [])]
-    : [...(props.albumIds || [])]
+    ? [...(artistIds.value || [])]
+    : [...(albumIds.value || [])]
   const id = option.id
   const index = current.indexOf(id)
   if (index >= 0) {
@@ -185,19 +205,23 @@ const toggleOption = (option) => {
   } else {
     current.push(id)
   }
-  const event = activeTab.value === 'artist' ? 'update:artistIds' : 'update:albumIds'
-  emit(event, current)
+  if (activeTab.value === 'artist') {
+    artistIds.value = current
+  } else {
+    albumIds.value = current
+  }
 }
 
 const emitSort = () => {
-  emit('update:sortBy', localSortBy.value)
-  emit('update:sortDirection', localSortDirection.value)
+  sortBy.value = localSortBy.value
+  sortDirection.value = localSortDirection.value
 }
 
 const loadArtists = async () => {
   artistLoading.value = true
   try {
-    artistData.value = await api.getArtistsList(artistPage.value, 10, artistSearchQuery.value)
+    const res = await api.getArtistsList(artistPage.value, 10, artistSearchQuery.value)
+    artistData.value = res.artists;
   } catch (e) { console.error(e) }
   artistLoading.value = false
 }
@@ -205,16 +229,17 @@ const loadArtists = async () => {
 const loadAlbums = async () => {
   albumLoading.value = true
   try {
-    albumData.value = await api.getAlbumsList(props.artistIds, albumPage.value, 10, albumSearchQuery.value)
+    const res = await api.getAlbumsList(artistIds.value, albumPage.value, 10, albumSearchQuery.value)
+    albumData.value = res.albums
   } catch (e) { console.error(e) }
   albumLoading.value = false
 }
 
 const nextPage = () => {
   if (activeTab.value === 'artist') {
-    if (artistPage.value < artistData.value.totalPages - 1) artistPage.value++
+    artistPage.value++
   } else {
-    if (albumPage.value < albumData.value.totalPages - 1) albumPage.value++
+    albumPage.value++
   }
 }
 
@@ -226,7 +251,7 @@ const prevPage = () => {
   }
 }
 
-const switchTab = (tab) => {
+const switchTab = (tab: string) => {
   activeTab.value = tab
   nextTick(() => {
     searchInput.value?.focus()
@@ -261,28 +286,28 @@ const closeDropdown = () => {
 
 defineExpose({ closeDropdown })
 
-const handleClickOutside = (e) => {
-  if (isOpen.value && !e.target.closest('.combined-filter')) {
+const handleClickOutside = (e: MouseEvent) => {
+  if (isOpen.value && !(e.target as HTMLElement).closest('.combined-filter')) {
     isOpen.value = false
   }
 }
 
 watch(artistSearchQuery, () => {
-  clearTimeout(searchDebounce)
+  if (searchDebounce) clearTimeout(searchDebounce)
   searchDebounce = setTimeout(() => { artistPage.value = 0; loadArtists() }, 300)
 })
 
 watch(artistPage, () => loadArtists())
 
 watch(albumSearchQuery, () => {
-  clearTimeout(searchDebounce)
+  if (searchDebounce) clearTimeout(searchDebounce)
   searchDebounce = setTimeout(() => { albumPage.value = 0; loadAlbums() }, 300)
 })
 
 watch(albumPage, () => loadAlbums())
 
-watch(() => props.artistIds, () => {
-  emit('update:albumIds', [])
+watch(artistIds, () => {
+  albumIds.value = []
   albumPage.value = 0
   albumSearchQuery.value = ''
   if (isOpen.value && props.showAlbums) loadAlbums()
@@ -297,8 +322,8 @@ watch(isOpen, (open) => {
   }
 })
 
-watch(() => props.sortBy, (val) => { localSortBy.value = val })
-watch(() => props.sortDirection, (val) => { localSortDirection.value = val })
+watch(sortBy, (val) => { localSortBy.value = val })
+watch(sortDirection, (val) => { localSortDirection.value = val })
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)

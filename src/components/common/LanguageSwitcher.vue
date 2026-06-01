@@ -1,7 +1,17 @@
 <template>
-  <div class="toggle-group" role="radiogroup" aria-label="Idioma">
-    <button v-for="lang in languages" :key="lang.code" :class="{ active: currentLocale === lang.code }"
-      @click="changeLocale(lang.code)" role="radio" :aria-checked="currentLocale === lang.code">
+  <div
+    class="toggle-group"
+    role="radiogroup"
+    aria-label="Idioma"
+  >
+    <button
+      v-for="lang in languages"
+      :key="lang.code"
+      :class="{ active: currentLocale === lang.code }"
+      role="radio"
+      :aria-checked="currentLocale === lang.code"
+      @click="changeLocale(lang.code)"
+    >
       {{ lang.label }}
     </button>
   </div>

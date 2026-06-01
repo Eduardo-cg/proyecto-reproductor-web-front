@@ -2,8 +2,11 @@
   <div class="not-found">
     <h1>{{ t('notfound.title') }}</h1>
     <p>{{ t('notfound.message') }}</p>
-    <br />
-    <router-link to="/" class="btn btn-primary">
+    <br>
+    <router-link
+      to="/"
+      class="btn btn-primary"
+    >
       {{ t('notfound.home') }}
     </router-link>
   </div>

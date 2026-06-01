@@ -1,15 +1,41 @@
 <template>
-  <div v-if="show" class="modal-overlay" @click.self="handleCancel" role="dialog" aria-modal="true">
-    <div class="modal">
-      <h3 class="modal-title">{{ title }}</h3>
-      <p class="modal-message">{{ message }}</p>
-      <p v-if="warning" class="modal-warning">{{ warning }}</p>
+  <div
+    v-if="show"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    @click.self="handleCancel"
+  >
+    <div class="modal-confim">
+      <h3 class="modal-title">
+        {{ title }}
+      </h3>
+      <p class="modal-message">
+        {{ message }}
+      </p>
+      <p
+        v-if="warning"
+        class="modal-warning"
+      >
+        {{ warning }}
+      </p>
       <div class="modal-actions">
-        <button class="btn btn-secondary" @click="handleCancel" :disabled="loading">
+        <button
+          class="btn btn-secondary"
+          :disabled="loading"
+          @click="handleCancel"
+        >
           {{ cancelText }}
         </button>
-        <button :class="['btn', danger ? 'btn-danger' : 'btn-primary']" @click="handleConfirm" :disabled="loading">
-          <span v-if="loading" class="btn-spinner"></span>
+        <button
+          :class="['btn', danger ? 'btn-danger' : 'btn-primary']"
+          :disabled="loading"
+          @click="handleConfirm"
+        >
+          <span
+            v-if="loading"
+            class="btn-spinner"
+          />
           {{ loading ? loadingText : confirmText }}
         </button>
       </div>
@@ -61,7 +87,7 @@ const handleCancel = (): void => emit('cancel')
   padding: 16px;
 }
 
-.modal {
+.modal-confim {
   background: var(--bg-primary);
   border-radius: var(--radius);
   padding: 24px;
@@ -90,10 +116,10 @@ const handleCancel = (): void => emit('cancel')
 
 .modal-warning {
   font-size: 13px;
-  color: #e74c3c;
+  color: var(--danger);
   margin: 4px 0 16px;
   padding: 8px 12px;
-  background: rgba(231, 76, 60, 0.08);
+  background: var(--danger-bg);
   border-radius: var(--radius-sm);
   line-height: 1.4;
 }
@@ -133,12 +159,12 @@ const handleCancel = (): void => emit('cancel')
 }
 
 .btn-danger {
-  background: #e74c3c;
+  background: var(--danger);
   color: #fff;
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #c0392b;
+  background: var(--danger-hover);
 }
 
 .btn-primary {
@@ -178,7 +204,7 @@ const handleCancel = (): void => emit('cancel')
 }
 
 @media (max-width: 480px) {
-  .modal {
+  .modal-confim {
     padding: 20px;
   }
 }

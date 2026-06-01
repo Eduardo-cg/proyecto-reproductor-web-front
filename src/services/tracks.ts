@@ -1,5 +1,5 @@
 import type { PageResponse, TrackDTO } from '../types'
-import { API_URL, authHeaders, downloadBlob, handleResponse } from './utils'
+import { API_URL, authHeaders, downloadBlob, getToken, handleResponse } from './utils'
 
 interface TracksResult {
   tracks: TrackDTO[]
@@ -11,7 +11,7 @@ interface TracksResult {
 
 export const getTracks = async (
   page: number = 0,
-  size: number = 20,
+  size: number = 10,
   search: string = '',
   artistIds: number[] = [],
   albumIds: number[] = [],
@@ -56,7 +56,7 @@ export const uploadTrack = async (
   if (albumId != null) formData.append('albumId', String(albumId))
   if (cover) formData.append('cover', cover)
   if (releaseDate) formData.append('releaseDate', releaseDate)
-  const res = await fetch(`${API_URL}/tracks`, { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }, body: formData })
+  const res = await fetch(`${API_URL}/tracks`, { method: 'POST', headers: authHeaders(), body: formData })
   return handleResponse<TrackDTO>(res, 'Error al subir la canción')
 }
 
@@ -74,7 +74,7 @@ export const updateTrack = async (
   if (album != null) formData.append('album', album)
   if (cover) formData.append('cover', cover)
   if (releaseDate) formData.append('releaseDate', releaseDate)
-  const res = await fetch(`${API_URL}/tracks/${id}`, { method: 'PUT', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }, body: formData })
+  const res = await fetch(`${API_URL}/tracks/${id}`, { method: 'PUT', headers: authHeaders(), body: formData })
   return handleResponse<TrackDTO>(res, 'Error al actualizar la canción')
 }
 
@@ -84,8 +84,7 @@ export const deleteTrack = async (id: number): Promise<void> => {
 }
 
 export const getStreamUrl = (id: number): string => {
-  const token = localStorage.getItem('token')
-  return `${API_URL}/tracks/${id}/stream?token=${token}`
+  return `${API_URL}/tracks/${id}/stream?token=${getToken()}`
 }
 
 export const getTrackStreamBlob = async (id: number): Promise<Blob> => {

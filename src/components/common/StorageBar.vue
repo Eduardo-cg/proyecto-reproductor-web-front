@@ -1,7 +1,14 @@
 <template>
-  <div v-if="storageData" class="storage-bar-inner">
+  <div
+    v-if="storageData"
+    class="storage-bar-inner"
+  >
     <div class="storage-bar-track">
-      <div class="storage-bar-fill" :style="{ width: storagePercent + '%' }" :class="storageBarClass"></div>
+      <div
+        class="storage-bar-fill"
+        :style="{ width: storagePercent + '%' }"
+        :class="storageBarClass"
+      />
     </div>
     <div class="storage-info">
       <span class="storage-used">{{ formatFileSize(storageData.usedBytes) }}</span>
@@ -69,7 +76,7 @@ const storageBarClass = computed(() => {
 }
 
 .storage-critical {
-  background: #e74c3c;
+  background: var(--danger);
 }
 
 .storage-info {

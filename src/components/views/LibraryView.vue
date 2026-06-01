@@ -4,49 +4,102 @@
       <div class="header">
         <AppLogo />
         <div class="header-buttons">
-          <button class="btn btn-primary" @click="showUploadModal = true" aria-label="Añadir contenido">
-            <Icon name="plus" size="16" />
+          <button
+            class="btn btn-primary"
+            aria-label="Añadir contenido"
+            @click="showUploadModal = true"
+          >
+            <Icon
+              name="plus"
+              size="16"
+            />
             {{ t('library.add') }}
           </button>
         </div>
       </div>
 
-      <div class="view-tabs" role="tablist" aria-label="Vista de biblioteca">
-        <button :class="['tab-btn', { active: viewMode === 'tracks' }]" @click="switchToTracks" role="tab"
-          :aria-selected="viewMode === 'tracks'" :aria-controls="'panel-tracks'">
-          <Icon name="music" size="16" />
+      <div
+        class="view-tabs"
+        role="tablist"
+        aria-label="Vista de biblioteca"
+      >
+        <button
+          :class="['tab-btn', { active: viewMode === 'tracks' }]"
+          role="tab"
+          :aria-selected="viewMode === 'tracks'"
+          :aria-controls="'panel-tracks'"
+          @click="switchToTracks"
+        >
+          <Icon
+            name="music"
+            size="16"
+          />
           {{ t('library.tracks') }}
         </button>
-        <button :class="['tab-btn', { active: viewMode === 'albums' }]" @click="switchToAlbums" role="tab"
-          :aria-selected="viewMode === 'albums'" :aria-controls="'panel-albums'">
-          <Icon name="album" size="16" />
+        <button
+          :class="['tab-btn', { active: viewMode === 'albums' }]"
+          role="tab"
+          :aria-selected="viewMode === 'albums'"
+          :aria-controls="'panel-albums'"
+          @click="switchToAlbums"
+        >
+          <Icon
+            name="album"
+            size="16"
+          />
           {{ t('library.albums') }}
         </button>
-        <button :class="['tab-btn', { active: viewMode === 'artists' }]" @click="switchToArtists" role="tab"
-          :aria-selected="viewMode === 'artists'" :aria-controls="'panel-artists'">
-          <Icon name="artist" size="16" />
+        <button
+          :class="['tab-btn', { active: viewMode === 'artists' }]"
+          role="tab"
+          :aria-selected="viewMode === 'artists'"
+          :aria-controls="'panel-artists'"
+          @click="switchToArtists"
+        >
+          <Icon
+            name="artist"
+            size="16"
+          />
           {{ t('library.artists') }}
         </button>
       </div>
 
-      <div v-if="viewMode === 'tracks'" id="panel-tracks" role="tabpanel">
-        <TracksView ref="tracksRef" />
+      <div
+        v-if="viewMode === 'tracks'"
+        id="panel-tracks"
+        role="tabpanel"
+      >
+        <TracksView />
       </div>
-      <div v-if="viewMode === 'albums'" id="panel-albums" role="tabpanel">
-        <AlbumsView ref="albumsRef" />
+      <div
+        v-if="viewMode === 'albums'"
+        id="panel-albums"
+        role="tabpanel"
+      >
+        <AlbumsView />
       </div>
-      <div v-if="viewMode === 'artists'" id="panel-artists" role="tabpanel">
-        <ArtistsView ref="artistsRef" />
+      <div
+        v-if="viewMode === 'artists'"
+        id="panel-artists"
+        role="tabpanel"
+      >
+        <ArtistsView />
       </div>
 
-      <UploadModal v-model:show="showUploadModal" @uploaded="handleUploaded" />
+      <UploadModal
+        v-model="showUploadModal"
+        @uploaded="handleUploaded"
+      />
     </main>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useTracksList } from '../../composables/useTracksList'
+import { useAlbumsList } from '../../composables/useAlbumsList'
+import { useArtistsList } from '../../composables/useArtistsList'
 import AppLogo from '../common/AppLogo.vue'
 import Icon from '../icons/Icon.vue'
 import UploadModal from '../modals/UploadModal.vue'
@@ -58,9 +111,10 @@ const { t } = useI18n()
 
 const viewMode = ref('tracks')
 const showUploadModal = ref(false)
-const tracksRef = ref(null)
-const albumsRef = ref(null)
-const artistsRef = ref(null)
+
+const tracksList = useTracksList()
+const albumsList = useAlbumsList()
+const artistsList = useArtistsList()
 
 const switchToTracks = () => {
   viewMode.value = 'tracks'
@@ -76,11 +130,11 @@ const switchToArtists = () => {
 
 const handleUploaded = () => {
   if (viewMode.value === 'tracks') {
-    tracksRef.value?.refresh()
+    tracksList.refresh()
   } else if (viewMode.value === 'albums') {
-    albumsRef.value?.refresh()
+    albumsList.refresh()
   } else {
-    artistsRef.value?.refresh()
+    artistsList.refresh()
   }
 }
 </script>

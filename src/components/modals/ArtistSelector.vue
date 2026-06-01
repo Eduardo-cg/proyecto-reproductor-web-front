@@ -1,8 +1,8 @@
 <template>
   <div class="artist-selector" :class="{ open: isOpen }">
-    <div class="selector-trigger" @click="toggleDropdown" role="combobox" :aria-expanded="isOpen"
-      :aria-label="placeholder || t('library.selectArtist')" tabindex="0" @keydown.enter.prevent="toggleDropdown"
-      @keydown.space.prevent="toggleDropdown">
+    <div class="selector-trigger" role="combobox" :aria-expanded="isOpen"
+      :aria-label="placeholder || t('library.selectArtist')" tabindex="0" @click="toggleDropdown"
+      @keydown.enter.prevent="toggleDropdown" @keydown.space.prevent="toggleDropdown">
       <div class="selector-display">
         <template v-if="selectedArtists.length === 0">
           <span class="placeholder">{{ placeholder || t('library.selectArtist') }}</span>
@@ -19,13 +19,13 @@
           <div class="selected-chips">
             <span v-for="(artist, index) in selectedArtists" :key="artist.id" class="artist-chip"
               :class="{ 'primary-chip': index === 0 }">
-              <img v-if="artist.image" :src="artist.image" alt="" class="chip-image" />
+              <img v-if="artist.image" :src="artist.image" alt="" class="chip-image">
               <span class="chip-name">
                 {{ artist.name }}
                 <span v-if="index === 0" class="primary-badge">{{ t('library.primary') }}</span>
               </span>
-              <button type="button" class="chip-remove" @click.stop="removeArtist(index)"
-                :aria-label="'Eliminar ' + artist.name">
+              <button type="button" class="chip-remove" :aria-label="'Eliminar ' + artist.name"
+                @click.stop="removeArtist(index)">
                 <Icon name="close" size="12" />
               </button>
             </span>
@@ -33,40 +33,41 @@
         </template>
       </div>
       <div class="selector-actions">
-        <button type="button" class="btn-add-artist" @click.stop="openCreateModal" :title="t('library.createArtist')"
-          aria-label="Crear nuevo artista">
+        <button type="button" class="btn-add-artist" :title="t('library.createArtist')" aria-label="Crear nuevo artista"
+          @click.stop="openCreateModal">
           <Icon name="plus" size="14" />
         </button>
         <Icon name="chevron-down" size="12" class="dropdown-arrow" :class="{ rotated: isOpen }" />
       </div>
     </div>
 
-    <div v-if="isOpen" class="selector-dropdown" @click.stop role="listbox" :aria-label="t('library.selectArtist')">
+    <div v-if="isOpen" class="selector-dropdown" role="listbox" :aria-label="t('library.selectArtist')" @click.stop>
       <div class="dropdown-search">
         <div class="search-wrapper">
           <Icon name="search" size="14" class="search-icon-inline" />
-          <input v-model="searchQuery" type="text" :placeholder="t('library.searchArtist')" class="search-input"
-            ref="searchInput" aria-label="Buscar artista" />
+          <input ref="searchInput" v-model="searchQuery" type="text" :placeholder="t('library.searchArtist')"
+            class="search-input" aria-label="Buscar artista">
         </div>
       </div>
 
       <div v-if="selectedArtists.length > 0" class="selected-section">
-        <div class="section-label">{{ t('library.selectedArtists').replace('{count}', String(selectedArtists.length)) }}
+        <div class="section-label">
+          {{ t('library.selectedArtists').replace('{count}', String(selectedArtists.length)) }}
         </div>
-        <div class="selected-list" ref="sortableContainer">
+        <div ref="sortableContainer" class="selected-list">
           <div v-for="(artist, index) in selectedArtists" :key="artist.id" class="selected-item"
             :class="{ 'primary-item': index === 0 }" :data-id="artist.id" role="option" :aria-selected="true">
             <span class="drag-handle" :title="t('library.dragToReorderArtists')" aria-hidden="true">
               <Icon name="drag" size="14" />
             </span>
-            <img v-if="artist.image" :src="artist.image" alt="" class="item-image" />
+            <img v-if="artist.image" :src="artist.image" alt="" class="item-image">
             <div v-else class="item-image-placeholder" aria-hidden="true">
               <Icon name="artist" size="14" />
             </div>
             <span class="item-name">{{ artist.name }}</span>
             <span v-if="index === 0" class="item-primary-tag">{{ t('library.primaryArtist') }}</span>
-            <button type="button" class="item-remove" @click="removeArtist(index)"
-              :aria-label="'Eliminar ' + artist.name">
+            <button type="button" class="item-remove" :aria-label="'Eliminar ' + artist.name"
+              @click="removeArtist(index)">
               <Icon name="close" size="14" />
             </button>
           </div>
@@ -75,38 +76,47 @@
 
       <div class="available-section">
         <div class="section-label">
-          {{ availableArtists.length === 0 ? t('library.noArtists') : `${availableArtists.length}
+          {{ artistData.length === 0 ? t('library.noArtists') : `${artistData.length}
           ${t('library.artists')}`
           }}
         </div>
         <div class="available-list">
-          <div v-if="availableArtists.length === 0 && !loading" class="empty-state">
+          <div v-if="artistData.length === 0 && !loading" class="empty-state">
             {{ t('library.noArtists') }}
           </div>
           <div v-else-if="loading" class="loading-state">
             {{ t('auth.loading') }}
           </div>
-          <div v-for="artist in availableArtists" :key="artist.id" class="available-item"
-            :class="{ disabled: isSelected(artist.id) }" @click="toggleArtist(artist)" role="option"
-            :aria-selected="false">
-            <img v-if="artist.image" :src="artist.image" alt="" class="item-image" />
+          <div v-for="artist in artistData" :key="artist.id" class="available-item"
+            :class="{ disabled: isSelected(artist.id) }" role="option" :aria-selected="false"
+            @click="toggleArtist(artist)">
+            <img v-if="artist.image" :src="artist.image" alt="" class="item-image">
             <div v-else class="item-image-placeholder" aria-hidden="true">
               <Icon name="artist" size="14" />
             </div>
             <span class="item-name">{{ artist.name }}</span>
           </div>
+          <div v-if="artistData.length >= 10" class="pagination-controls">
+            <button class="page-btn" :disabled="artistPage === 0" @click="prevPage">
+              <Icon name="chevron-left" size="14" />
+            </button>
+            <span class="page-info">{{ artistPage + 1 }}</span>
+            <button class="page-btn" @click="nextPage">
+              <Icon name="chevron-right" size="14" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <UploadArtistModal :show-upload="showCreateModal" @update:show-upload="showCreateModal = false"
-      @created="onArtistCreated" @uploaded="$emit('artistCreated')" />
+    <UploadArtistModal v-model:show-upload="showCreateModal" @created="onArtistCreated"
+      @uploaded="$emit('artistCreated')" />
   </div>
 </template>
 
 <script setup lang="ts">
 import Sortable from 'sortablejs'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
 import type { ArtistDTO } from '../../types'
@@ -115,57 +125,63 @@ import UploadArtistModal from './UploadArtistModal.vue'
 
 const { t } = useI18n()
 
-const props = withDefaults(defineProps<{
-  modelValue?: number[]
+withDefaults(defineProps<{
   placeholder?: string
   compact?: boolean
 }>(), {
-  modelValue: () => [],
   placeholder: '',
   compact: false
 })
 
+const modelValue = defineModel<number[]>({ default: () => [] })
+
 const emit = defineEmits<{
-  'update:modelValue': [value: number[]]
   'artistCreated': []
 }>()
 
 const isOpen = ref(false)
 const searchQuery = ref('')
-const allArtists = ref<ArtistDTO[]>([])
 const selectedArtists = ref<ArtistDTO[]>([])
 const loading = ref(false)
 const showCreateModal = ref(false)
 const searchInput = ref<HTMLInputElement | null>(null)
 const sortableContainer = ref<HTMLElement | null>(null)
+
+const artistData = ref<ArtistDTO[]>([])
+const artistPage = ref(0)
+const pageSize = 10
+
+let searchDebounce: ReturnType<typeof setTimeout> | null = null
 let sortableInstance: Sortable | null = null
-
-const availableArtists = computed(() => {
-  const selectedIds = new Set(selectedArtists.value.map(a => a.id))
-  let filtered = allArtists.value.filter(a => !selectedIds.has(a.id))
-
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(a => a.name.toLowerCase().includes(q))
-  }
-
-  return filtered
-})
 
 const isSelected = (id: number) => selectedArtists.value.some(a => a.id === id)
 
 const fetchArtists = async () => {
   loading.value = true
   try {
-    const data = await api.getArtists(0, 200)
-    allArtists.value = data.artists
+    artistData.value = (await api.getArtistsList(artistPage.value, pageSize, searchQuery.value)).artists
   } catch (e) {
     console.error('Error fetching artists:', e)
-    allArtists.value = []
+    artistData.value = []
   } finally {
     loading.value = false
   }
 }
+
+const nextPage = () => {
+  artistPage.value++
+}
+
+const prevPage = () => {
+  artistPage.value--
+}
+
+watch(searchQuery, () => {
+  if (searchDebounce) clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(() => { artistPage.value = 0; fetchArtists() }, 300)
+})
+
+watch(artistPage, () => fetchArtists())
 
 const toggleArtist = (artist: ArtistDTO) => {
   if (isSelected(artist.id)) return
@@ -180,12 +196,13 @@ const removeArtist = (index: number) => {
 }
 
 const emitValue = () => {
-  emit('update:modelValue', selectedArtists.value.map(a => a.id))
+  modelValue.value = selectedArtists.value.map(a => a.id)
 }
 
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
   if (isOpen.value) {
+    artistPage.value = 0  // Reset page when opening dropdown
     fetchArtists()
     nextTick(() => {
       searchInput.value?.focus()
@@ -198,7 +215,7 @@ const openCreateModal = () => {
 }
 
 const onArtistCreated = (artist: ArtistDTO) => {
-  allArtists.value = [...allArtists.value, artist]
+  artistData.value = [...artistData.value, artist]
   selectedArtists.value = [...selectedArtists.value, artist]
   emitValue()
   showCreateModal.value = false
@@ -230,28 +247,28 @@ const destroySortable = () => {
   }
 }
 
-watch(() => props.modelValue, (newVal) => {
+watch(modelValue, (newVal) => {
   const ids = newVal || []
   selectedArtists.value = ids.map(id => {
-    const found = allArtists.value.find(a => a.id === id)
+    const found = artistData.value.find(a => a.id === id)
     return found || { id, name: `Artist ${id}`, image: undefined, userId: 0, trackCount: 0, albumCount: 0 } as ArtistDTO
   })
-  const missingIds = ids.filter(id => !allArtists.value.find(a => a.id === id))
+  const missingIds = ids.filter(id => !artistData.value.find(a => a.id === id))
   if (missingIds.length > 0) {
     Promise.all(missingIds.map(id => api.getArtist(id).catch(() => null)))
       .then(artists => {
         const valid = artists.filter(Boolean) as ArtistDTO[]
         if (valid.length > 0) {
-          allArtists.value = [...allArtists.value, ...valid]
+          artistData.value = [...artistData.value, ...valid]
         }
       })
   }
 }, { immediate: true })
 
-watch(allArtists, () => {
-  const ids = props.modelValue || []
+watch(artistData, () => {
+  const ids = modelValue.value || []
   selectedArtists.value = ids.map(id => {
-    const found = allArtists.value.find(a => a.id === id)
+    const found = artistData.value.find(a => a.id === id)
     return found || { id, name: `Artist ${id}`, image: undefined, userId: 0, trackCount: 0, albumCount: 0 } as ArtistDTO
   })
 })
@@ -380,8 +397,8 @@ onBeforeUnmount(() => {
 }
 
 .chip-remove:hover {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .selector-actions {
@@ -417,7 +434,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   z-index: 100;
-  max-height: 360px;
+  max-height: 50vh;
   display: flex;
   flex-direction: column;
 }
@@ -473,14 +490,12 @@ onBeforeUnmount(() => {
 }
 
 .selected-list {
-  max-height: 140px;
   overflow-y: auto;
 }
 
 .available-list {
   flex: 1;
   overflow-y: auto;
-  min-height: 80px;
 }
 
 .selected-item {
@@ -554,8 +569,8 @@ onBeforeUnmount(() => {
 }
 
 .item-remove:hover {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .available-item {

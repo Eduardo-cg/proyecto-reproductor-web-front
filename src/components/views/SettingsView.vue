@@ -2,8 +2,15 @@
   <div class="settings">
     <main class="container">
       <div class="settings-header">
-        <button @click="router.back()" class="btn btn-secondary" aria-label="Volver">
-          <Icon name="chevron-left" size="16" />
+        <button
+          class="btn btn-secondary"
+          aria-label="Volver"
+          @click="router.back()"
+        >
+          <Icon
+            name="chevron-left"
+            size="16"
+          />
           {{ t('common.back') }}
         </button>
         <h1>{{ t('settings.title') }}</h1>
@@ -14,25 +21,44 @@
           <h2>{{ t('settings.account') }}</h2>
           <div class="settings-card user-card">
             <div class="user-card-top">
-              <div class="user-avatar" aria-hidden="true">
-                <Icon name="artist" size="20" />
+              <div
+                class="user-avatar"
+                aria-hidden="true"
+              >
+                <Icon
+                  name="artist"
+                  size="20"
+                />
               </div>
               <template v-if="authStore.state.isAuthenticated">
-                <p class="user-name">{{ authStore.state.user?.username }}</p>
-                <button @click="logout" class="btn btn-secondary">
-                  <Icon name="logout" size="16" />
+                <p class="user-name">
+                  {{ authStore.state.user?.username }}
+                </p>
+                <button
+                  class="btn btn-secondary"
+                  @click="logout"
+                >
+                  <Icon
+                    name="logout"
+                    size="16"
+                  />
                   {{ t('nav.logout') }}
                 </button>
               </template>
               <template v-else>
-                <p class="user-name">{{ t('settings.loginPrompt') }}</p>
-                <router-link to="/login" class="btn btn-primary">
+                <p class="user-name">
+                  {{ t('settings.loginPrompt') }}
+                </p>
+                <router-link
+                  to="/login"
+                  class="btn btn-primary"
+                >
                   {{ t('settings.login') }}
                 </router-link>
               </template>
             </div>
             <template v-if="authStore.state.isAuthenticated">
-              <div class="user-card-divider"></div>
+              <div class="user-card-divider" />
               <StorageBar :storage-data="storageData" />
             </template>
           </div>
@@ -40,15 +66,25 @@
 
         <section class="settings-section">
           <h2>{{ t('settings.appearance') }}</h2>
-          <div class="settings-card theme-card" @click="showThemePicker = !showThemePicker">
+          <div
+            class="settings-card theme-card"
+            @click="toggleThemePicker"
+          >
             <div class="theme-header">
               <span>{{ t('settings.theme') }}</span>
               <div class="theme-header-right">
                 <span class="current-theme">{{ t(`settings.themes.${themeId}`) }}</span>
-                <Icon :name="showThemePicker ? 'chevron-up' : 'chevron-down'" size="16" />
+                <Icon
+                  :name="showThemePicker ? 'chevron-up' : 'chevron-down'"
+                  size="16"
+                />
               </div>
             </div>
-            <div v-show="showThemePicker" class="theme-picker-body" @click.stop>
+            <div
+              v-show="showThemePicker"
+              class="theme-picker-body"
+              @click.stop
+            >
               <ThemeSwitcher />
             </div>
           </div>
@@ -68,10 +104,16 @@
           <h2>{{ t('settings.playback') }}</h2>
           <div class="settings-card">
             <div class="toggle-group">
-              <button :class="{ active: mode === MODES.RANGE }" @click="setMode(MODES.RANGE)">
+              <button
+                :class="{ active: mode === MODES.RANGE }"
+                @click="setMode(MODES.RANGE)"
+              >
                 {{ t('settings.range') }}
               </button>
-              <button :class="{ active: mode === MODES.BLOB }" @click="setMode(MODES.BLOB)">
+              <button
+                :class="{ active: mode === MODES.BLOB }"
+                @click="setMode(MODES.BLOB)"
+              >
                 {{ t('settings.blob') }}
               </button>
             </div>
@@ -82,7 +124,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -102,7 +144,11 @@ const { themeId } = useTheme()
 const { mode, setMode, MODES } = useStreamingMode()
 
 const showThemePicker = ref(false)
-const storageData = ref(null)
+const storageData = ref<Awaited<ReturnType<typeof import('../../services/api').api.getStorageUsage>> | null>(null)
+
+const toggleThemePicker = () => {
+  showThemePicker.value = !showThemePicker.value
+}
 
 onMounted(async () => {
   if (authStore.state.isAuthenticated) {

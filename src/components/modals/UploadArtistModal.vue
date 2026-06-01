@@ -1,38 +1,93 @@
 <template>
   <template v-if="showUpload && editMode && editData">
-    <div class="modal" @click.self="closeEdit" role="dialog" aria-modal="true" aria-label="Editar artista">
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Editar artista"
+      @click.self="closeEdit"
+    >
       <div class="modal-content">
         <div class="modal-header">
           <h3>{{ t('common.edit') + ': ' + editData.name }}</h3>
-          <button class="btn-close" @click="closeEdit" aria-label="Cerrar">
-            <Icon name="close" size="20" />
+          <button
+            class="btn-close"
+            aria-label="Cerrar"
+            @click="closeEdit"
+          >
+            <Icon
+              name="close"
+              size="20"
+            />
           </button>
         </div>
         <div class="artist-form">
           <div class="artist-global-fields">
-            <div class="artist-image-group" @click="editImageInput?.click()" :title="t('library.changeImage')"
-              role="button" tabindex="0">
-              <img v-if="editImage" :src="editImage" alt="" class="artist-image-img" />
-              <div v-else class="artist-image-placeholder" aria-hidden="true">
-                <Icon name="artist" size="32" />
+            <div
+              class="artist-image-group"
+              :title="t('library.changeImage')"
+              role="button"
+              tabindex="0"
+              @click="editImageInput?.click()"
+            >
+              <img
+                v-if="editImage"
+                :src="editImage"
+                alt=""
+                class="artist-image-img"
+              >
+              <div
+                v-else
+                class="artist-image-placeholder"
+                aria-hidden="true"
+              >
+                <Icon
+                  name="artist"
+                  size="32"
+                />
               </div>
-              <div class="artist-image-overlay" aria-hidden="true">
-                <Icon name="upload" size="20" />
+              <div
+                class="artist-image-overlay"
+                aria-hidden="true"
+              >
+                <Icon
+                  name="upload"
+                  size="20"
+                />
               </div>
-              <input ref="editImageInput" type="file" accept="image/*" class="file-input"
-                @change="handleEditImageSelect" />
+              <input
+                ref="editImageInput"
+                type="file"
+                accept="image/*"
+                class="file-input"
+                @change="handleEditImageSelect"
+              >
             </div>
             <div class="artist-meta-fields">
-              <input v-model="editName" :placeholder="t('library.artistName')" class="global-input"
-                @keyup.enter="saveEdit" />
+              <input
+                v-model="editName"
+                :placeholder="t('library.artistName')"
+                class="global-input"
+                @keyup.enter="saveEdit"
+              >
             </div>
           </div>
           <div class="artist-actions">
-            <button class="btn btn-primary" @click="saveEdit" :disabled="editing || !editName.trim()">
+            <button
+              class="btn btn-primary"
+              :disabled="editing || !editName.trim()"
+              @click="saveEdit"
+            >
               {{ editing ? t('common.saving') : t('common.save') }}
             </button>
           </div>
-          <div v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</div>
+          <div
+            v-if="errorMessage"
+            class="error-message"
+            role="alert"
+          >
+            {{ errorMessage }}
+          </div>
         </div>
       </div>
     </div>
@@ -41,69 +96,172 @@
   <template v-else-if="embedded">
     <div class="artist-form">
       <div class="artist-global-fields">
-        <div class="artist-image-group" @click="imageInput?.click()" :title="t('library.changeImage')" role="button"
-          tabindex="0" :aria-label="'Seleccionar imagen'">
-          <img v-if="artistImage" :src="artistImage" alt="Imagen del artista" class="artist-image-img" />
-          <div v-else class="artist-image-placeholder" aria-hidden="true">
-            <Icon name="artist" size="32" />
+        <div
+          class="artist-image-group"
+          :title="t('library.changeImage')"
+          role="button"
+          tabindex="0"
+          :aria-label="'Seleccionar imagen'"
+          @click="imageInput?.click()"
+        >
+          <img
+            v-if="artistImage"
+            :src="artistImage"
+            alt="Imagen del artista"
+            class="artist-image-img"
+          >
+          <div
+            v-else
+            class="artist-image-placeholder"
+            aria-hidden="true"
+          >
+            <Icon
+              name="artist"
+              size="32"
+            />
           </div>
-          <div class="artist-image-overlay" aria-hidden="true">
-            <Icon name="upload" size="20" />
+          <div
+            class="artist-image-overlay"
+            aria-hidden="true"
+          >
+            <Icon
+              name="upload"
+              size="20"
+            />
           </div>
-          <input ref="imageInput" type="file" accept="image/*" class="file-input" @change="handleImageSelect" />
+          <input
+            ref="imageInput"
+            type="file"
+            accept="image/*"
+            class="file-input"
+            @change="handleImageSelect"
+          >
         </div>
         <div class="artist-meta-fields">
-          <input v-model="artistName" :placeholder="t('library.artistName')" class="global-input"
-            @keyup.enter="create" />
+          <input
+            v-model="artistName"
+            :placeholder="t('library.artistName')"
+            class="global-input"
+            @keyup.enter="create"
+          >
         </div>
       </div>
 
       <div class="artist-actions">
-        <button class="btn btn-primary" @click="create" :disabled="creating || !artistName.trim()">
+        <button
+          class="btn btn-primary"
+          :disabled="creating || !artistName.trim()"
+          @click="create"
+        >
           {{ creating ? t('library.artistCreating') : t('library.createArtist') }}
         </button>
       </div>
 
-      <div v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</div>
+      <div
+        v-if="errorMessage"
+        class="error-message"
+        role="alert"
+      >
+        {{ errorMessage }}
+      </div>
     </div>
   </template>
 
-  <div v-else-if="showUpload" class="modal" @click.self="close" role="dialog" aria-modal="true"
-    aria-label="Subir artista">
+  <div
+    v-else-if="showUpload"
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Subir artista"
+    @click.self="close"
+  >
     <div class="modal-content">
       <div class="modal-header">
         <h3>{{ t('library.addArtist') }}</h3>
-        <button class="btn-close" @click="close" aria-label="Cerrar">
-          <Icon name="close" size="20" />
+        <button
+          class="btn-close"
+          aria-label="Cerrar"
+          @click="close"
+        >
+          <Icon
+            name="close"
+            size="20"
+          />
         </button>
       </div>
       <div class="artist-form">
         <div class="artist-global-fields">
-          <div class="artist-image-group" @click="imageInput?.click()" :title="t('library.changeImage')" role="button"
-            tabindex="0" :aria-label="'Seleccionar imagen'">
-            <img v-if="artistImage" :src="artistImage" alt="Imagen del artista" class="artist-image-img" />
-            <div v-else class="artist-image-placeholder" aria-hidden="true">
-              <Icon name="artist" size="32" />
+          <div
+            class="artist-image-group"
+            :title="t('library.changeImage')"
+            role="button"
+            tabindex="0"
+            :aria-label="'Seleccionar imagen'"
+            @click="imageInput?.click()"
+          >
+            <img
+              v-if="artistImage"
+              :src="artistImage"
+              alt="Imagen del artista"
+              class="artist-image-img"
+            >
+            <div
+              v-else
+              class="artist-image-placeholder"
+              aria-hidden="true"
+            >
+              <Icon
+                name="artist"
+                size="32"
+              />
             </div>
-            <div class="artist-image-overlay" aria-hidden="true">
-              <Icon name="upload" size="20" />
+            <div
+              class="artist-image-overlay"
+              aria-hidden="true"
+            >
+              <Icon
+                name="upload"
+                size="20"
+              />
             </div>
-            <input ref="imageInput" type="file" accept="image/*" class="file-input" @change="handleImageSelect" />
+            <input
+              ref="imageInput"
+              type="file"
+              accept="image/*"
+              class="file-input"
+              @change="handleImageSelect"
+            >
           </div>
           <div class="artist-meta-fields">
-            <input v-model="artistName" :placeholder="t('library.artistName')" class="global-input"
-              @keyup.enter="create" />
-            <div class="field-hint">{{ t('library.clickToSelectImage') }}</div>
+            <input
+              v-model="artistName"
+              :placeholder="t('library.artistName')"
+              class="global-input"
+              @keyup.enter="create"
+            >
+            <div class="field-hint">
+              {{ t('library.clickToSelectImage') }}
+            </div>
           </div>
         </div>
 
         <div class="artist-actions">
-          <button class="btn btn-primary" @click="create" :disabled="creating || !artistName.trim()">
+          <button
+            class="btn btn-primary"
+            :disabled="creating || !artistName.trim()"
+            @click="create"
+          >
             {{ creating ? t('library.artistCreating') : t('library.createArtist') }}
           </button>
         </div>
 
-        <div v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</div>
+        <div
+          v-if="errorMessage"
+          class="error-message"
+          role="alert"
+        >
+          {{ errorMessage }}
+        </div>
       </div>
     </div>
   </div>
@@ -125,14 +283,14 @@ interface EditData {
 }
 
 const props = defineProps<{
-  showUpload: boolean
   embedded?: boolean
   editMode?: boolean
   editData?: EditData | null
 }>()
 
+const showUpload = defineModel<boolean>('showUpload', { required: true })
+
 const emit = defineEmits<{
-  'update:showUpload': [value: boolean]
   'uploaded': []
   'created': [artist: ArtistDTO]
   'close': []
@@ -168,7 +326,7 @@ const handleEditImageSelect = (e: Event) => {
 }
 
 const closeEdit = () => {
-  emit('update:showUpload', false)
+  showUpload.value = false
   editing.value = false
   errorMessage.value = ''
 }
@@ -214,13 +372,13 @@ const reset = () => {
   artistImageFile.value = null
   errorMessage.value = ''
   if (props.embedded) {
-    emit('update:showUpload', false)
+    showUpload.value = false
   }
 }
 
 const close = () => {
   reset()
-  emit('update:showUpload', false)
+  showUpload.value = false
 }
 
 const create = async () => {
@@ -346,10 +504,10 @@ const create = async () => {
 }
 
 .error-message {
-  color: #e74c3c;
+  color: var(--danger);
   font-size: 13px;
   padding: 8px;
-  background: rgba(231, 76, 60, 0.1);
+  background: var(--danger-bg);
   border-radius: var(--radius-sm);
   text-align: center;
 }

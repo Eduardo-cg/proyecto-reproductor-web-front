@@ -134,8 +134,8 @@
 }
 
 .btn-remove-file:hover {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .preview-actions {
@@ -154,10 +154,10 @@
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: rgba(231, 76, 60, 0.1);
-  border: 1px solid rgba(231, 76, 60, 0.3);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
   border-radius: var(--radius-sm);
-  color: #e74c3c;
+  color: var(--danger);
   font-size: 13px;
   margin-bottom: 12px;
 }
@@ -183,7 +183,7 @@
   cursor: grab;
   color: var(--text-muted);
   padding: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   flex-shrink: 0;
 }
 

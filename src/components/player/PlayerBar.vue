@@ -1,76 +1,174 @@
 <template>
-  <div class="player-bar" role="region" :aria-label="t('player.player')">
+  <div
+    class="player-bar"
+    role="region"
+    :aria-label="t('player.player')"
+  >
     <div class="track-info">
-      <div v-if="playerStore.state.currentTrack" class="track-info">
-        <img v-if="playerStore.state.currentTrack.cover" :src="playerStore.state.currentTrack.cover" alt="Cover"
-          class="cover" />
-        <div v-else class="cover-placeholder" aria-hidden="true">
-          <Icon name="music" size="20" />
+      <div
+        v-if="playerStore.state.currentTrack"
+        class="track-info"
+      >
+        <img
+          v-if="playerStore.state.currentTrack.cover"
+          :src="playerStore.state.currentTrack.cover"
+          alt="Cover"
+          class="cover"
+        >
+        <div
+          v-else
+          class="cover-placeholder"
+          aria-hidden="true"
+        >
+          <Icon
+            name="music"
+            size="20"
+          />
         </div>
         <div class="track-text">
-          <div class="track-title">{{ playerStore.state.currentTrack.title }}</div>
-          <div class="track-artist">{{ playerStore.state.currentTrack.artist }}</div>
+          <div class="track-title">
+            {{ playerStore.state.currentTrack.title }}
+          </div>
+          <div class="track-artist">
+            {{ playerStore.state.currentTrack.artist }}
+          </div>
         </div>
       </div>
     </div>
 
     <div class="controls">
       <div class="controls-buttons">
-        <button class="btn-control" @click="playerStore.playPrevious()" :aria-label="t('player.previous')">
-          <Icon name="prev" size="18" />
+        <button
+          class="btn-control"
+          :aria-label="t('player.previous')"
+          @click="playerStore.playPrevious()"
+        >
+          <Icon
+            name="prev"
+            size="18"
+          />
         </button>
-        <button class="btn-play" @click="playerStore.togglePlay()"
-          :aria-label="playerStore.state.isPlaying ? t('player.pause') : t('player.play')">
-          <Icon :name="playerStore.state.isPlaying ? 'pause' : 'play'" size="18" />
+        <button
+          class="btn-play"
+          :aria-label="playerStore.state.isPlaying ? t('player.pause') : t('player.play')"
+          @click="playerStore.togglePlay()"
+        >
+          <Icon
+            :name="playerStore.state.isPlaying ? 'pause' : 'play'"
+            size="18"
+          />
         </button>
-        <button class="btn-control" @click="playerStore.playNext()" :aria-label="t('player.next')">
-          <Icon name="next" size="18" />
+        <button
+          class="btn-control"
+          :aria-label="t('player.next')"
+          @click="playerStore.playNext()"
+        >
+          <Icon
+            name="next"
+            size="18"
+          />
         </button>
       </div>
       <div class="progress-container">
-        <span class="time" aria-hidden="true">{{ formatDuration(isSeeking ? seekTemp : playerStore.state.position)
-          }}</span>
-        <div class="progress-wrapper" ref="progressContainer">
-          <input class="progress-bar" type="range" :value="isSeeking ? seekTemp : playerStore.state.position"
-            :max="playerStore.state.duration || 0" @mousedown.prevent="onProgressMouseDown"
-            :aria-label="t('player.progress', { current: formatDuration(isSeeking ? seekTemp : playerStore.state.position), total: formatDuration(playerStore.state.duration) })" />
-          <div v-if="isSeeking" class="seek-tooltip" :style="tooltipStyle">
+        <span
+          class="time"
+          aria-hidden="true"
+        >{{ formatDuration(isSeeking ? seekTemp : playerStore.state.position)
+        }}</span>
+        <div
+          ref="progressContainer"
+          class="progress-wrapper"
+        >
+          <input
+            class="progress-bar"
+            type="range"
+            :value="isSeeking ? seekTemp : playerStore.state.position"
+            :max="playerStore.state.duration || 0"
+            :aria-label="t('player.progress', { current: formatDuration(isSeeking ? seekTemp : playerStore.state.position), total: formatDuration(playerStore.state.duration) })"
+            @mousedown.prevent="onProgressMouseDown"
+          >
+          <div
+            v-if="isSeeking"
+            class="seek-tooltip"
+            :style="tooltipStyle"
+          >
             {{ formatDuration(seekTemp) }}
           </div>
         </div>
-        <span class="time" aria-hidden="true">{{ formatDuration(playerStore.state.duration) }}</span>
+        <span
+          class="time"
+          aria-hidden="true"
+        >{{ formatDuration(playerStore.state.duration) }}</span>
       </div>
     </div>
 
     <div class="right-controls">
-      <button class="btn-control btn-icon-only" :class="{ active: showQueue }" @click="showQueue = !showQueue"
-        :aria-label="t('player.showQueue')" :aria-expanded="showQueue">
-        <Icon name="queue" size="20" />
+      <button
+        class="btn-control btn-icon-only"
+        :class="{ active: showQueue }"
+        :aria-label="t('player.showQueue')"
+        :aria-expanded="showQueue"
+        @click="showQueue = !showQueue"
+      >
+        <Icon
+          name="queue"
+          size="20"
+        />
       </button>
 
-      <div class="volume" role="group" :aria-label="t('player.volumeControl')">
-        <button class="btn-control btn-icon-only" @click="playerStore.mute()"
-          :aria-label="playerStore.state.volume === 0 ? t('player.unmute') : t('player.mute')">
-          <Icon :name="playerStore.state.volume === 0 ? 'volume-mute' : 'volume'" size="20" />
+      <div
+        class="volume"
+        role="group"
+        :aria-label="t('player.volumeControl')"
+      >
+        <button
+          class="btn-control btn-icon-only"
+          :aria-label="playerStore.state.volume === 0 ? t('player.unmute') : t('player.mute')"
+          @click="playerStore.mute()"
+        >
+          <Icon
+            :name="playerStore.state.volume === 0 ? 'volume-mute' : 'volume'"
+            size="20"
+          />
         </button>
-        <input type="range" :value="playerStore.state.volume" max="1" step="0.01" @input="onVolumeChange"
-          class="volume-bar" :aria-label="t('player.volume')" />
+        <input
+          type="range"
+          :value="playerStore.state.volume"
+          max="1"
+          step="0.01"
+          class="volume-bar"
+          :aria-label="t('player.volume')"
+          @input="onVolumeChange"
+        >
       </div>
 
-      <router-link to="/settings" class="btn-control btn-icon-only settings-btn" :title="t('settings.title')"
-        :aria-label="t('settings.title')">
-        <Icon name="settings" size="20" />
+      <router-link
+        to="/settings"
+        class="btn-control btn-icon-only settings-btn"
+        :title="t('settings.title')"
+        :aria-label="t('settings.title')"
+      >
+        <Icon
+          name="settings"
+          size="20"
+        />
       </router-link>
     </div>
   </div>
 
-  <QueuePanel v-if="showQueue" :queue="playerStore.state.queue" @close="showQueue = false"
-    @remove="playerStore.removeFromQueue" @clear="playerStore.clearQueue" @reorder="playerStore.reorderQueue"
-    @play="playerStore.playFromQueue" />
+  <QueuePanel
+    v-if="showQueue"
+    :queue="playerStore.state.queue"
+    @close="showQueue = false"
+    @remove="playerStore.removeFromQueue"
+    @clear="playerStore.clearQueue"
+    @reorder="playerStore.reorderQueue"
+    @play="playerStore.playFromQueue"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '../../stores/playerStore'
 import { formatDuration } from '../../utils/utils'
@@ -137,6 +235,11 @@ const onProgressMouseUp = () => {
 const onVolumeChange = (e: Event) => {
   playerStore.setVolume(parseFloat((e.target as HTMLInputElement).value))
 }
+
+onBeforeUnmount(() => {
+  document.removeEventListener('mousemove', onProgressMouseMove)
+  document.removeEventListener('mouseup', onProgressMouseUp)
+})
 </script>
 
 <style scoped>

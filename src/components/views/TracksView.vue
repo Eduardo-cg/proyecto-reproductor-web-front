@@ -1,96 +1,271 @@
 <template>
   <div>
     <div class="toolbar">
-      <div class="search" role="search">
+      <div
+        class="search"
+        role="search"
+      >
         <div class="search-wrapper">
-          <Icon name="search" size="16" class="search-icon" />
-          <input v-model="search" type="text" :placeholder="t('library.searchPlaceholder')"
-            aria-label="Buscar canciones" @keyup.enter="handleSearch" />
+          <Icon
+            name="search"
+            size="16"
+            class="search-icon"
+          />
+          <input
+            v-model="search"
+            type="text"
+            :placeholder="t('library.searchPlaceholder')"
+            aria-label="Buscar canciones"
+            @keyup.enter="handleSearch"
+          >
         </div>
       </div>
-      <CombinedFilter v-model:artistIds="selectedArtistIds" v-model:albumIds="selectedAlbumIds" v-model:sortBy="sortBy"
-        v-model:sortDirection="sortDirection" :sortOptions="trackSortOptions" />
+      <CombinedFilter
+        v-model:artist-ids="selectedArtistIds"
+        v-model:album-ids="selectedAlbumIds"
+        v-model:sort-by="sortBy"
+        v-model:sort-direction="sortDirection"
+        :sort-options="trackSortOptions"
+      />
       <div class="toolbar-actions">
-        <button class="btn btn-primary" @click="handleSearch">
-          <Icon name="search" size="14" />
+        <button
+          class="btn btn-primary"
+          @click="handleSearch"
+        >
+          <Icon
+            name="search"
+            size="14"
+          />
           {{ t('library.search') }}
         </button>
-        <button class="btn btn-secondary" @click="clearFilters">
+        <button
+          class="btn btn-secondary"
+          @click="clearFilters"
+        >
           {{ t('library.clearFilters') }}
         </button>
       </div>
     </div>
 
-    <div v-if="loading" class="loading" role="status">{{ t('auth.loading') }}</div>
+    <div
+      v-if="loading"
+      class="loading"
+      role="status"
+    >
+      {{ t('auth.loading') }}
+    </div>
 
     <template v-else>
-      <div v-if="tracks.length === 0" class="empty">
-        <Icon name="empty" size="48" />
+      <div
+        v-if="tracks.length === 0"
+        class="empty"
+      >
+        <Icon
+          name="empty"
+          size="48"
+        />
         <p>{{ t('library.noTracks') }}</p>
       </div>
-      <div v-else class="tracks-table" role="table" aria-label="Lista de canciones">
-        <div class="tracks-header" role="row">
-          <div class="col-cover" role="columnheader"></div>
-          <div class="col-title" role="columnheader">{{ t('library.trackTitle') }}</div>
-          <div class="col-artist" role="columnheader">{{ t('library.trackArtist') }}</div>
-          <div class="col-album" role="columnheader">{{ t('library.album') }}</div>
-          <div class="col-duration" role="columnheader">{{ t('library.duration') }}</div>
-          <div class="col-actions" role="columnheader"></div>
+      <div
+        v-else
+        class="tracks-table"
+        role="table"
+        aria-label="Lista de canciones"
+      >
+        <div
+          class="tracks-header"
+          role="row"
+        >
+          <div
+            class="col-cover"
+            role="columnheader"
+          />
+          <div
+            class="col-title"
+            role="columnheader"
+          >
+            {{ t('library.trackTitle') }}
+          </div>
+          <div
+            class="col-artist"
+            role="columnheader"
+          >
+            {{ t('library.trackArtist') }}
+          </div>
+          <div
+            class="col-album"
+            role="columnheader"
+          >
+            {{ t('library.album') }}
+          </div>
+          <div
+            class="col-duration"
+            role="columnheader"
+          >
+            {{ t('library.duration') }}
+          </div>
+          <div
+            class="col-actions"
+            role="columnheader"
+          />
         </div>
-        <div v-for="track in tracks" :key="track.id" class="track-wrapper">
-          <div class="track-row" role="row">
-            <div class="col-cover" role="cell">
-              <img v-if="track.cover" :src="track.cover" alt="" class="track-cover" />
-              <div v-else class="cover-placeholder" aria-hidden="true">
-                <Icon name="music" size="16" />
+        <div
+          v-for="track in tracks"
+          :key="track.id"
+          v-memo="[track, selectedTrackId === track.id, openDropdownId === track.id]"
+          class="track-wrapper"
+        >
+          <div
+            class="track-row"
+            role="row"
+          >
+            <div
+              class="col-cover"
+              role="cell"
+            >
+              <img
+                v-if="track.cover"
+                :src="track.cover"
+                alt=""
+                class="track-cover"
+              >
+              <div
+                v-else
+                class="cover-placeholder"
+                aria-hidden="true"
+              >
+                <Icon
+                  name="music"
+                  size="16"
+                />
               </div>
             </div>
-            <div class="col-title track-title" role="cell">{{ track.title }}</div>
-            <div class="col-artist track-artist" role="cell">{{ track.artist || '-' }}</div>
-            <div class="col-album track-album" role="cell">{{ track.album || '-' }}</div>
-            <div class="col-duration track-duration" role="cell">{{ formatDuration(track.duration) }}</div>
-            <div class="col-actions track-actions" role="cell">
-              <button class="btn-action" @click="playTrack(track)" :aria-label="'Reproducir ' + track.title">
-                <Icon name="play" size="14" />
+            <div
+              class="col-title track-title"
+              role="cell"
+            >
+              {{ track.title }}
+            </div>
+            <div
+              class="col-artist track-artist"
+              role="cell"
+            >
+              {{ track.artist || '-' }}
+            </div>
+            <div
+              class="col-album track-album"
+              role="cell"
+            >
+              {{ track.album || '-' }}
+            </div>
+            <div
+              class="col-duration track-duration"
+              role="cell"
+            >
+              {{ formatDuration(track.duration) }}
+            </div>
+            <div
+              class="col-actions track-actions"
+              role="cell"
+            >
+              <button
+                class="btn-action"
+                :aria-label="'Reproducir ' + track.title"
+                @click="playTrack(track)"
+              >
+                <Icon
+                  name="play"
+                  size="14"
+                />
               </button>
-              <button v-if="playerStore.state.currentTrack" class="btn-action" @click="playerStore.addToQueue(track)"
-                :aria-label="'Agregar ' + track.title + ' a la cola'">
-                <Icon name="plus" size="14" />
+              <button
+                v-if="playerStore.state.currentTrack"
+                class="btn-action"
+                :aria-label="'Agregar ' + track.title + ' a la cola'"
+                @click="playerStore.addToQueue(track)"
+              >
+                <Icon
+                  name="plus"
+                  size="14"
+                />
               </button>
-              <div class="actions-more" @click.stop>
-                <button class="btn-action" @click="openDropdownId = openDropdownId === track.id ? null : track.id"
-                  :aria-label="'Más opciones'">
-                  <Icon name="more-vertical" size="16" />
+              <div
+                class="actions-more"
+                @click.stop
+              >
+                <button
+                  class="btn-action"
+                  :aria-label="'Más opciones'"
+                  @click="openDropdownId = openDropdownId === track.id ? null : track.id"
+                >
+                  <Icon
+                    name="more-vertical"
+                    size="16"
+                  />
                 </button>
-                <div v-if="openDropdownId === track.id" class="track-dropdown">
-                  <button class="dropdown-item" @click="downloadTrackFile(track)">
-                    <Icon name="download" size="14" />
+                <div
+                  v-if="openDropdownId === track.id"
+                  class="track-dropdown"
+                >
+                  <button
+                    class="dropdown-item"
+                    @click="downloadTrackFile(track)"
+                  >
+                    <Icon
+                      name="download"
+                      size="14"
+                    />
                     <span>{{ t('common.download') }}</span>
                   </button>
-                  <button class="dropdown-item" @click="editTrack(track)">
-                    <Icon name="edit" size="14" />
+                  <button
+                    class="dropdown-item"
+                    @click="editTrack(track)"
+                  >
+                    <Icon
+                      name="edit"
+                      size="14"
+                    />
                     <span>{{ t('common.edit') }}</span>
                   </button>
-                  <button class="dropdown-item" @click="toggleInfo(track.id)">
-                    <Icon name="info" size="14" />
+                  <button
+                    class="dropdown-item"
+                    @click="toggleInfo(track.id)"
+                  >
+                    <Icon
+                      name="info"
+                      size="14"
+                    />
                     <span>{{ t('common.info') }}</span>
                   </button>
-                  <button class="dropdown-item dropdown-item-danger" @click="confirmDelete(track)">
-                    <Icon name="trash" size="14" />
+                  <button
+                    class="dropdown-item dropdown-item-danger"
+                    @click="confirmDelete(track)"
+                  >
+                    <Icon
+                      name="trash"
+                      size="14"
+                    />
                     <span>{{ t('common.delete') }}</span>
                   </button>
                 </div>
               </div>
             </div>
           </div>
-          <div v-if="selectedTrackId === track.id" class="track-details" role="region"
-            :aria-label="'Detalles de ' + track.title">
+          <div
+            v-if="selectedTrackId === track.id"
+            class="track-details"
+            role="region"
+            :aria-label="'Detalles de ' + track.title"
+          >
             <div class="details-content">
               <span class="details-label">{{ t('library.releaseDate') }}:</span>
               <span class="details-value">{{ track.releaseDate ? formatDate(track.releaseDate) :
                 t('library.notSpecified') }}</span>
             </div>
-            <div v-if="track.fileSize" class="details-content">
+            <div
+              v-if="track.fileSize"
+              class="details-content"
+            >
               <span class="details-label">{{ t('library.fileSize') }}:</span>
               <span class="details-value">{{ formatFileSize(track.fileSize) }}</span>
             </div>
@@ -99,22 +274,39 @@
       </div>
     </template>
 
-    <Pagination :current-page="currentPage" :total-pages="totalPages" :total-elements="totalElements"
-      :page-size="pageSize" @page-change="goToPage" @page-size-change="changePageSize" />
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :total-elements="totalElements"
+      :page-size="pageSize"
+      @page-change="goToPage"
+      @page-size-change="changePageSize"
+    />
 
-    <ConfirmDialog :show="showDeleteConfirm" :title="t('confirm.deleteTitle')" :message="deleteMessage"
-      :loading="deleteLoading" @confirm="handleDeleteConfirm" @cancel="showDeleteConfirm = false" />
+    <ConfirmDialog
+      :show="showDeleteConfirm"
+      :title="t('confirm.deleteTitle')"
+      :message="deleteMessage"
+      :loading="deleteLoading"
+      @confirm="handleDeleteConfirm"
+      @cancel="showDeleteConfirm = false"
+    />
 
-    <UploadSongsModal :showUpload="showEditModal" :editMode="true" :editData="trackToEdit ?? undefined"
-      @update:showUpload="showEditModal = false" @uploaded="onEditUploaded" />
+    <UploadSongsModal
+      v-model:show-upload="showEditModal"
+      :edit-mode="true"
+      :edit-data="trackToEdit ?? undefined"
+      @uploaded="onEditUploaded"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
 import { usePlayerStore } from '../../stores/playerStore'
+import { useTracksList } from '../../composables/useTracksList'
 import type { TrackDTO } from '../../types'
 import { formatDuration, formatFileSize } from '../../utils/utils'
 import CombinedFilter from '../common/CombinedFilter.vue'
@@ -126,9 +318,26 @@ import UploadSongsModal from '../modals/UploadSongsModal.vue'
 const { t } = useI18n()
 const playerStore = usePlayerStore()
 
-const loading = ref<boolean>(true)
-const search = ref<string>('')
-let searchTimeout: ReturnType<typeof setTimeout>
+const {
+  tracks,
+  loading,
+  currentPage,
+  pageSize,
+  totalElements,
+  totalPages,
+  search,
+  sortBy,
+  sortDirection,
+  selectedArtistIds,
+  selectedAlbumIds,
+  loadTracks,
+  goToPage,
+  changePageSize,
+  handleSearch,
+  debouncedSearch,
+  clearFilters
+} = useTracksList()
+
 const selectedTrackId = ref<number | null>(null)
 const openDropdownId = ref<number | null>(null)
 
@@ -140,11 +349,6 @@ const deleteMessage = ref<string>('')
 const showEditModal = ref<boolean>(false)
 const trackToEdit = ref<TrackDTO | null>(null)
 
-const selectedArtistIds = ref<number[]>([])
-const selectedAlbumIds = ref<number[]>([])
-
-const sortBy = ref<string>('title')
-const sortDirection = ref<string>('asc')
 const trackSortOptions = [
   { value: 'title', label: 'Título' },
   { value: 'artist', label: 'Artista' },
@@ -162,46 +366,6 @@ const editTrack = (track: TrackDTO): void => {
 const onEditUploaded = (): void => {
   showEditModal.value = false
   trackToEdit.value = null
-  loadTracks()
-}
-
-const tracks = ref<TrackDTO[]>([])
-const currentPage = ref<number>(0)
-const pageSize = ref<number>(20)
-const totalElements = ref<number>(0)
-const totalPages = ref<number>(0)
-
-const loadTracks = async (): Promise<void> => {
-  try {
-    loading.value = true
-    const res = await api.getTracks(
-      currentPage.value,
-      pageSize.value,
-      search.value,
-      selectedArtistIds.value,
-      selectedAlbumIds.value,
-      sortBy.value,
-      sortDirection.value
-    )
-    tracks.value = res.tracks
-    totalElements.value = res.totalElements
-    totalPages.value = res.totalPages
-    currentPage.value = res.currentPage
-  } catch (e) {
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
-}
-
-const goToPage = (page: number): void => {
-  currentPage.value = page
-  loadTracks()
-}
-
-const changePageSize = (newSize: number): void => {
-  pageSize.value = newSize
-  currentPage.value = 0
   loadTracks()
 }
 
@@ -256,40 +420,16 @@ const formatDate = (dateStr: string): string => {
   return `${d}/${m}/${y}`
 }
 
-const refresh = (): void => {
-  loadTracks()
-}
-
-const handleSearch = (): void => {
-  currentPage.value = 0
-  loadTracks()
-}
-
 watch(search, () => {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    handleSearch()
-  }, 300)
+  debouncedSearch()
 })
-
-const clearFilters = (): void => {
-  search.value = ''
-  selectedArtistIds.value = []
-  selectedAlbumIds.value = []
-  sortBy.value = 'title'
-  sortDirection.value = 'asc'
-  currentPage.value = 0
-  loadTracks()
-}
-
-defineExpose({ refresh })
 
 onMounted(async () => {
   await loadTracks()
   document.addEventListener('click', handleDocumentClick)
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   document.removeEventListener('click', handleDocumentClick)
 })
 </script>

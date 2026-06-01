@@ -1,8 +1,8 @@
 import { reactive } from 'vue'
-import { initMediaSession, updateMetadata, updatePlaybackState } from '../composables/useMediaSession'
 import { useStreamingMode } from '../composables/useStreamingMode'
 import { api } from '../services/api'
 import type { TrackDTO } from '../types'
+import { initMediaSession, updateMetadata, updatePlaybackState } from '../utils/mediaSession'
 
 let audio: HTMLAudioElement | null = null
 let currentBlobUrl: string | null = null
@@ -123,18 +123,19 @@ const playTrack = async (track: TrackDTO, fromBackQueue: boolean = false): Promi
   }
 }
 
-const storedTrackId = localStorage.getItem('currentTrackId')
-
-if (storedTrackId) {
-  const token = localStorage.getItem('token')
-  const user = localStorage.getItem('user')
-  if (token && user) {
-    try {
-      const track = await api.getTrack(Number(storedTrackId))
-      state.currentTrack = track
-    } catch (e) {
-      console.error('Error al restaurar canción:', e)
-      localStorage.removeItem('currentTrackId')
+const restoreLastTrack = async (): Promise<void> => {
+  const storedTrackId = localStorage.getItem('currentTrackId')
+  if (storedTrackId) {
+    const token = localStorage.getItem('token')
+    const user = localStorage.getItem('user')
+    if (token && user) {
+      try {
+        const track = await api.getTrack(Number(storedTrackId))
+        state.currentTrack = track
+      } catch (e) {
+        console.error('Error restoring last track:', e)
+        localStorage.removeItem('currentTrackId')
+      }
     }
   }
 }
@@ -243,5 +244,6 @@ export const usePlayerStore = () => ({
   playFromQueue,
   removeFromQueue,
   reorderQueue,
-  mute
+  mute,
+  restoreLastTrack
 })
