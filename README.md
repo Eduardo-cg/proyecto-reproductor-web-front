@@ -506,8 +506,15 @@ npm run preview      # Previsualiza la compilacion de produccion
 - `.env.example` - Plantilla con comentarios
 
 **Constantes globales** (definidas en `vite.config.ts`):
-- `APP_NAME` = `'FonoPort'` (disponible como variable global en tiempo de compilacion)
 - `global` = `globalThis` (polyfill para `music-metadata-browser`)
+
+> **Nota:** `APP_NAME` está hardcodeado en `src/config.ts` y no es una variable de build-time, aunque el README anterior lo afirmaba. Si en el futuro se necesita variabilizar, exponer vía `define` en `vite.config.ts` + `VITE_APP_NAME` en `.env.development`.
+
+### Mapa: dónde se setea cada variable → dónde se lee
+
+| Variable | Fuentes posibles (en orden de prioridad) | Lectura |
+|----------|------------------------------------------|---------|
+| `VITE_API_URL` | `docker-compose.yml` como build arg (`/api` cuando nginx hace proxy), `.env.development` (dev local sin Docker: `http://localhost:8080/api`), `.env.production` (placeholder, ignorar) | `src/services/utils.ts:4` → exportada como `API_URL` y consumida por todos los `services/*.ts` |
 
 ---
 
