@@ -64,6 +64,7 @@
   height: 48px;
   border-radius: var(--radius-sm);
   object-fit: cover;
+  display: block;
 }
 
 .preview-cover-placeholder {

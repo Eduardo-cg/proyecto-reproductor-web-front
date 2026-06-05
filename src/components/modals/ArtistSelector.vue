@@ -202,7 +202,7 @@ const emitValue = () => {
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
   if (isOpen.value) {
-    artistPage.value = 0  // Reset page when opening dropdown
+    artistPage.value = 0
     fetchArtists()
     nextTick(() => {
       searchInput.value?.focus()

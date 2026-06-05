@@ -117,10 +117,10 @@ const { t } = useI18n()
 const show = defineModel<boolean>({ required: true })
 
 const emit = defineEmits<{
-  'uploaded': []
+  'uploaded': [type: 'tracks' | 'album' | 'artist']
 }>()
 
-const activeTab = ref('tracks')
+const activeTab = ref<'tracks' | 'album' | 'artist'>('tracks')
 const alwaysOpen = ref(true)
 
 const close = () => {
@@ -129,7 +129,7 @@ const close = () => {
 
 const onUploaded = () => {
   close()
-  emit('uploaded')
+  emit('uploaded', activeTab.value)
 }
 </script>
 

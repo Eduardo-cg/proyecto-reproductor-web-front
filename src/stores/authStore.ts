@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import { api } from '../services/api'
+import { usePlayerStore } from '../stores/playerStore'
 import type { UserInfo } from '../types'
 
 interface AuthState {
@@ -67,6 +68,7 @@ const register = async (username: string, email: string, password: string): Prom
 }
 
 const logout = (): void => {
+  usePlayerStore().resetPlayer()
   state.user = null
   state.token = null
   state.isAuthenticated = false

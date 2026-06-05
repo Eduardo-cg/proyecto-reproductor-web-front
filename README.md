@@ -1,4 +1,4 @@
-# FonoPort
+# FonoPort - Frontend
 
 Aplicación web de streaming y biblioteca de música construida con Vue 3 y TypeScript. Interfaz inspirada en Spotify con reproductor persistente, sistema de carga de archivos con extracción automática de metadatos, cola de reproducción, múltiples temas y soporte para dos idiomas.
 
@@ -7,15 +7,15 @@ Aplicación web de streaming y biblioteca de música construida con Vue 3 y Type
 ## Tabla de contenidos
 
 - [Stack Tecnológico](#stack-tecnológico)
-- [Caracteristicas](#características)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Rutas](#rutas)
+- [Características](#características)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Rutas (Vue Router)](#rutas-vue-router)
 - [Componentes](#componentes)
 - [Composables](#composables)
 - [Sistema de estado](#sistema-de-estado)
 - [Servicios API](#servicios-api)
 - [Sistema de temas](#sistema-de-temas)
-- [Internacionalizacion](#internacionalización)
+- [Internacionalización](#internacionalización)
 - [Scripts](#scripts)
 - [Variables de entorno](#variables-de-entorno)
 - [Docker](#docker)
@@ -25,24 +25,24 @@ Aplicación web de streaming y biblioteca de música construida con Vue 3 y Type
 
 ## Stack Tecnológico
 
-| Tecnologia | Version | Uso |
+| Tecnología | Versión | Uso |
 |---|---|---|
-| Vue 3 | ^3.5.34 | Framework frontend (Composition API + `<script setup>`) |
+| Vue 3 | ^3.5.35 | Framework frontend (Composition API + `<script setup>`) |
 | TypeScript | ^6.0.3 | Tipado estático |
-| Vue Router | ^5.0.7 | Navegación SPA con HTML5 history mode |
-| Vue I18n | ^11.4.2 | Internacionalización ES/EN |
-| Vite | ^8.0.13 | Bundler y dev server |
-| HTML5 Audio API | Nativa | Reproduccion de audio en el navegador |
+| Vue Router | ^5.1.0 | Navegación SPA con HTML5 history mode |
+| Vue I18n | ^11.4.4 | Internacionalización ES/EN |
+| Vite | ^8.0.16 | Bundler y dev server |
+| HTML5 Audio API | Nativa | Reproducción de audio en el navegador |
 | Media Session API | Nativa | Controles en pantalla de bloqueo / barra de notificaciones |
 | SortableJS | ^1.15.7 | Drag & drop para reordenar |
-| music-metadata-browser | ^2.5.11 | Extracción de metadatos de archivos de audio en el cliente |
+| music-metadata | ^11.12.3 | Extracción de metadatos de archivos de audio en el cliente |
 | buffer | ^6.0.3 | Polyfill de Buffer para browser |
 
 **Herramientas de desarrollo:**
 
-| Paquete | Version | Uso |
+| Paquete | Versión | Uso |
 |---|---|---|
-| @vitejs/plugin-vue | ^6.0.6 | Plugin de Vue para Vite |
+| @vitejs/plugin-vue | ^6.0.7 | Plugin de Vue para Vite |
 | vue-tsc | ^3.3.3 | Verificación de tipos Vue |
 | ESLint + eslint-plugin-vue | ^10.4.1 / ^10.9.1 | Linting |
 | @typescript-eslint | ^8.60.0 | Reglas ESLint para TypeScript |
@@ -50,7 +50,7 @@ Aplicación web de streaming y biblioteca de música construida con Vue 3 y Type
 | @types/node | ^25.9.1 | Tipos de Node.js |
 | @types/sortablejs | ^1.15.9 | Tipos de SortableJS |
 | @vue/tsconfig | ^0.9.1 | Configuración tsconfig para Vue |
-| typescript-eslint | ^8.60.0 | Integracion TypeScript + ESLint |
+| typescript-eslint | ^8.60.0 | Integración TypeScript + ESLint |
 
 ---
 
@@ -105,8 +105,8 @@ Aplicación web de streaming y biblioteca de música construida con Vue 3 y Type
 
 **Canciones:**
 - Carga múltiple con drag & drop
-- Extracción automática de metadatos (título, artista, álbum, carátula, duración)
-- Edición individual por archivo
+- Extracción automática de metadatos (título, artista, álbum, carátula, duración) con `music-metadata`
+- Edición individual por archivo, incluida la portada (click en el cover del preview abre el selector de imagen)
 - Selector global de artistas con "apply to all"
 - Búsqueda automática de artistas en el backend por nombre embebido
 
@@ -127,9 +127,9 @@ Aplicación web de streaming y biblioteca de música construida con Vue 3 y Type
 - CSS custom properties para cada tema
 
 ### Internacionalización
-- Espanol (por defecto) e Ingles
+- Español (por defecto) e Inglés
 - Persistencia de idioma en `localStorage`
-- 133 claves de traduccion cubriendo toda la aplicacion
+- 147 claves de traducción cubriendo toda la aplicación
 
 ### Otros
 - Tema oscuro/claro con persistencia
@@ -179,7 +179,6 @@ front_proyecto/
 │   │   │   ├── CombinedFilter.vue        # Filtro combinado (artista/álbum/orden)
 │   │   │   ├── ConfirmDialog.vue         # Diálogo de confirmación
 │   │   │   ├── DarkModeToggle.vue        # Toggle oscuro/claro
-│   │   │   ├── FilterSelector.vue        # Selector multi-select genérico
 │   │   │   ├── LanguageSwitcher.vue       # Selector ES/EN
 │   │   │   ├── Pagination.vue            # Paginador con selector de tamaño
 │   │   │   ├── StorageBar.vue            # Barra de uso de almacenamiento
@@ -200,7 +199,7 @@ front_proyecto/
 │   │       ├── ArtistExpanded.vue        # Vista expandida de artista
 │   │       ├── ArtistsView.vue           # Grid de artistas
 │   │       ├── HomeView.vue              # Página de inicio
-│   │       ├── LibraryView.vue           # Contenedor de biblioteca (pestanas)
+│   │       ├── LibraryView.vue           # Contenedor de biblioteca (pestañas)
 │   │       ├── LoginView.vue             # Formulario de inicio de sesión
 │   │       ├── NotFoundView.vue          # Página 404
 │   │       ├── RegisterView.vue          # Formulario de registro
@@ -208,7 +207,9 @@ front_proyecto/
 │   │       └── TracksView.vue            # Tabla de tracks con filtros
 │   │
 │   ├── composables/
-│   │   ├── useMediaSession.ts            # Integración Media Session API
+│   │   ├── useAlbumsList.ts              # Estado singleton de lista de álbumes
+│   │   ├── useArtistsList.ts             # Estado singleton de lista de artistas
+│   │   ├── useTracksList.ts              # Estado singleton de lista de tracks
 │   │   ├── useStreamingMode.ts           # Modo de streaming (Range/Blob)
 │   │   └── useTheme.ts                   # Gestión de temas y modo oscuro
 │   │
@@ -244,23 +245,24 @@ front_proyecto/
 │   │   └── track.ts                      # Tipos de track
 │   │
 │   └── utils/
-│       └── utils.ts                      # formatDuration, formatFileSize
+│       ├── utils.ts                      # formatDuration, formatFileSize, arrayBufferToBase64,
+│                                          # titleFromFile, extractCover (CoverExtraction)
+│       └── mediaSession.ts               # Integración Media Session API
 │
 ├── .env.development                      # Variables de entorno (dev)
 ├── .env.production                       # Variables de entorno (prod)
-├── .env.example                          # Plantilla de variables de entorno
 ├── vite.config.ts                        # Configuración de Vite
-├── tsconfig.json                         # Configuracion de TypeScript
-├── eslint.config.js                      # Configuracion de ESLint
+├── tsconfig.json                         # Configuración de TypeScript
+├── eslint.config.js                      # Configuración de ESLint
 ├── Dockerfile                            # Build multi-etapa (Node + Nginx)
-├── nginx.conf                            # Configuracion de Nginx
+├── nginx.conf                            # Configuración de Nginx
 ├── package.json
 └── README.md
 ```
 
 ---
 
-## Rutas
+## Rutas (Vue Router)
 
 | Ruta | Vista | Auth | Descripción |
 |------|-------|------|-------------|
@@ -282,53 +284,52 @@ front_proyecto/
 
 ### Reproductor
 
-| Componente | Ubicacion | Descripcion |
+| Componente | Ubicación | Descripción |
 |---|---|---|
 | `PlayerBar.vue` | `components/player/` | Barra inferior fija con info del track, controles (prev/play-pause/next), barra de progreso con seek y tooltip, control de volumen, toggle de cola y enlace a ajustes |
 | `QueuePanel.vue` | `components/player/` | Panel deslizable con lista de reproducción, reordenamiento con drag & drop, reproducción desde cualquier índice, botón para limpiar cola, redimensionable por arrastre |
 
 ### Modales de carga
 
-| Componente | Ubicacion | Descripcion |
+| Componente | Ubicación | Descripción |
 |---|---|---|
-| `UploadModal.vue` | `components/modals/` | Contenedor con 3 pestanas (Canciones/Album/Artista) que delega a los sub-modales |
-| `UploadSongsModal.vue` | `components/modals/` | Carga multiple de canciones con drag & drop, extraccion de metadatos, edicion individual, selector global de artistas |
-| `UploadAlbumModal.vue` | `components/modals/` | Creacion/edicion de album con cover, artista, fecha y lista de tracks reordenable con SortableJS |
-| `UploadArtistModal.vue` | `components/modals/` | Creacion/edicion de artista con nombre e imagen con vista previa |
-| `ArtistSelector.vue` | `components/modals/` | Selector multi-select de artistas con busqueda, reordenamiento y creacion inline |
+| `UploadModal.vue` | `components/modals/` | Contenedor con 3 pestañas (Canciones/Álbum/Artista) que delega a los sub-modales |
+| `UploadSongsModal.vue` | `components/modals/` | Carga múltiple de canciones con drag & drop, extracción de metadatos, edición individual (incluye cambio de portada por archivo en el preview), selector global de artistas |
+| `UploadAlbumModal.vue` | `components/modals/` | Creación/edición de álbum con cover, artista, fecha y lista de tracks reordenable con SortableJS |
+| `UploadArtistModal.vue` | `components/modals/` | Creación/edición de artista con nombre e imagen con vista previa |
+| `ArtistSelector.vue` | `components/modals/` | Selector multi-select de artistas con búsqueda, reordenamiento y creación inline |
 
 ### Vistas
 
-| Componente | Ubicacion | Descripcion |
+| Componente | Ubicación | Descripción |
 |---|---|---|
 | `HomeView.vue` | `components/views/` | Landing page con hero y tarjeta de features |
 | `LoginView.vue` | `components/views/` | Formulario de login con campos username/password |
 | `RegisterView.vue` | `components/views/` | Formulario de registro con campos nombre/email/password |
-| `LibraryView.vue` | `components/views/` | Contenedor con pestanas Tracks/Albumes/Artistas y boton "Agregar" |
-| `TracksView.vue` | `components/views/` | Tabla paginada de tracks con busqueda, filtros combinados, ordenamiento y acciones (play/cola/descargar/editar/info/eliminar) |
-| `AlbumsView.vue` | `components/views/` | Lista de albumes con filas expandibles para tracks, acciones por album y por track individual |
-| `ArtistsView.vue` | `components/views/` | Grid responsivo de tarjetas de artista con busqueda, expandible para ver tracks y albums |
+| `LibraryView.vue` | `components/views/` | Contenedor con pestañas Tracks/Álbumes/Artistas y botón "Agregar" |
+| `TracksView.vue` | `components/views/` | Tabla paginada de tracks con búsqueda, filtros combinados, ordenamiento y acciones (play/cola/descargar/editar/info/eliminar) |
+| `AlbumsView.vue` | `components/views/` | Lista de álbumes con filas expandibles para tracks, acciones por álbum y por track individual |
+| `ArtistsView.vue` | `components/views/` | Grid responsivo de tarjetas de artista con búsqueda, expandible para ver tracks y álbumes |
 | `ArtistExpanded.vue` | `components/views/` | Panel expandido dentro de ArtistsView con tracks y albums paginados del artista |
-| `SettingsView.vue` | `components/views/` | Configuracion con secciones: Cuenta (info + barra de almacenamiento), Apariencia (tema + modo oscuro), Idioma, Modo de streaming |
-| `NotFoundView.vue` | `components/views/` | Pagina 404 con enlace al inicio |
+| `SettingsView.vue` | `components/views/` | Configuración con secciones: Cuenta (info + barra de almacenamiento), Apariencia (tema + modo oscuro), Idioma, Modo de streaming |
+| `NotFoundView.vue` | `components/views/` | Página 404 con enlace al inicio |
 
 ### Componentes comunes
 
-| Componente | Ubicacion | Descripcion |
+| Componente | Ubicación | Descripción |
 |---|---|---|
 | `AppLogo.vue` | `components/common/` | Logo SVG + nombre de la marca, enlace al inicio |
-| `CombinedFilter.vue` | `components/common/` | Filtro combinado con pestanas de Artista, Album y Orden |
-| `ConfirmDialog.vue` | `components/common/` | Dialogo modal de confirmacion con variante peligrosa y estado de carga |
+| `CombinedFilter.vue` | `components/common/` | Filtro combinado con pestañas de Artista, Álbum y Orden |
+| `ConfirmDialog.vue` | `components/common/` | Diálogo modal de confirmación con variante peligrosa y estado de carga |
 | `DarkModeToggle.vue` | `components/common/` | Toggle oscuro/claro con iconos de sol/luna |
-| `FilterSelector.vue` | `components/common/` | Dropdown multi-select generico con busqueda |
 | `LanguageSwitcher.vue` | `components/common/` | Toggle ES/EN con grupo de botones |
-| `Pagination.vue` | `components/common/` | Navegacion paginada con selector de tamano (10/20/50/100) |
+| `Pagination.vue` | `components/common/` | Navegación paginada con selector de tamaño (10/20/50/100) |
 | `StorageBar.vue` | `components/common/` | Barra de progreso de almacenamiento con colores por nivel de uso |
 | `ThemeSwitcher.vue` | `components/common/` | Grid 2x2 de selector de temas con vista previa de colores |
 
 ### Iconos
 
-| Componente | Ubicacion | Descripcion |
+| Componente | Ubicación | Descripción |
 |---|---|---|
 | `Icon.vue` | `components/icons/` | Componente SVG con 30+ iconos (play, pause, prev, next, volume, queue, settings, close, search, trash, plus, info, upload, drag, chevron, check, moon, sun, logout, music, album, artist, edit, download, sort, etc.) |
 
@@ -336,90 +337,94 @@ front_proyecto/
 
 ## Composables
 
-| Composable | Ubicacion | Descripcion |
+| Composable | Ubicación | Descripción |
 |---|---|---|
-| `useTheme` | `composables/useTheme.ts` | Gestion de tema y modo oscuro. Estado singleton compartido. Persiste en `localStorage`. Aplica clases CSS al elemento `<html>`. |
+| `useTheme` | `composables/useTheme.ts` | Gestión de tema y modo oscuro. Estado singleton compartido. Persiste en `localStorage`. Aplica clases CSS al elemento `<html>`. |
 | `useStreamingMode` | `composables/useStreamingMode.ts` | Modo de streaming: `RANGE` (HTTP Range requests) o `BLOB` (descarga completa). Persiste en `localStorage`. |
-| `useMediaSession` | `composables/useMediaSession.ts` | Integracion con Media Session API. Configura acciones de play/pause/prev/next/seekto. Actualiza metadata del sistema. Atajo de teclado: Espacio para play/pause. |
+| `useTracksList` | `composables/useTracksList.ts` | Estado singleton compartido de la lista de tracks: paginación, búsqueda con debounce, filtros por artista/álbum, orden. Consumido por `TracksView`. |
+| `useAlbumsList` | `composables/useAlbumsList.ts` | Estado singleton de la lista de álbumes: paginación, búsqueda, filtros por artista, orden, mapa `albumId -> tracks[]` para filas expandidas. Consumido por `AlbumsView`. |
+| `useArtistsList` | `composables/useArtistsList.ts` | Estado singleton de la lista de artistas: paginación, búsqueda con debounce, ID expandido. Consumido por `ArtistsView`. |
+
+> La integración con **Media Session API** vive en `utils/mediaSession.ts` (no es un composable: expone `initMediaSession(audio)` que se llama una vez desde `playerStore`).
 
 ---
 
 ## Sistema de estado
 
-La aplicacion utiliza **`reactive()` de Vue directamente** (sin Pinia ni Vuex). Los stores son modulos singleton con estado a nivel de modulo.
+La aplicación utiliza **`reactive()` de Vue directamente** (sin Pinia ni Vuex). Los stores son módulos singleton con estado a nivel de módulo.
 
 ### `authStore.ts`
 
-| Estado | Tipo | Descripcion |
+| Estado | Tipo | Descripción |
 |---|---|---|
 | `user` | `UserInfo \| null` | Usuario autenticado actual |
 | `token` | `string \| null` | Token JWT |
-| `isAuthenticated` | `boolean` | Indica si hay sesion activa |
+| `isAuthenticated` | `boolean` | Indica si hay sesión activa |
 | `loading` | `boolean` | Estado de carga |
 | `error` | `string \| null` | Mensaje de error |
 
-**Metodos:** `init()`, `login()`, `register()`, `logout()`, `isAdmin()`, `getRoleName()`
+**Métodos:** `init()`, `login()`, `register()`, `logout()`, `isAdmin()`, `getRoleName()`
 
 ### `playerStore.ts`
 
-| Estado | Tipo | Descripcion |
+| Estado | Tipo | Descripción |
 |---|---|---|
 | `currentTrack` | `TrackDTO \| null` | Track reproduciendo actualmente |
-| `isPlaying` | `boolean` | Estado de reproduccion |
+| `isPlaying` | `boolean` | Estado de reproducción |
 | `volume` | `number` | Volumen (0-1) |
-| `position` | `number` | Posicion actual en segundos |
-| `duration` | `number` | Duracion total en segundos |
-| `queue` | `TrackDTO[]` | Cola de reproduccion |
+| `position` | `number` | Posición actual en segundos |
+| `duration` | `number` | Duración total en segundos |
+| `queue` | `TrackDTO[]` | Cola de reproducción |
 | `backQueue` | `TrackDTO[]` | Cola de tracks anteriores |
 
-**Metodos:** `playTrack()`, `play()`, `pause()`, `togglePlay()`, `seek()`, `setVolume()`, `mute()`, `playNext()`, `playPrevious()`, `addToQueue()`, `removeFromQueue()`, `reorderQueue()`, `clearQueue()`, `playFromQueue()`, `restoreLastTrack()`
+**Métodos:** `playTrack()`, `play()`, `pause()`, `togglePlay()`, `seek()`, `setVolume()`, `mute()`, `playNext()`, `playPrevious()`, `addToQueue()`, `removeFromQueue()`, `reorderQueue()`, `clearQueue()`, `playFromQueue()`, `restoreLastTrack()`
 
 ---
 
 ## Servicios API
 
-Todos los servicios usan `fetch()` nativo (sin axios). Autenticacion via Bearer token en headers.
+Todos los servicios usan `fetch()` nativo (sin axios). Autenticación vía Bearer token en headers.
 
 ### Auth (`services/auth.ts`)
 
-| Funcion | Metodo | Endpoint | Descripcion |
+| Función | Método | Endpoint | Descripción |
 |---|---|---|---|
-| `login(username, password)` | POST | `/auth/login` | Inicio de sesion, retorna token + usuario |
+| `login(username, password)` | POST | `/auth/login` | Inicio de sesión, retorna token + usuario |
 | `register(username, email, password)` | POST | `/auth/register` | Registro, retorna token + usuario |
 | `getMe()` | GET | `/auth/me` | Informacion del usuario actual |
 
 ### Tracks (`services/tracks.ts`)
 
-| Funcion | Metodo | Endpoint | Descripcion |
+| Función | Método | Endpoint | Descripción |
 |---|---|---|---|
 | `getTracks(page, size, search, artistIds, albumIds, sortBy, sortDirection)` | GET | `/tracks` | Listado paginado con filtros |
 | `getTrack(id)` | GET | `/tracks/:id` | Un track |
 | `getTrackCount()` | GET | `/tracks/count` | Cantidad total de tracks |
-| `uploadTrack(...)` | POST | `/tracks` | Subir track (FormData) |
+| `uploadTrack(...)` | POST | `/tracks` | Cargar track (FormData) |
 | `updateTrack(id, ...)` | PUT | `/tracks/:id` | Actualizar track (FormData) |
 | `deleteTrack(id)` | DELETE | `/tracks/:id` | Eliminar track |
 | `getStreamUrl(id)` | - | `/tracks/:id/stream?token=` | URL de streaming (token en query) |
 | `getTrackStreamBlob(id)` | GET | `/tracks/:id/stream` | Stream como Blob |
 | `downloadTrack(id)` | GET | `/tracks/:id/download` | Descargar archivo |
-| `downloadAlbumZip(id)` | GET | `/albums/:id/download` | Descargar album como ZIP |
+| `downloadAlbumZip(id)` | GET | `/albums/:id/download` | Descargar álbum como ZIP |
 | `downloadArtistZip(id)` | GET | `/artists/:id/download` | Descargar artista como ZIP |
 
 ### Albums (`services/albums.ts`)
 
-| Funcion | Metodo | Endpoint | Descripcion |
+| Función | Método | Endpoint | Descripción |
 |---|---|---|---|
 | `getAlbums(page, size, search, artistIds, sortBy, sortDirection)` | GET | `/albums` | Listado paginado |
 | `getAlbum(id)` | GET | `/albums/:id` | Album con tracks |
-| `createAlbum(...)` | POST | `/albums` | Crear album |
-| `updateAlbum(id, ...)` | PUT | `/albums/:id` | Actualizar album |
-| `deleteAlbum(id)` | DELETE | `/albums/:id` | Eliminar album |
-| `uploadAlbumTrack(albumId, ...)` | POST | `/albums/:id/tracks` | Subir track a album |
+| `createAlbum(...)` | POST | `/albums` | Crear álbum |
+| `updateAlbum(id, ...)` | PUT | `/albums/:id` | Actualizar álbum |
+| `deleteAlbum(id)` | DELETE | `/albums/:id` | Eliminar álbum |
+| `uploadAlbumTrack(albumId, ...)` | POST | `/albums/:id/tracks` | Cargar track a álbum |
 | `reorderAlbumTracks(albumId, trackIds)` | PUT | `/albums/:id/tracks/reorder` | Reordenar tracks |
-| `deleteAlbumTrack(albumId, trackId)` | DELETE | `/albums/:id/tracks/:trackId` | Eliminar track de album |
+| `deleteAlbumTrack(albumId, trackId)` | DELETE | `/albums/:id/tracks/:trackId` | Eliminar track de álbum |
 
 ### Artists (`services/artists.ts`)
 
-| Funcion | Metodo | Endpoint | Descripcion |
+| Función | Método | Endpoint | Descripción |
 |---|---|---|---|
 | `getArtists(page, size, search)` | GET | `/artists` | Listado paginado |
 | `getArtistsList(page, size, search)` | GET | `/artists/list` | Lista plana para selectores |
@@ -434,7 +439,7 @@ Todos los servicios usan `fetch()` nativo (sin axios). Autenticacion via Bearer 
 
 ### Storage (`services/storage.ts`)
 
-| Funcion | Metodo | Endpoint | Descripcion |
+| Función | Método | Endpoint | Descripción |
 |---|---|---|---|
 | `getStorageUsage()` | GET | `/auth/storage` | Uso de almacenamiento (usedBytes, limitBytes, availableBytes, roleName) |
 
@@ -460,23 +465,24 @@ Todos los servicios usan `fetch()` nativo (sin axios). Autenticacion via Bearer 
 
 ## Internacionalización
 
-- **Idiomas:** Espanol (`es`, por defecto) e Ingles (`en`, fallback)
+- **Idiomas:** Español (`es`, por defecto) e Inglés (`en`, fallback)
 - **Persistencia:** Idioma guardado en `localStorage` con la clave `locale`
-- **Configuracion:** `vue-i18n` en modo Composition API (`legacy: false`)
-- **133 claves de traduccion** organizadas en namespaces:
+- **Configuración:** `vue-i18n` en modo Composition API (`legacy: false`)
+- **147 claves de traducción** (EN y ES idénticas, 0 discrepancias) organizadas en namespaces:
 
-| Namespace | Contenido |
-|---|---|
-| `nav` | Navegacion |
-| `home` | Pagina de inicio (con interpolacion `{appName}`) |
-| `auth` | Formularios de login/registro |
-| `library` | Gestion de tracks, albumes, artistas, carga, busqueda, filtros, orden, almacenamiento |
-| `confirm` | Dialogos de eliminacion (con interpolacion de `{item}`, `{tracks}`, `{albums}`) |
-| `pagination` | Navegacion paginada |
-| `player` | Controles del reproductor (con interpolacion `{current}`, `{total}`) |
-| `common` | Acciones compartidas |
-| `settings` | Configuracion (cuenta, apariencia, temas, idioma, streaming, almacenamiento) |
-| `notfound` | Pagina 404 |
+| Namespace | Contenido | Claves |
+|---|---|---|
+| `nav` | Navegación | 2 |
+| `home` | Página de inicio (con interpolación `{appName}`) | 17 |
+| `auth` | Formularios de login/registro | 11 |
+| `library` | Gestión de tracks, álbumes, artistas, carga, búsqueda, filtros, orden, almacenamiento | 67 |
+| `confirm` | Diálogos de eliminación (con interpolación de `{item}`, `{tracks}`, `{albums}`) | 7 |
+| `pagination` | Navegación paginada | 1 |
+| `player` | Controles del reproductor (con interpolacion `{current}`, `{total}`) | 12 |
+| `common` | Acciones compartidas | 7 |
+| `settings` | Configuración (cuenta, apariencia, temas, idioma, streaming, almacenamiento; `themes.*` anidadas: warp/midnight/forest/ocean/retro) | 20 |
+| `notfound` | Página 404 | 3 |
+| **Total** | | **147** |
 
 ---
 
@@ -484,80 +490,96 @@ Todos los servicios usan `fetch()` nativo (sin axios). Autenticacion via Bearer 
 
 ```bash
 npm run dev          # Inicia servidor de desarrollo (puerto 5173)
-npm run build        # Verifica tipos y compila para produccion
-npm run build:prod   # Compila explicitamente en modo produccion
+npm run build        # Verifica tipos y compila para producción
+npm run build:prod   # Compila explícitamente en modo producción
 npm run type-check   # Verifica tipos sin compilar
 npm run lint         # Ejecuta ESLint sobre src/
-npm run lint:fix     # ESLint con auto-correccion
-npm run preview      # Previsualiza la compilacion de produccion
+npm run lint:fix     # ESLint con auto-corrección
+npm run preview      # Previsualiza la compilación de producción
 ```
 
 ---
 
 ## Variables de Entorno
 
-| Variable | Descripcion | Desarrollo | Produccion |
+| Variable | Default local/dev | Obligatoria en prod | Descripción |
 |---|---|---|---|
-| `VITE_API_URL` | URL base de la API REST | `http://localhost:8080/api` | `https://api.tudominio.com/api` |
+| `VITE_API_URL` | `/api` (Docker) / `http://localhost:8080/api` (IDE) | – | URL del API para el build del frontend |
 
-**Archivos de configuracion:**
-- `.env.development` - Variables para `npm run dev`
-- `.env.production` - Variables para `npm run build:prod`
-- `.env.example` - Plantilla con comentarios
+**Archivos de configuración:**
+- `.env.development` - Variables para `npm run dev` (consumido por Vite fuera de Docker)
+- `.env.production` - Plantilla para builds con Vite fuera de Docker
 
 **Constantes globales** (definidas en `vite.config.ts`):
-- `global` = `globalThis` (polyfill para `music-metadata-browser`)
+- `global` = `globalThis` (polyfill para `music-metadata`)
 
-> **Nota:** `APP_NAME` está hardcodeado en `src/config.ts` y no es una variable de build-time, aunque el README anterior lo afirmaba. Si en el futuro se necesita variabilizar, exponer vía `define` en `vite.config.ts` + `VITE_APP_NAME` en `.env.development`.
+> **Nota:** `APP_NAME` está hardcodeado en `src/config.ts` y no es una variable de build-time. Si en el futuro se necesita variabilizar, exponer vía `define` en `vite.config.ts` + `VITE_APP_NAME` en `.env.development`.
 
 ### Mapa: dónde se setea cada variable → dónde se lee
 
 | Variable | Fuentes posibles (en orden de prioridad) | Lectura |
 |----------|------------------------------------------|---------|
-| `VITE_API_URL` | `docker-compose.yml` como build arg (`/api` cuando nginx hace proxy), `.env.development` (dev local sin Docker: `http://localhost:8080/api`), `.env.production` (placeholder, ignorar) | `src/services/utils.ts:4` → exportada como `API_URL` y consumida por todos los `services/*.ts` |
+| `VITE_API_URL` | `docker-compose.yml` (base, build arg con default `/api`), `docker-compose.dev.yml` (override: `http://localhost:8080/api`), `docker-compose.prod.yml` (override: `/api`), `.env.development` (dev local sin Docker) | `src/services/utils.ts:4` → exportada como `API_URL` y consumida por todos los `services/*.ts` |
+
+El resto de variables del proyecto (`DB_*`, `JWT_SECRET`, `CORS_ORIGINS`, `SPRING_PROFILES_ACTIVE`, `CADDY_DOMAIN`) se gestionan en el backend y están documentadas en el [README.md de la raíz](../README.md).
 
 ---
 
 ## Docker
 
+### Archivos Docker
+
+| Archivo | Propósito |
+|---|---|
+| `docker-compose.yml` | Base: definición común de servicios |
+| `docker-compose.local.yml` | Local: solo PostgreSQL, apps en el host con IDE |
+| `docker-compose.dev.yml` | Dev: stack completo dockerizado |
+| `docker-compose.prod.yml` | Prod: stack completo + Caddy con TLS automático |
+| `infra/caddy/Caddyfile` | Reverse proxy con HTTPS automático |
+| `back_proyecto/Dockerfile` | Multi-stage: Maven build → JRE 21 Alpine |
+| `front_proyecto/Dockerfile` | Multi-stage: Node 22 build → Nginx Alpine |
+| `front_proyecto/nginx.conf` | SPA fallback, proxy `/api/` → backend, gzip, caché inmutable |
+
+### Comandos
+
+Desde la raíz del proyecto (`ProyectoDAW/`):
+
+| Entorno | Comando |
+|---|---|
+| `local` | `docker compose -f docker-compose.yml -f docker-compose.local.yml up -d postgres` |
+| `dev` | `docker compose -f docker-compose.yml -f docker-compose.dev.yml up` |
+| `prod` | `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d` |
+
 ### Dockerfile (multi-etapa)
 
 **Etapa 1 - Build (Node 22 Alpine):**
 1. Instala dependencias
-2. Compila la aplicacion con `VITE_API_URL` como argumento de build
+2. Compila la aplicación con `VITE_API_URL` como argumento de build
 
 **Etapa 2 - Serve (Nginx Alpine):**
 1. Copia los archivos compilados
-2. Sirve con Nginx usando configuracion personalizada
+2. Sirve con Nginx usando configuración personalizada
 
 ### nginx.conf
 
-- Headers de seguridad (X-Frame-Options, X-Content-Type-Options, etc.)
-- Compresion gzip
-- Cache inmutable de 1 ano para `/assets/`
-- Proxy reverso: `/api/` -> `http://backend:8080`
+- Headers de seguridad: `X-Frame-Options SAMEORIGIN`, `X-Content-Type-Options nosniff`, `Referrer-Policy strict-origin-when-cross-origin`, **`Permissions-Policy`** (deniega `geolocation`/`microphone`/`camera`), **`Content-Security-Policy`** estricta (default `self`; `media-src` permite `blob:` para el reproductor)
+- Compresion gzip (text/css/json/js/svg)
+- Caché inmutable 1 año en `/assets/` (`Cache-Control: public, immutable`)
+- `index.html` con `Cache-Control: no-cache, no-store, must-revalidate` para forzar revalidación
+- Proxy reverso `/api/` -> `http://backend:8080` con **`proxy_request_buffering off`** y **`proxy_buffering off`** para no bufferizar streams de audio ni descargas ZIP
+- Timeouts 300s en `proxy_read_timeout`/`proxy_send_timeout`/`client_body_timeout` para uploads grandes
+- `client_max_body_size 500M` aplicado global y en `location /api/`
 - SPA fallback: `try_files $uri $uri/ /index.html`
-- `client_max_body_size 500M` para cargas grandes
-
-### Comandos
-
-```bash
-# Build
-docker build -t fonopart-front .
-
-# Ejecutar
-docker run -p 80:80 -e VITE_API_URL=http://backend:8080/api fonopart-front
-```
 
 ---
 
 ## Backend
 
-La aplicacion se conecta a una API REST. El backend **debe estar corriendo** para que funcionen:
+La aplicación se conecta a una API REST. El backend **debe estar corriendo** para que funcionen:
 
-- Autenticacion (login, registro, sesion)
-- Biblioteca de tracks (CRUD, busqueda, filtros)
-- Albumes (CRUD, tracks, reordenamiento, descarga ZIP)
+- Autenticación (login, registro, sesión)
+- Biblioteca de tracks (CRUD, búsqueda, filtros)
+- Álbumes (CRUD, tracks, reordenamiento, descarga ZIP)
 - Artistas (CRUD, tracks, albums, descarga ZIP)
 - Almacenamiento (uso de espacio)
 
@@ -572,4 +594,11 @@ La aplicacion se conecta a una API REST. El backend **debe estar corriendo** par
 | `/albums/` | CRUD, tracks, reorder, download |
 | `/artists/` | CRUD, tracks, albums, download |
 
-**Nota sobre streaming:** Para el modo Range, el token JWT se pasa como parametro de query (`?token=...`) porque el elemento `<audio>` de HTML5 no soporta headers personalizados. Se recomienda HTTPS en produccion para mitigar esto.
+**Nota sobre streaming:** Para el modo Range, el token JWT se pasa como parámetro de query (`?token=...`) porque el elemento `<audio>` de HTML5 no soporta headers personalizados. Se recomienda HTTPS en producción para mitigar esto.
+
+---
+
+## Documentación relacionada
+
+- Volver al [índice principal](../README.md)
+- Ver también: [Backend README](../back_proyecto/README.md)

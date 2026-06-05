@@ -602,13 +602,13 @@
 </template>
 
 <script setup lang="ts">
-import { parseBlob } from 'music-metadata-browser'
+import { parseBlob } from 'music-metadata'
 import Sortable from 'sortablejs'
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../services/api'
 import type { AlbumDTO, AlbumWithTracksDTO, ArtistDTO, TrackDTO } from '../../types'
-import { formatDuration, formatFileSize } from '../../utils/utils'
+import { titleFromFile, extractCover, formatDuration, formatFileSize } from '../../utils/utils'
 import Icon from '../icons/Icon.vue'
 import ArtistSelector from './ArtistSelector.vue'
 
@@ -817,17 +817,6 @@ const parseAndLookupArtists = async (artistString: string) => {
   return ids
 }
 
-const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
-  const bytes = new Uint8Array(buffer)
-  const CHUNK = 8192
-  let result = ''
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    const chunk = bytes.subarray(i, i + CHUNK)
-    result += String.fromCharCode(...chunk)
-  }
-  return btoa(result)
-}
-
 const updatePositions = () => {
   pendingFiles.value.forEach((f: PendingFile, i: number) => {
     f.position = i + 1
@@ -843,18 +832,12 @@ const processFiles = async (files: FileList | null) => {
 
   for (const file of validFiles) {
     const metadata = await parseBlob(file)
-
-    let coverDataUrl = null
-    if (metadata.common.picture?.[0]) {
-      const pic = metadata.common.picture[0]
-      const base64 = arrayBufferToBase64(pic.data.buffer as ArrayBuffer)
-      coverDataUrl = `data:${pic.format};base64,${base64}`
-      albumCoverFile.value = new File([pic.data.buffer as ArrayBuffer], 'cover.jpg', { type: pic.format })
-    }
+    const cover = extractCover(metadata)
+    if (cover) albumCoverFile.value = cover.file
 
     const wasEmpty = pendingFiles.value.length === 0
 
-    const artistIds = await parseAndLookupArtists(metadata.common.artist ?? '')
+    const artistIds = await parseAndLookupArtists(metadata.common.artist || '')
 
     const fileArtistIds = artistIds.length > 0
       ? artistIds
@@ -866,7 +849,7 @@ const processFiles = async (files: FileList | null) => {
       _isNew: true,
       file,
       fileName: file.name,
-      title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ''),
+      title: titleFromFile(file, metadata.common.title),
       duration: Math.round(metadata.format.duration ?? 0),
       position: pendingFiles.value.length + 1,
       artistIds: fileArtistIds
@@ -874,7 +857,7 @@ const processFiles = async (files: FileList | null) => {
 
     if (wasEmpty) {
       if (!albumName.value) albumName.value = metadata.common.album || ''
-      if (!albumCover.value && coverDataUrl) albumCover.value = coverDataUrl
+      if (!albumCover.value && cover) albumCover.value = cover.dataUrl
       if (artistIds.length > 0 && selectedArtistIds.value.length === 0) {
         selectedArtistIds.value = [...artistIds]
       }
@@ -975,13 +958,13 @@ const handleEditAddFiles = async (e: Event) => {
   })
   for (const file of validFiles) {
     const metadata = await parseBlob(file)
-    const artistIds = await parseAndLookupArtists(metadata.common.artist ?? '')
+    const artistIds = await parseAndLookupArtists(metadata.common.artist || '')
     editTracks.value.push({
       _key: ++keyCounter,
       _trackId: null,
       _isNew: true,
       file,
-      title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ''),
+      title: titleFromFile(file, metadata.common.title),
       artistIds: artistIds.length > 0 ? artistIds : (editArtistIds.value.length > 0 ? [...editArtistIds.value] : []),
       duration: Math.round(metadata.format.duration ?? 0) || 0
     })

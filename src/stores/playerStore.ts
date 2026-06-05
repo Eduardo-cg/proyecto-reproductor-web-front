@@ -229,6 +229,20 @@ const mute = (): void => {
   }
 }
 
+const resetPlayer = (): void => {
+  if (audio) {
+    audio.pause()
+    audio.src = ''
+  }
+  revokeCurrentBlob()
+  state.currentTrack = null
+  state.isPlaying = false
+  state.position = 0
+  state.duration = 0
+  state.queue.length = 0
+  state.backQueue.length = 0
+}
+
 export const usePlayerStore = () => ({
   state,
   playTrack,
@@ -245,5 +259,6 @@ export const usePlayerStore = () => ({
   removeFromQueue,
   reorderQueue,
   mute,
-  restoreLastTrack
+  restoreLastTrack,
+  resetPlayer
 })

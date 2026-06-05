@@ -106,7 +106,7 @@
         <div
           v-for="album in albums"
           :key="album.id"
-          v-memo="[album, expandedAlbumId === album.id, openDropdownId === album.id, selectedAlbumId === album.id, openTrackDropdownId, albumTracksLoading.has(album.id), albumTracksMap[album.id]]"
+          v-memo="[album, expandedAlbumId === album.id, openDropdownId === album.id, selectedAlbumId === album.id, openTrackDropdownId, albumTracksLoading.has(album.id), albumTracksMap[album.id], playerStore.state.currentTrack?.id ?? null]"
           class="track-wrapper"
         >
           <div

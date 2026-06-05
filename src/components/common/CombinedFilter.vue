@@ -24,7 +24,7 @@
           <Icon name="artist" size="14" />
           <span>{{ t('library.filterByArtist') }}</span>
         </button>
-        <button v-if="showAlbums && hasAlbums" class="tab-btn" :class="{ active: activeTab === 'album' }"
+        <button v-if="showAlbums" class="tab-btn" :class="{ active: activeTab === 'album' }"
           @click="switchTab('album')">
           <Icon name="album" size="14" />
           <span>{{ t('library.filterByAlbum') }}</span>
@@ -164,10 +164,6 @@ const tabCount = computed(() => {
 })
 
 const tabSizeClass = computed(() => `tabs-${tabCount.value}`)
-
-const hasAlbums = computed(() => {
-  return albumData.value.length > 0 || albumLoading.value || albumSearchQuery.value.length > 0
-})
 
 const currentContent = computed(() => {
   if (activeTab.value === 'artist') {

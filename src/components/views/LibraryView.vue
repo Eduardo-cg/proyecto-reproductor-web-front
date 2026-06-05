@@ -37,9 +37,9 @@
           {{ t('library.tracks') }}
         </button>
         <button
-          :class="['tab-btn', { active: viewMode === 'albums' }]"
+          :class="['tab-btn', { active: viewMode === 'album' }]"
           role="tab"
-          :aria-selected="viewMode === 'albums'"
+          :aria-selected="viewMode === 'album'"
           :aria-controls="'panel-albums'"
           @click="switchToAlbums"
         >
@@ -50,9 +50,9 @@
           {{ t('library.albums') }}
         </button>
         <button
-          :class="['tab-btn', { active: viewMode === 'artists' }]"
+          :class="['tab-btn', { active: viewMode === 'artist' }]"
           role="tab"
-          :aria-selected="viewMode === 'artists'"
+          :aria-selected="viewMode === 'artist'"
           :aria-controls="'panel-artists'"
           @click="switchToArtists"
         >
@@ -72,14 +72,14 @@
         <TracksView />
       </div>
       <div
-        v-if="viewMode === 'albums'"
+        v-if="viewMode === 'album'"
         id="panel-albums"
         role="tabpanel"
       >
         <AlbumsView />
       </div>
       <div
-        v-if="viewMode === 'artists'"
+        v-if="viewMode === 'artist'"
         id="panel-artists"
         role="tabpanel"
       >
@@ -109,7 +109,7 @@ import TracksView from './TracksView.vue'
 
 const { t } = useI18n()
 
-const viewMode = ref('tracks')
+const viewMode = ref<'tracks' | 'album' | 'artist'>('tracks')
 const showUploadModal = ref(false)
 
 const tracksList = useTracksList()
@@ -121,17 +121,18 @@ const switchToTracks = () => {
 }
 
 const switchToAlbums = () => {
-  viewMode.value = 'albums'
+  viewMode.value = 'album'
 }
 
 const switchToArtists = () => {
-  viewMode.value = 'artists'
+  viewMode.value = 'artist'
 }
 
-const handleUploaded = () => {
-  if (viewMode.value === 'tracks') {
+const handleUploaded = (type: 'tracks' | 'album' | 'artist') => {
+  if (type !== viewMode.value) return
+  if (type === 'tracks') {
     tracksList.refresh()
-  } else if (viewMode.value === 'albums') {
+  } else if (type === 'album') {
     albumsList.refresh()
   } else {
     artistsList.refresh()

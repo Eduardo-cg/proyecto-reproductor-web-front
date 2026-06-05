@@ -71,3 +71,4 @@ $RECYCLE.BIN/
 *.vsix
 
 .agents/
+skills-lock.json

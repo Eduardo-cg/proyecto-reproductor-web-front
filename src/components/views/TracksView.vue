@@ -112,7 +112,7 @@
         <div
           v-for="track in tracks"
           :key="track.id"
-          v-memo="[track, selectedTrackId === track.id, openDropdownId === track.id]"
+          v-memo="[track, selectedTrackId === track.id, openDropdownId === track.id, playerStore.state.currentTrack?.id ?? null]"
           class="track-wrapper"
         >
           <div
